@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🚂 Train Tracks</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --sidebar-w: 90px;
+  --cell-size: 60px;
+  --grass: #7CB342;
+  --grass-dark: #689F38;
+  --wood: #8D6E63;
+  --wood-light: #BCAAA4;
+  --track: #5D4037;
+  --track-light: #A1887F;
+  --sky: #E8F5E9;
+  --accent: #FF6B6B;
+  --play-green: #4CAF50;
+  --stop-red: #F44336;
+}
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  font-family: 'Nunito', sans-serif;
+  background: var(--sky);
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+#app {
+  display: flex;
+  width: 100%; height: 100%;
+}
+
+/* SIDEBAR */
+#sidebar {
+  width: var(--sidebar-w);
+  background: linear-gradient(180deg, #6D4C41, #5D4037);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 4px;
+  gap: 6px;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.2);
+  z-index: 10;
+  overflow-y: auto;
+}
+
+#sidebar h2 {
+  color: #FFCC80;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 4px 0 2px;
+}
+
+.palette-piece {
+  width: 64px; height: 64px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  transition: transform 0.15s, background 0.15s;
+  position: relative;
+}
+
+.palette-piece:hover {
+  background: rgba(255,255,255,0.2);
+  transform: scale(1.08);
+}
+
+.palette-piece:active { cursor: grabbing; }
+
+.palette-piece .label {
+  position: absolute;
+  bottom: 2px;
+  font-size: 8px;
+  color: rgba(255,255,255,0.7);
+  text-align: center;
+  width: 100%;
+}
+
+.palette-train {
+  background: rgba(255,200,0,0.2) !important;
+  border: 2px dashed rgba(255,200,0,0.5);
+}
+
+.palette-divider {
+  width: 50px;
+  height: 1px;
+  background: rgba(255,255,255,0.15);
+  margin: 2px 0;
+}
+
+/* MAIN AREA */
+#main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  gap: 10px;
+  overflow: hidden;
+}
+
+#header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#header h1 {
+  font-size: 22px;
+  font-weight: 800;
+  color: #3E2723;
+}
+
+/* GRID */
+#grid-container {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15), inset 0 0 0 3px rgba(0,0,0,0.1);
+}
+
+#grid {
+  display: grid;
+  background: var(--grass-dark);
+  gap: 1px;
+}
+
+.cell {
+  width: var(--cell-size);
+  height: var(--cell-size);
+  background: var(--grass);
+  position: relative;
+  transition: background 0.15s;
+}
+
+.cell:hover { background: #85BB4A; }
+.cell.highlight { background: #A5D64E; box-shadow: inset 0 0 0 2px #FFF; }
+.cell.occupied { cursor: pointer; }
+.cell.has-train { z-index: 5; }
+
+.cell svg {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+}
+
+.cell .train-emoji {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: calc(var(--cell-size) * 0.6);
+  z-index: 6;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
+  transition: transform 0.1s;
+}
+
+.cell .scenery-emoji {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: calc(var(--cell-size) * 0.55);
+  pointer-events: none;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+}
+
+/* Connection glow */
+.cell .connection-dot {
+  position: absolute;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #76FF03;
+  box-shadow: 0 0 6px #76FF03;
+  z-index: 4;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.cell .connection-dot.connected { opacity: 1; }
+.cell .connection-dot.disconnected { background: #FF5252; box-shadow: 0 0 6px #FF5252; opacity: 0.7; }
+.cell .connection-dot.n { top: -3px; left: 50%; transform: translateX(-50%); }
+.cell .connection-dot.s { bottom: -3px; left: 50%; transform: translateX(-50%); }
+.cell .connection-dot.e { right: -3px; top: 50%; transform: translateY(-50%); }
+.cell .connection-dot.w { left: -3px; top: 50%; transform: translateY(-50%); }
+
+/* CONTROLS */
+#controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.btn {
+  padding: 8px 18px;
+  border: none;
+  border-radius: 20px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn:hover { transform: scale(1.05); }
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+.btn-play { background: var(--play-green); color: white; box-shadow: 0 3px 10px rgba(76,175,80,0.4); }
+.btn-stop { background: var(--stop-red); color: white; box-shadow: 0 3px 10px rgba(244,67,54,0.4); }
+.btn-clear { background: #FF9800; color: white; box-shadow: 0 3px 10px rgba(255,152,0,0.3); }
+.btn-undo { background: #9E9E9E; color: white; box-shadow: 0 3px 10px rgba(0,0,0,0.15); }
+
+.speed-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #5D4037;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.speed-control input[type=range] {
+  width: 80px;
+  accent-color: var(--play-green);
+}
+
+/* GHOST (dragged piece) */
+#ghost {
+  position: fixed;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0.85;
+  transform: translate(-50%, -50%) scale(1.1);
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+  transition: opacity 0.1s;
+}
+
+/* TRASH ZONE */
+#trash-zone {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  background: rgba(244,67,54,0.15);
+  border: 2px dashed rgba(244,67,54,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+  z-index: 50;
+  pointer-events: none;
+}
+
+#trash-zone.visible { opacity: 1; pointer-events: auto; }
+#trash-zone.hover { background: rgba(244,67,54,0.3); transform: scale(1.15); }
+
+/* TOAST */
+#toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-100px);
+  background: #333;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 14px;
+  z-index: 200;
+  transition: transform 0.3s ease;
+  pointer-events: none;
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+
+/* PLAYING STATE */
+#app.playing .cell { cursor: default; }
+#app.playing .cell:hover { background: var(--grass); }
+#app.playing #sidebar { opacity: 0.5; pointer-events: none; }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  :root { --sidebar-w: 70px; }
+  .palette-piece { width: 54px; height: 54px; }
+  #header h1 { font-size: 18px; }
+  .btn { padding: 6px 14px; font-size: 12px; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="sidebar">
+    <h2>Tracks</h2>
+    <div class="palette-piece" data-type="straight"><div class="label">Straight</div></div>
+    <div class="palette-piece" data-type="curve"><div class="label">Curve</div></div>
+    <div class="palette-piece" data-type="tjunction"><div class="label">T-Split</div></div>
+    <div class="palette-piece" data-type="crossover"><div class="label">Cross</div></div>
+    <div class="palette-piece" data-type="bridge"><div class="label">Bridge</div></div>
+    <div class="palette-piece" data-type="station"><div class="label">Station</div></div>
+    <div class="palette-divider"></div>
+    <h2>Train</h2>
+    <div class="palette-piece palette-train" data-type="train"><div class="label">Loco</div></div>
+    <div class="palette-divider"></div>
+    <h2>Scenery</h2>
+    <div class="palette-piece" data-type="tree"><div class="label">Tree</div></div>
+    <div class="palette-piece" data-type="house"><div class="label">House</div></div>
+    <div class="palette-piece" data-type="cow"><div class="label">Cow</div></div>
+  </div>
+  <div id="main">
+    <div id="header">
+      <h1>🚂 Train Tracks</h1>
+    </div>
+    <div id="grid-container">
+      <div id="grid"></div>
+    </div>
+    <div id="controls">
+      <button class="btn btn-play" id="btn-play" onclick="togglePlay()">▶️ Play</button>
+      <button class="btn btn-clear" onclick="clearAll()">🗑️ Clear</button>
+      <button class="btn btn-undo" onclick="undo()">↩️ Undo</button>
+      <div class="speed-control">
+        🐢 <input type="range" id="speed-slider" min="0.3" max="4" step="0.1" value="1.2"> 🐇
+      </div>
+    </div>
+  </div>
+</div>
+<div id="ghost"></div>
+<div id="trash-zone">🗑️</div>
+<div id="toast"></div>
+
+<script>
+// ============================================================
+// CONSTANTS
+// ============================================================
+const COLS = 12;
+const ROWS = 8;
+const OPPOSITE = { N: 'S', S: 'N', E: 'W', W: 'E' };
+const DELTA = { N: { r: -1, c: 0 }, S: { r: 1, c: 0 }, E: { r: 0, c: 1 }, W: { r: 0, c: -1 } };
+const ROTATE_MAP = { N: 'E', E: 'S', S: 'W', W: 'N' };
+
+const TRACK_TYPES = ['straight', 'curve', 'tjunction', 'crossover', 'bridge', 'station'];
+const SCENERY_TYPES = ['tree', 'house', 'cow'];
+const SCENERY_EMOJI = { tree: '🌲', house: '🏠', cow: '🐄' };
+
+// Base connections at rotation 0
+const BASE_CONNECTIONS = {
+  straight: ['N', 'S'],
+  curve:    ['N', 'E'],
+  tjunction:['N', 'E', 'S'],
+  crossover:['N', 'S', 'E', 'W'],
+  bridge:   ['N', 'S', 'E', 'W'],
+  station:  ['N', 'S'],
+};
+
+// Through-routes for crossover/bridge (pairs that form continuous paths)
+const THROUGH_ROUTES = {
+  crossover: [['N','S'], ['E','W']],
+  bridge:    [['N','S'], ['E','W']],
+};
+
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  grid: Array.from({ length: ROWS }, () => Array(COLS).fill(null)),
+  // Each cell: { type, rotation } or null
+  train: null, // { row, col }
+  trainDir: 'E', // initial facing
+  playing: false,
+  speed: 1.2,
+  undoStack: [],
+};
+
+let cellSize = 60;
+let animState = null; // train animation state
+
+// ============================================================
+// UTILITY
+// ============================================================
+function rotateDir(dir, times) {
+  let d = dir;
+  for (let i = 0; i < times; i++) d = ROTATE_MAP[d];
+  return d;
+}
+
+function getConnections(type, rotation) {
+  const base = BASE_CONNECTIONS[type];
+  if (!base) return [];
+  const steps = (((rotation % 360) + 360) % 360) / 90;
+  return base.map(d => rotateDir(d, steps));
+}
+
+function getExitDir(type, rotation, entryEdge) {
+  const conns = getConnections(type, rotation);
+  if (!conns.includes(entryEdge)) return null;
+
+  // Crossover/Bridge: must stay on same axis
+  if (type === 'crossover' || type === 'bridge') {
+    const steps = (((rotation % 360) + 360) % 360) / 90;
+    for (const route of THROUGH_ROUTES[type]) {
+      const rotated = route.map(d => rotateDir(d, steps));
+      if (rotated.includes(entryEdge)) {
+        return rotated.find(d => d !== entryEdge);
+      }
+    }
+    return null;
+  }
+
+  // T-junction: prefer straight-through, else turn
+  if (type === 'tjunction') {
+    const opposite = OPPOSITE[entryEdge];
+    if (conns.includes(opposite)) return opposite;
+    return conns.find(d => d !== entryEdge) || null;
+  }
+
+  // Simple pieces (straight, curve, station): one exit
+  return conns.find(d => d !== entryEdge) || null;
+}
+
+function getNeighbor(row, col, dir) {
+  const d = DELTA[dir];
+  const nr = row + d.r, nc = col + d.c;
+  if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) return null;
+  return { row: nr, col: nc };
+}
+
+function isConnectedAt(row, col, dir) {
+  const piece = state.grid[row][col];
+  if (!piece) return false;
+  return getConnections(piece.type, piece.rotation).includes(dir);
+}
+
+function neighborConnected(row, col, dir) {
+  const nb = getNeighbor(row, col, dir);
+  if (!nb) return false;
+  const piece = state.grid[nb.row][nb.col];
+  if (!piece) return false;
+  return getConnections(piece.type, piece.rotation).includes(OPPOSITE[dir]);
+}
+
+// ============================================================
+// TRACK SVG RENDERING
+// ============================================================
+function createTrackSVG(type) {
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('viewBox', '0 0 60 60');
+  svg.setAttribute('fill', 'none');
+
+  const trackColor = '#5D4037';
+  const trackWidth = 10;
+  const tieColor = '#8D6E63';
+  const tieWidth = 3;
+  const railColor = '#4E342E';
+
+  function line(x1,y1,x2,y2,color,width,cap='round') {
+    const l = document.createElementNS(ns,'line');
+    l.setAttribute('x1',x1); l.setAttribute('y1',y1);
+    l.setAttribute('x2',x2); l.setAttribute('y2',y2);
+    l.setAttribute('stroke',color);
+    l.setAttribute('stroke-width',width);
+    l.setAttribute('stroke-linecap',cap);
+    return l;
+  }
+
+  function arc(sx,sy,ex,ey,r,sweep,color,width) {
+    const p = document.createElementNS(ns,'path');
+    p.setAttribute('d', `M${sx},${sy} A${r},${r} 0 0,${sweep} ${ex},${ey}`);
+    p.setAttribute('stroke', color);
+    p.setAttribute('stroke-width', width);
+    p.setAttribute('stroke-linecap', 'round');
+    p.setAttribute('fill', 'none');
+    return p;
+  }
+
+  function circle(cx,cy,r,color) {
+    const c = document.createElementNS(ns,'circle');
+    c.setAttribute('cx',cx); c.setAttribute('cy',cy);
+    c.setAttribute('r',r); c.setAttribute('fill',color);
+    return c;
+  }
+
+  function rect(x,y,w,h,color,rx=0) {
+    const r2 = document.createElementNS(ns,'rect');
+    r2.setAttribute('x',x); r2.setAttribute('y',y);
+    r2.setAttribute('width',w); r2.setAttribute('height',h);
+    r2.setAttribute('fill',color);
+    if(rx) r2.setAttribute('rx',rx);
+    return r2;
+  }
+
+  switch(type) {
+    case 'straight':
+      // Ties
+      [10,22,34,46].forEach(y => svg.appendChild(line(20,y,40,y,tieColor,tieWidth,'butt')));
+      // Rails
+      svg.appendChild(line(24,0,24,60,railColor,2.5));
+      svg.appendChild(line(36,0,36,60,railColor,2.5));
+      // Track bed
+      svg.appendChild(line(30,0,30,60,'#A1887F',12));
+      svg.appendChild(line(30,0,30,60,trackColor,8));
+      break;
+
+    case 'curve':
+      // Track bed arc (N→E, around corner 60,0)
+      svg.appendChild(arc(30,0,60,30,30,1,'#A1887F',12));
+      svg.appendChild(arc(30,0,60,30,30,1,trackColor,8));
+      // Rail arcs
+      svg.appendChild(arc(26,0,60,26,34,1,railColor,1.5));
+      svg.appendChild(arc(34,0,60,34,26,1,railColor,1.5));
+      break;
+
+    case 'tjunction':
+      // Main straight (N→S)
+      svg.appendChild(line(30,0,30,60,'#A1887F',12));
+      svg.appendChild(line(30,0,30,60,trackColor,8));
+      // Branch (→E)
+      svg.appendChild(line(30,30,60,30,'#A1887F',12));
+      svg.appendChild(line(30,30,60,30,trackColor,8));
+      // Junction dot
+      svg.appendChild(circle(30,30,5,'#FFAB40'));
+      break;
+
+    case 'crossover':
+      // N-S
+      svg.appendChild(line(30,0,30,60,'#A1887F',12));
+      svg.appendChild(line(30,0,30,60,trackColor,8));
+      // E-W
+      svg.appendChild(line(0,30,60,30,'#A1887F',12));
+      svg.appendChild(line(0,30,60,30,trackColor,8));
+      // Center dot
+      svg.appendChild(circle(30,30,4,'#FFAB40'));
+      break;
+
+    case 'bridge':
+      // Under track (E-W) — draw first
+      svg.appendChild(line(0,30,60,30,'#A1887F',12));
+      svg.appendChild(line(0,30,60,30,trackColor,8));
+      // Bridge supports
+      svg.appendChild(rect(22,18,16,24,'#A1887F',3));
+      svg.appendChild(rect(24,20,12,20,'#8D6E63',2));
+      // Over track (N-S) — on top
+      svg.appendChild(line(30,0,30,18,'#A1887F',12));
+      svg.appendChild(line(30,0,30,18,trackColor,8));
+      svg.appendChild(line(30,42,30,60,'#A1887F',12));
+      svg.appendChild(line(30,42,30,60,trackColor,8));
+      // Bridge deck
+      svg.appendChild(rect(22,16,16,28,'#D7CCC8',2));
+      svg.appendChild(line(30,16,30,44,'#BCAAA4',12));
+      svg.appendChild(line(30,16,30,44,trackColor,8));
+      // Railings
+      svg.appendChild(line(22,16,22,44,'#8D6E63',2));
+      svg.appendChild(line(38,16,38,44,'#8D6E63',2));
+      break;
+
+    case 'station':
+      // Track
+      [10,22,34,46].forEach(y => svg.appendChild(line(20,y,40,y,tieColor,tieWidth,'butt')));
+      svg.appendChild(line(30,0,30,60,'#A1887F',12));
+      svg.appendChild(line(30,0,30,60,trackColor,8));
+      // Platform
+      svg.appendChild(rect(42,10,14,40,'#E0E0E0',3));
+      svg.appendChild(rect(42,10,14,40,'#BDBDBD',3));
+      svg.appendChild(rect(44,14,10,6,'#F44336',2));
+      // Platform edge
+      svg.appendChild(line(42,10,42,50,'#9E9E9E',1.5));
+      break;
+  }
+
+  return svg;
+}
+
+// Palette preview SVGs (smaller, centered)
+function createPaletteSVG(type) {
+  if (type === 'train') {
+    const div = document.createElement('div');
+    div.textContent = '🚂';
+    div.style.fontSize = '32px';
+    return div;
+  }
+  if (SCENERY_TYPES.includes(type)) {
+    const div = document.createElement('div');
+    div.textContent = SCENERY_EMOJI[type];
+    div.style.fontSize = '32px';
+    return div;
+  }
+  const svg = createTrackSVG(type);
+  svg.style.width = '48px';
+  svg.style.height = '48px';
+  return svg;
+}
+
+// ============================================================
+// GRID RENDERING
+// ============================================================
+function initGrid() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  grid.style.gridTemplateColumns = `repeat(${COLS}, ${cellSize}px)`;
+  grid.style.gridTemplateRows = `repeat(${ROWS}, ${cellSize}px)`;
+
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.style.width = cellSize + 'px';
+      cell.style.height = cellSize + 'px';
+      cell.dataset.row = r;
+      cell.dataset.col = c;
+      grid.appendChild(cell);
+    }
+  }
+}
+
+function renderCell(row, col) {
+  const cell = getCellEl(row, col);
+  if (!cell) return;
+
+  // Clear existing content except connection dots
+  cell.querySelectorAll('svg, .train-emoji, .scenery-emoji').forEach(el => el.remove());
+  cell.classList.remove('occupied', 'has-train');
+
+  const piece = state.grid[row][col];
+  if (piece) {
+    if (SCENERY_TYPES.includes(piece.type)) {
+      const emoji = document.createElement('div');
+      emoji.className = 'scenery-emoji';
+      emoji.textContent = SCENERY_EMOJI[piece.type];
+      cell.appendChild(emoji);
+      cell.classList.add('occupied');
+    } else {
+      const svg = createTrackSVG(piece.type);
+      svg.style.transform = `rotate(${piece.rotation}deg)`;
+      cell.appendChild(svg);
+      cell.classList.add('occupied');
+    }
+  }
+
+  // Train
+  if (state.train && state.train.row === row && state.train.col === col && !state.playing) {
+    const te = document.createElement('div');
+    te.className = 'train-emoji';
+    te.textContent = '🚂';
+    cell.appendChild(te);
+    cell.classList.add('has-train');
+  }
+
+  updateConnectionDots(row, col);
+}
+
+function renderAllCells() {
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++)
+      renderCell(r, c);
+}
+
+function getCellEl(row, col) {
+  return document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+}
+
+function updateConnectionDots(row, col) {
+  const cell = getCellEl(row, col);
+  if (!cell) return;
+  cell.querySelectorAll('.connection-dot').forEach(el => el.remove());
+
+  const piece = state.grid[row][col];
+  if (!piece || SCENERY_TYPES.includes(piece.type)) return;
+
+  const conns = getConnections(piece.type, piece.rotation);
+  conns.forEach(dir => {
+    const dot = document.createElement('div');
+    dot.className = 'connection-dot ' + dir.toLowerCase();
+    if (neighborConnected(row, col, dir)) {
+      dot.classList.add('connected');
+    } else {
+      dot.classList.add('disconnected');
+    }
+    cell.appendChild(dot);
+  });
+}
+
+function updateAllConnectionDots() {
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++) {
+      if (state.grid[r][c] && !SCENERY_TYPES.includes(state.grid[r][c].type)) {
+        updateConnectionDots(r, c);
+      }
+    }
+}
+
+// ============================================================
+// UNDO
+// ============================================================
+function saveUndo() {
+  state.undoStack.push({
+    grid: state.grid.map(row => row.map(cell => cell ? { ...cell } : null)),
+    train: state.train ? { ...state.train } : null,
+    trainDir: state.trainDir,
+  });
+  if (state.undoStack.length > 50) state.undoStack.shift();
+}
+
+function undo() {
+  if (state.playing || state.undoStack.length === 0) return;
+  const prev = state.undoStack.pop();
+  state.grid = prev.grid;
+  state.train = prev.train;
+  state.trainDir = prev.trainDir;
+  renderAllCells();
+}
+
+// ============================================================
+// PIECE PLACEMENT
+// ============================================================
+function placePiece(row, col, type, rotation = 0) {
+  saveUndo();
+  state.grid[row][col] = { type, rotation };
+  renderCell(row, col);
+  // Update neighbors' dots too
+  ['N','S','E','W'].forEach(dir => {
+    const nb = getNeighbor(row, col, dir);
+    if (nb) updateConnectionDots(nb.row, nb.col);
+  });
+}
+
+function removePiece(row, col) {
+  saveUndo();
+  // If train is here, remove train too
+  if (state.train && state.train.row === row && state.train.col === col) {
+    state.train = null;
+  }
+  state.grid[row][col] = null;
+  renderCell(row, col);
+  ['N','S','E','W'].forEach(dir => {
+    const nb = getNeighbor(row, col, dir);
+    if (nb) {
+      updateConnectionDots(nb.row, nb.col);
+      renderCell(nb.row, nb.col);
+    }
+  });
+}
+
+function rotatePiece(row, col) {
+  const piece = state.grid[row][col];
+  if (!piece || SCENERY_TYPES.includes(piece.type)) return;
+  saveUndo();
+  piece.rotation = (piece.rotation + 90) % 360;
+  renderCell(row, col);
+  ['N','S','E','W'].forEach(dir => {
+    const nb = getNeighbor(row, col, dir);
+    if (nb) updateConnectionDots(nb.row, nb.col);
+  });
+}
+
+function placeTrain(row, col) {
+  const piece = state.grid[row][col];
+  if (!piece || SCENERY_TYPES.includes(piece.type)) return;
+  saveUndo();
+  // Remove old train rendering
+  if (state.train) renderCell(state.train.row, state.train.col);
+  state.train = { row, col };
+  renderCell(row, col);
+}
+
+function clearAll() {
+  if (state.playing) stopPlay();
+  saveUndo();
+  state.grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+  state.train = null;
+  renderAllCells();
+  showToast('Board cleared!');
+}
+
+// ============================================================
+// DRAG & DROP (Pointer Events)
+// ============================================================
+let dragInfo = null;
+const ghost = document.getElementById('ghost');
+const trashZone = document.getElementById('trash-zone');
+
+function initDragAndDrop() {
+  // Palette pieces
+  document.querySelectorAll('.palette-piece').forEach(el => {
+    el.addEventListener('pointerdown', onPaletteDown);
+  });
+
+  // Grid cells
+  document.getElementById('grid').addEventListener('pointerdown', onGridDown);
+
+  // Global move/up
+  document.addEventListener('pointermove', onPointerMove);
+  document.addEventListener('pointerup', onPointerUp);
+}
+
+function onPaletteDown(e) {
+  if (state.playing) return;
+  e.preventDefault();
+  const type = e.currentTarget.dataset.type;
+
+  dragInfo = {
+    type: type,
+    source: 'palette',
+    startX: e.clientX,
+    startY: e.clientY,
+    sourceRow: null,
+    sourceCol: null,
+  };
+
+  // Create ghost
+  showGhost(type, e.clientX, e.clientY);
+  trashZone.classList.add('visible');
+}
+
+function onGridDown(e) {
+  if (state.playing) return;
+  const cell = e.target.closest('.cell');
+  if (!cell) return;
+  const row = +cell.dataset.row, col = +cell.dataset.col;
+  const piece = state.grid[row][col];
+
+  // If clicking an occupied cell and not starting a drag, rotate
+  if (piece && !SCENERY_TYPES.includes(piece.type)) {
+    // Start potential drag — if they move enough, it's a drag; else it's a click (rotate)
+    dragInfo = {
+      type: piece.type,
+      source: 'grid',
+      startX: e.clientX,
+      startY: e.clientY,
+      sourceRow: row,
+      sourceCol: col,
+      rotation: piece.rotation,
+      moved: false,
+      hasTrain: state.train && state.train.row === row && state.train.col === col,
+    };
+    return;
+  }
+
+  if (piece && SCENERY_TYPES.includes(piece.type)) {
+    dragInfo = {
+      type: piece.type,
+      source: 'grid',
+      startX: e.clientX,
+      startY: e.clientY,
+      sourceRow: row,
+      sourceCol: col,
+      moved: false,
+    };
+    return;
+  }
+
+  // Check if train is here but no piece (shouldn't happen)
+  if (state.train && state.train.row === row && state.train.col === col) {
+    dragInfo = {
+      type: 'train',
+      source: 'grid',
+      startX: e.clientX,
+      startY: e.clientY,
+      sourceRow: row,
+      sourceCol: col,
+      moved: false,
+    };
+  }
+}
+
+function onPointerMove(e) {
+  if (!dragInfo) return;
+
+  const dx = e.clientX - dragInfo.startX;
+  const dy = e.clientY - dragInfo.startY;
+  const dist = Math.sqrt(dx*dx + dy*dy);
+
+  if (!dragInfo.moved && dist < 8) return; // threshold before starting drag
+
+  if (!dragInfo.moved) {
+    dragInfo.moved = true;
+    // If from grid, pick up the piece
+    if (dragInfo.source === 'grid') {
+      showGhost(dragInfo.type, e.clientX, e.clientY, dragInfo.rotation);
+      trashZone.classList.add('visible');
+      // Temporarily hide piece in grid
+      const r = dragInfo.sourceRow, c = dragInfo.sourceCol;
+      if (dragInfo.type === 'train' || dragInfo.hasTrain) {
+        // Remove train visual temporarily
+      }
+    }
+  }
+
+  ghost.style.left = e.clientX + 'px';
+  ghost.style.top = e.clientY + 'px';
+
+  // Highlight cell under cursor
+  highlightCellUnder(e.clientX, e.clientY);
+
+  // Check trash zone
+  const trashRect = trashZone.getBoundingClientRect();
+  if (e.clientX >= trashRect.left && e.clientX <= trashRect.right &&
+      e.clientY >= trashRect.top && e.clientY <= trashRect.bottom) {
+    trashZone.classList.add('hover');
+  } else {
+    trashZone.classList.remove('hover');
+  }
+}
+
+function onPointerUp(e) {
+  if (!dragInfo) return;
+
+  clearHighlight();
+  trashZone.classList.remove('visible', 'hover');
+
+  // If we didn't move (it was a click), handle click action
+  if (!dragInfo.moved && dragInfo.source === 'grid') {
+    const row = dragInfo.sourceRow, col = dragInfo.sourceCol;
+    const piece = state.grid[row][col];
+    if (piece && !SCENERY_TYPES.includes(piece.type)) {
+      rotatePiece(row, col);
+    }
+    hideGhost();
+    dragInfo = null;
+    return;
+  }
+
+  if (!dragInfo.moved) {
+    hideGhost();
+    dragInfo = null;
+    return;
+  }
+
+  // Check if dropped on trash
+  const trashRect = trashZone.getBoundingClientRect();
+  if (e.clientX >= trashRect.left && e.clientX <= trashRect.right &&
+      e.clientY >= trashRect.top && e.clientY <= trashRect.bottom) {
+    // Delete the piece
+    if (dragInfo.source === 'grid') {
+      removePiece(dragInfo.sourceRow, dragInfo.sourceCol);
+    }
+    hideGhost();
+    dragInfo = null;
+    return;
+  }
+
+  // Find target cell
+  const target = getCellUnder(e.clientX, e.clientY);
+
+  if (target) {
+    const { row, col } = target;
+    const existing = state.grid[row][col];
+
+    if (dragInfo.type === 'train') {
+      // Place train on a track cell
+      const piece = state.grid[row][col];
+      if (piece && !SCENERY_TYPES.includes(piece.type)) {
+        placeTrain(row, col);
+      } else {
+        showToast('Place train on a track piece!');
+        // Return to source if from grid
+        if (dragInfo.source === 'grid') {
+          placeTrain(dragInfo.sourceRow, dragInfo.sourceCol);
+        }
+      }
+    } else if (SCENERY_TYPES.includes(dragInfo.type)) {
+      // Scenery: place on empty cells only
+      if (!existing) {
+        placePiece(row, col, dragInfo.type);
+      } else if (dragInfo.source === 'grid' && (row !== dragInfo.sourceRow || col !== dragInfo.sourceCol)) {
+        // Swap or reject
+        showToast('Cell occupied!');
+      }
+      // Remove from source if grid
+      if (dragInfo.source === 'grid' && (row !== dragInfo.sourceRow || col !== dragInfo.sourceCol)) {
+        removePiece(dragInfo.sourceRow, dragInfo.sourceCol);
+        if (!state.grid[row][col]) placePiece(row, col, dragInfo.type);
+      }
+    } else {
+      // Track piece
+      if (dragInfo.source === 'grid') {
+        // Remove from old position
+        const oldRow = dragInfo.sourceRow, oldCol = dragInfo.sourceCol;
+        const hadTrain = dragInfo.hasTrain;
+        removePiece(oldRow, oldCol);
+
+        // Place at new position (replace whatever is there)
+        if (existing && SCENERY_TYPES.includes(existing.type)) {
+          // Track replaces scenery
+        }
+        placePiece(row, col, dragInfo.type, dragInfo.rotation || 0);
+        if (hadTrain) placeTrain(row, col);
+      } else {
+        // From palette: replace anything on the cell
+        if (existing && SCENERY_TYPES.includes(existing.type)) {
+          removePiece(row, col);
+        }
+        if (state.train && state.train.row === row && state.train.col === col) {
+          // Keep train, replace track under it
+          placePiece(row, col, dragInfo.type, 0);
+        } else {
+          placePiece(row, col, dragInfo.type, existing && !SCENERY_TYPES.includes(existing.type) ? 0 : 0);
+        }
+      }
+    }
+  } else {
+    // Dropped outside grid
+    if (dragInfo.source === 'grid') {
+      // Remove piece (dragged off = delete)
+      removePiece(dragInfo.sourceRow, dragInfo.sourceCol);
+      showToast('Removed!');
+    }
+  }
+
+  hideGhost();
+  dragInfo = null;
+}
+
+function showGhost(type, x, y, rotation = 0) {
+  ghost.innerHTML = '';
+  ghost.style.display = 'block';
+  ghost.style.left = x + 'px';
+  ghost.style.top = y + 'px';
+
+  if (type === 'train') {
+    ghost.textContent = '🚂';
+    ghost.style.fontSize = (cellSize * 0.6) + 'px';
+  } else if (SCENERY_TYPES.includes(type)) {
+    ghost.textContent = SCENERY_EMOJI[type];
+    ghost.style.fontSize = (cellSize * 0.55) + 'px';
+  } else {
+    const svg = createTrackSVG(type);
+    svg.style.width = cellSize + 'px';
+    svg.style.height = cellSize + 'px';
+    svg.style.transform = `rotate(${rotation}deg)`;
+    ghost.appendChild(svg);
+    ghost.style.fontSize = '';
+  }
+}
+
+function hideGhost() {
+  ghost.style.display = 'none';
+  ghost.innerHTML = '';
+  ghost.textContent = '';
+}
+
+function getCellUnder(x, y) {
+  const grid = document.getElementById('grid');
+  const rect = grid.getBoundingClientRect();
+  const col = Math.floor((x - rect.left) / (cellSize + 1)); // +1 for gap
+  const row = Math.floor((y - rect.top) / (cellSize + 1));
+  if (row >= 0 && row < ROWS && col >= 0 && col < COLS) {
+    return { row, col };
+  }
+  return null;
+}
+
+let highlightedCell = null;
+function highlightCellUnder(x, y) {
+  clearHighlight();
+  const target = getCellUnder(x, y);
+  if (target) {
+    const el = getCellEl(target.row, target.col);
+    if (el) { el.classList.add('highlight'); highlightedCell = el; }
+  }
+}
+
+function clearHighlight() {
+  if (highlightedCell) {
+    highlightedCell.classList.remove('highlight');
+    highlightedCell = null;
+  }
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+let toastTimeout = null;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+// ============================================================
+// TRAIN ANIMATION
+// ============================================================
+// Edge midpoints in cell-local coordinates (0-1 range)
+const EDGE_POS = {
+  N: { x: 0.5, y: 0 },
+  S: { x: 0.5, y: 1 },
+  E: { x: 1, y: 0.5 },
+  W: { x: 0, y: 0.5 },
+};
+
+// Corner positions for curve arcs
+function getCurveCenter(entry, exit) {
+  const key = [entry, exit].sort().join('');
+  switch(key) {
+    case 'EN': return { x: 1, y: 0 };
+    case 'ES': return { x: 1, y: 1 };
+    case 'SW': return { x: 0, y: 1 };
+    case 'NW': return { x: 0, y: 0 };
+  }
+  return null;
+}
+
+function getPathPoints(type, rotation, entryEdge, exitEdge) {
+  const start = EDGE_POS[entryEdge];
+  const end = EDGE_POS[exitEdge];
+
+  // Check if this is a curve (adjacent edges, not opposite)
+  if (entryEdge !== OPPOSITE[exitEdge] && !['crossover','bridge','tjunction'].includes(type)) {
+    // Curve path — generate arc points
+    const center = getCurveCenter(entryEdge, exitEdge);
+    if (!center) return [start, end];
+
+    const r = 0.5;
+    const startAngle = Math.atan2(start.y - center.y, start.x - center.x);
+    let endAngle = Math.atan2(end.y - center.y, end.x - center.x);
+
+    // Ensure we take the short arc (-π/2 sweep)
+    let sweep = endAngle - startAngle;
+    if (sweep > Math.PI) sweep -= 2 * Math.PI;
+    if (sweep < -Math.PI) sweep += 2 * Math.PI;
+
+    const points = [];
+    const steps = 12;
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const a = startAngle + sweep * t;
+      points.push({
+        x: center.x + r * Math.cos(a),
+        y: center.y + r * Math.sin(a),
+      });
+    }
+    return points;
+  }
+
+  // Check T-junction with a turn (entry and exit are adjacent)
+  if (type === 'tjunction' && entryEdge !== OPPOSITE[exitEdge]) {
+    const center = getCurveCenter(entryEdge, exitEdge);
+    if (center) {
+      const r = 0.5;
+      const startAngle = Math.atan2(start.y - center.y, start.x - center.x);
+      let endAngle = Math.atan2(end.y - center.y, end.x - center.x);
+      let sweep = endAngle - startAngle;
+      if (sweep > Math.PI) sweep -= 2 * Math.PI;
+      if (sweep < -Math.PI) sweep += 2 * Math.PI;
+      const points = [];
+      const steps = 12;
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const a = startAngle + sweep * t;
+        points.push({
+          x: center.x + r * Math.cos(a),
+          y: center.y + r * Math.sin(a),
+        });
+      }
+      return points;
+    }
+  }
+
+  // Straight path
+  return [start, end];
+}
+
+function pathLength(points) {
+  let len = 0;
+  for (let i = 1; i < points.length; i++) {
+    const dx = points[i].x - points[i-1].x;
+    const dy = points[i].y - points[i-1].y;
+    len += Math.sqrt(dx*dx + dy*dy);
+  }
+  return len;
+}
+
+function interpolatePath(points, t) {
+  if (points.length < 2) return points[0] || { x: 0.5, y: 0.5 };
+  const totalLen = pathLength(points);
+  const targetDist = t * totalLen;
+  let accumulated = 0;
+  for (let i = 1; i < points.length; i++) {
+    const dx = points[i].x - points[i-1].x;
+    const dy = points[i].y - points[i-1].y;
+    const segLen = Math.sqrt(dx*dx + dy*dy);
+    if (accumulated + segLen >= targetDist) {
+      const segT = (targetDist - accumulated) / segLen;
+      return {
+        x: points[i-1].x + dx * segT,
+        y: points[i-1].y + dy * segT,
+        angle: Math.atan2(dy, dx),
+      };
+    }
+    accumulated += segLen;
+  }
+  const last = points[points.length-1];
+  const prev = points[points.length-2];
+  return {
+    x: last.x,
+    y: last.y,
+    angle: Math.atan2(last.y - prev.y, last.x - prev.x),
+  };
+}
+
+function togglePlay() {
+  if (state.playing) {
+    stopPlay();
+  } else {
+    startPlay();
+  }
+}
+
+function startPlay() {
+  if (!state.train) {
+    showToast('Place a train first! 🚂');
+    return;
+  }
+
+  const piece = state.grid[state.train.row][state.train.col];
+  if (!piece) {
+    showToast('Train must be on a track!');
+    return;
+  }
+
+  const conns = getConnections(piece.type, piece.rotation);
+  if (conns.length === 0) return;
+
+  // Determine initial direction: find first connected neighbor
+  let startExit = null;
+  for (const dir of conns) {
+    if (neighborConnected(state.train.row, state.train.col, dir)) {
+      startExit = dir;
+      break;
+    }
+  }
+
+  if (!startExit) {
+    // No connected neighbors — try to just animate within the cell
+    startExit = conns[0];
+  }
+
+  // Entry is opposite of first exit (train "enters" from the other side)
+  const entryEdge = OPPOSITE[startExit] || conns.find(d => d !== startExit) || conns[0];
+
+  state.playing = true;
+  document.getElementById('app').classList.add('playing');
+  document.getElementById('btn-play').innerHTML = '⏹️ Stop';
+  document.getElementById('btn-play').className = 'btn btn-stop';
+
+  // Remove static train emoji
+  if (state.train) {
+    const cell = getCellEl(state.train.row, state.train.col);
+    if (cell) cell.querySelectorAll('.train-emoji').forEach(el => el.remove());
+  }
+
+  // Create animated train element
+  const trainEl = document.createElement('div');
+  trainEl.id = 'animated-train';
+  trainEl.textContent = '🚂';
+  trainEl.style.cssText = `
+    position: absolute;
+    font-size: ${cellSize * 0.55}px;
+    z-index: 50;
+    pointer-events: none;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    transition: none;
+  `;
+  document.getElementById('grid-container').appendChild(trainEl);
+
+  const exitDir = getExitDir(piece.type, piece.rotation, entryEdge);
+
+  animState = {
+    row: state.train.row,
+    col: state.train.col,
+    entryEdge: entryEdge,
+    exitEdge: exitDir || startExit,
+    path: null,
+    progress: 0,
+    trainEl: trainEl,
+    lastTime: performance.now(),
+    startRow: state.train.row,
+    startCol: state.train.col,
+  };
+
+  // Compute path
+  animState.path = getPathPoints(piece.type, piece.rotation, animState.entryEdge, animState.exitEdge);
+  requestAnimationFrame(animateFrame);
+}
+
+function animateFrame(timestamp) {
+  if (!state.playing || !animState) return;
+
+  const dt = (timestamp - animState.lastTime) / 1000;
+  animState.lastTime = timestamp;
+
+  const speed = parseFloat(document.getElementById('speed-slider').value) || 1;
+
+  // Progress: 1.0 = one full cell traversal
+  // A curve path is longer (~π/4 * cellSize) vs straight (cellSize), normalize
+  const pLen = pathLength(animState.path);
+  const normalizedSpeed = speed / Math.max(pLen, 0.5); // adjust for path length
+  animState.progress += normalizedSpeed * dt;
+
+  if (animState.progress >= 1) {
+    // Move to next cell
+    const nextPos = getNeighbor(animState.row, animState.col, animState.exitEdge);
+    if (!nextPos) {
+      // Hit grid boundary — stop
+      animState.progress = 1;
+      renderTrainAtProgress();
+      stopPlay();
+      showToast('End of the line! 🛑');
+      return;
+    }
+
+    const nextPiece = state.grid[nextPos.row]?.[nextPos.col];
+    if (!nextPiece || SCENERY_TYPES.includes(nextPiece.type)) {
+      // Dead end
+      animState.progress = 1;
+      renderTrainAtProgress();
+      stopPlay();
+      showToast('Dead end! 🛑');
+      return;
+    }
+
+    const newEntry = OPPOSITE[animState.exitEdge];
+    const nextConns = getConnections(nextPiece.type, nextPiece.rotation);
+    if (!nextConns.includes(newEntry)) {
+      // Not connected
+      animState.progress = 1;
+      renderTrainAtProgress();
+      stopPlay();
+      showToast('Track not connected! 🔧');
+      return;
+    }
+
+    const newExit = getExitDir(nextPiece.type, nextPiece.rotation, newEntry);
+    if (!newExit) {
+      stopPlay();
+      showToast('Dead end! 🛑');
+      return;
+    }
+
+    // Check for loop detection (back at start)
+    // (We allow loops — train runs forever, which is fun for kids)
+
+    animState.row = nextPos.row;
+    animState.col = nextPos.col;
+    animState.entryEdge = newEntry;
+    animState.exitEdge = newExit;
+    animState.path = getPathPoints(nextPiece.type, nextPiece.rotation, newEntry, newExit);
+    animState.progress -= 1; // carry over
+
+    // Train whistle at stations!
+    if (nextPiece.type === 'station') {
+      showToast('🚉 Toot toot!');
+    }
+  }
+
+  renderTrainAtProgress();
+  requestAnimationFrame(animateFrame);
+}
+
+function renderTrainAtProgress() {
+  if (!animState || !animState.trainEl) return;
+
+  const pos = interpolatePath(animState.path, Math.min(animState.progress, 1));
+  const grid = document.getElementById('grid');
+  const gridRect = grid.getBoundingClientRect();
+  const containerRect = document.getElementById('grid-container').getBoundingClientRect();
+
+  const cellX = animState.col * (cellSize + 1); // +1 for gap
+  const cellY = animState.row * (cellSize + 1);
+
+  const pixelX = cellX + pos.x * cellSize;
+  const pixelY = cellY + pos.y * cellSize;
+
+  animState.trainEl.style.left = (pixelX + gridRect.left - containerRect.left) + 'px';
+  animState.trainEl.style.top = (pixelY + gridRect.top - containerRect.top) + 'px';
+
+  // Rotate train to face direction of travel
+  const angle = (pos.angle || 0) * (180 / Math.PI);
+  animState.trainEl.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+}
+
+function stopPlay() {
+  state.playing = false;
+  document.getElementById('app').classList.remove('playing');
+  document.getElementById('btn-play').innerHTML = '▶️ Play';
+  document.getElementById('btn-play').className = 'btn btn-play';
+
+  if (animState && animState.trainEl) {
+    animState.trainEl.remove();
+  }
+
+  // Update train position to where it ended up
+  if (animState) {
+    state.train = { row: animState.startRow, col: animState.startCol };
+  }
+
+  animState = null;
+  renderAllCells();
+}
+
+// ============================================================
+// SIZING
+// ============================================================
+function calculateSize() {
+  const sidebarW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-w'));
+  const availW = window.innerWidth - sidebarW - 40;
+  const availH = window.innerHeight - 120;
+  cellSize = Math.floor(Math.min(availW / COLS, availH / ROWS));
+  cellSize = Math.max(40, Math.min(cellSize, 80));
+  document.documentElement.style.setProperty('--cell-size', cellSize + 'px');
+}
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  calculateSize();
+  initGrid();
+  renderAllCells();
+
+  // Render palette SVGs
+  document.querySelectorAll('.palette-piece').forEach(el => {
+    const type = el.dataset.type;
+    const svg = createPaletteSVG(type);
+    el.insertBefore(svg, el.firstChild);
+  });
+
+  initDragAndDrop();
+
+  window.addEventListener('resize', () => {
+    calculateSize();
+    initGrid();
+    renderAllCells();
+    // Re-render palette
+    document.querySelectorAll('.palette-piece').forEach(el => {
+      const type = el.dataset.type;
+      el.querySelectorAll('svg, div:not(.label)').forEach(ch => {
+        if (!ch.classList.contains('label')) ch.remove();
+      });
+      const svg = createPaletteSVG(type);
+      el.insertBefore(svg, el.firstChild);
+    });
+  });
+
+  // Prevent context menu on grid
+  document.getElementById('grid').addEventListener('contextmenu', e => e.preventDefault());
+
+  showToast('Drag track pieces to build! 🚂');
+}
+
+init();
+</script>
+</body>
+</html>
