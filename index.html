@@ -480,9 +480,9 @@ function createTrackSVG(type) {
     return l;
   }
 
-  function arc(sx,sy,ex,ey,r,sweep,color,width) {
+  function arc(sx,sy,ex,ey,r,sweep,color,width,largeArc) {
     const p = document.createElementNS(ns,'path');
-    p.setAttribute('d', `M${sx},${sy} A${r},${r} 0 0,${sweep} ${ex},${ey}`);
+    p.setAttribute('d', `M${sx},${sy} A${r},${r} 0 ${largeArc||0},${sweep} ${ex},${ey}`);
     p.setAttribute('stroke', color);
     p.setAttribute('stroke-width', width);
     p.setAttribute('stroke-linecap', 'round');
@@ -506,16 +506,6 @@ function createTrackSVG(type) {
     return r2;
   }
 
-  function bezierPath(sx,sy,c1x,c1y,c2x,c2y,ex,ey,color,width) {
-    const p = document.createElementNS(ns,'path');
-    p.setAttribute('d', `M${sx},${sy} C${c1x},${c1y} ${c2x},${c2y} ${ex},${ey}`);
-    p.setAttribute('stroke', color);
-    p.setAttribute('stroke-width', width);
-    p.setAttribute('stroke-linecap', 'round');
-    p.setAttribute('fill', 'none');
-    return p;
-  }
-
   switch(type) {
     case 'straight':
       // Ties
@@ -529,12 +519,13 @@ function createTrackSVG(type) {
       break;
 
     case 'curve':
-      // Track bed curve through center (N→E via cubic bezier through cell center)
-      svg.appendChild(bezierPath(30,0, 30,40, 20,30, 60,30, '#A1887F',12));
-      svg.appendChild(bezierPath(30,0, 30,40, 20,30, 60,30, trackColor,8));
-      // Rail curves (offset ±4 perpendicular to track direction)
-      svg.appendChild(bezierPath(26,0, 26,40, 20,34, 60,34, railColor,1.5));
-      svg.appendChild(bezierPath(34,0, 34,40, 20,26, 60,26, railColor,1.5));
+      // Semicircular arc through cell center (N→E)
+      // Arc center at (45,15), r=15√2≈21.21, passes exactly through (30,30)
+      svg.appendChild(arc(30,0, 60,30, 21.21, 0, '#A1887F',12));
+      svg.appendChild(arc(30,0, 60,30, 21.21, 0, trackColor,8));
+      // Rail arcs (concentric, same center at 45,15)
+      svg.appendChild(arc(26,0, 60,34, 24.21, 0, railColor,1.5));       // outer rail
+      svg.appendChild(arc(34,0, 60,26, 18.6, 0, railColor,1.5, 1));     // inner rail (large-arc)
       break;
 
     case 'tjunction':
@@ -1116,34 +1107,32 @@ const EDGE_POS = {
   W: { x: 0, y: 0.5 },
 };
 
-// Bezier control point for curve through center
-// Returns a point 2/3 of the way from the edge toward cell center
-function getCurveControlPoint(edge) {
-  switch(edge) {
-    case 'N': return { x: 0.5, y: 2/3 };
-    case 'S': return { x: 0.5, y: 1/3 };
-    case 'E': return { x: 1/3, y: 0.5 };
-    case 'W': return { x: 2/3, y: 0.5 };
-  }
-}
-
 function getPathPoints(type, rotation, entryEdge, exitEdge) {
   const start = EDGE_POS[entryEdge];
   const end = EDGE_POS[exitEdge];
 
   // Curve/turn: adjacent edges (not crossover/bridge which go straight through)
   if (entryEdge !== OPPOSITE[exitEdge] && !['crossover','bridge'].includes(type)) {
-    // Cubic bezier that passes exactly through cell center at t=0.5
-    const cp1 = getCurveControlPoint(entryEdge);
-    const cp2 = getCurveControlPoint(exitEdge);
+    // Semicircular arc through cell center (0.5, 0.5)
+    // Arc center = midpoint of start and end edge positions
+    const cx = (start.x + end.x) / 2;
+    const cy = (start.y + end.y) / 2;
+    const r = Math.sqrt((start.x - cx) ** 2 + (start.y - cy) ** 2);
+    const startAngle = Math.atan2(start.y - cy, start.x - cx);
+    // Determine sweep direction: must pass through tile center (0.5, 0.5)
+    const centerAngle = Math.atan2(0.5 - cy, 0.5 - cx);
+    let diff = centerAngle - startAngle;
+    if (diff > Math.PI) diff -= 2 * Math.PI;
+    if (diff < -Math.PI) diff += 2 * Math.PI;
+    const totalSweep = diff < 0 ? -Math.PI : Math.PI;
+
     const points = [];
     const steps = 16;
     for (let i = 0; i <= steps; i++) {
-      const t = i / steps;
-      const mt = 1 - t;
+      const a = startAngle + totalSweep * (i / steps);
       points.push({
-        x: mt*mt*mt*start.x + 3*mt*mt*t*cp1.x + 3*mt*t*t*cp2.x + t*t*t*end.x,
-        y: mt*mt*mt*start.y + 3*mt*mt*t*cp1.y + 3*mt*t*t*cp2.y + t*t*t*end.y,
+        x: cx + r * Math.cos(a),
+        y: cy + r * Math.sin(a),
       });
     }
     return points;
