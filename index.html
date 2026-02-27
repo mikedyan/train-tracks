@@ -506,6 +506,16 @@ function createTrackSVG(type) {
     return r2;
   }
 
+  function bezierPath(sx,sy,c1x,c1y,c2x,c2y,ex,ey,color,width) {
+    const p = document.createElementNS(ns,'path');
+    p.setAttribute('d', `M${sx},${sy} C${c1x},${c1y} ${c2x},${c2y} ${ex},${ey}`);
+    p.setAttribute('stroke', color);
+    p.setAttribute('stroke-width', width);
+    p.setAttribute('stroke-linecap', 'round');
+    p.setAttribute('fill', 'none');
+    return p;
+  }
+
   switch(type) {
     case 'straight':
       // Ties
@@ -519,12 +529,12 @@ function createTrackSVG(type) {
       break;
 
     case 'curve':
-      // Track bed arc (N→E, around corner 60,0)
-      svg.appendChild(arc(30,0,60,30,30,1,'#A1887F',12));
-      svg.appendChild(arc(30,0,60,30,30,1,trackColor,8));
-      // Rail arcs
-      svg.appendChild(arc(26,0,60,26,34,1,railColor,1.5));
-      svg.appendChild(arc(34,0,60,34,26,1,railColor,1.5));
+      // Track bed curve through center (N→E via cubic bezier through cell center)
+      svg.appendChild(bezierPath(30,0, 30,40, 20,30, 60,30, '#A1887F',12));
+      svg.appendChild(bezierPath(30,0, 30,40, 20,30, 60,30, trackColor,8));
+      // Rail curves (offset ±4 perpendicular to track direction)
+      svg.appendChild(bezierPath(26,0, 26,40, 20,34, 60,34, railColor,1.5));
+      svg.appendChild(bezierPath(34,0, 34,40, 20,26, 60,26, railColor,1.5));
       break;
 
     case 'tjunction':
@@ -1106,75 +1116,40 @@ const EDGE_POS = {
   W: { x: 0, y: 0.5 },
 };
 
-// Corner positions for curve arcs
-function getCurveCenter(entry, exit) {
-  const key = [entry, exit].sort().join('');
-  switch(key) {
-    case 'EN': return { x: 1, y: 0 };
-    case 'ES': return { x: 1, y: 1 };
-    case 'SW': return { x: 0, y: 1 };
-    case 'NW': return { x: 0, y: 0 };
+// Bezier control point for curve through center
+// Returns a point 2/3 of the way from the edge toward cell center
+function getCurveControlPoint(edge) {
+  switch(edge) {
+    case 'N': return { x: 0.5, y: 2/3 };
+    case 'S': return { x: 0.5, y: 1/3 };
+    case 'E': return { x: 1/3, y: 0.5 };
+    case 'W': return { x: 2/3, y: 0.5 };
   }
-  return null;
 }
 
 function getPathPoints(type, rotation, entryEdge, exitEdge) {
   const start = EDGE_POS[entryEdge];
   const end = EDGE_POS[exitEdge];
 
-  // Check if this is a curve (adjacent edges, not opposite)
-  if (entryEdge !== OPPOSITE[exitEdge] && !['crossover','bridge','tjunction'].includes(type)) {
-    // Curve path — generate arc points
-    const center = getCurveCenter(entryEdge, exitEdge);
-    if (!center) return [start, end];
-
-    const r = 0.5;
-    const startAngle = Math.atan2(start.y - center.y, start.x - center.x);
-    let endAngle = Math.atan2(end.y - center.y, end.x - center.x);
-
-    // Ensure we take the short arc (-π/2 sweep)
-    let sweep = endAngle - startAngle;
-    if (sweep > Math.PI) sweep -= 2 * Math.PI;
-    if (sweep < -Math.PI) sweep += 2 * Math.PI;
-
+  // Curve/turn: adjacent edges (not crossover/bridge which go straight through)
+  if (entryEdge !== OPPOSITE[exitEdge] && !['crossover','bridge'].includes(type)) {
+    // Cubic bezier that passes exactly through cell center at t=0.5
+    const cp1 = getCurveControlPoint(entryEdge);
+    const cp2 = getCurveControlPoint(exitEdge);
     const points = [];
-    const steps = 12;
+    const steps = 16;
     for (let i = 0; i <= steps; i++) {
       const t = i / steps;
-      const a = startAngle + sweep * t;
+      const mt = 1 - t;
       points.push({
-        x: center.x + r * Math.cos(a),
-        y: center.y + r * Math.sin(a),
+        x: mt*mt*mt*start.x + 3*mt*mt*t*cp1.x + 3*mt*t*t*cp2.x + t*t*t*end.x,
+        y: mt*mt*mt*start.y + 3*mt*mt*t*cp1.y + 3*mt*t*t*cp2.y + t*t*t*end.y,
       });
     }
     return points;
   }
 
-  // Check T-junction with a turn (entry and exit are adjacent)
-  if (type === 'tjunction' && entryEdge !== OPPOSITE[exitEdge]) {
-    const center = getCurveCenter(entryEdge, exitEdge);
-    if (center) {
-      const r = 0.5;
-      const startAngle = Math.atan2(start.y - center.y, start.x - center.x);
-      let endAngle = Math.atan2(end.y - center.y, end.x - center.x);
-      let sweep = endAngle - startAngle;
-      if (sweep > Math.PI) sweep -= 2 * Math.PI;
-      if (sweep < -Math.PI) sweep += 2 * Math.PI;
-      const points = [];
-      const steps = 12;
-      for (let i = 0; i <= steps; i++) {
-        const t = i / steps;
-        const a = startAngle + sweep * t;
-        points.push({
-          x: center.x + r * Math.cos(a),
-          y: center.y + r * Math.sin(a),
-        });
-      }
-      return points;
-    }
-  }
-
-  // Straight path
+  // Straight path (crossover, bridge, opposite edges)
   return [start, end];
 }
 
