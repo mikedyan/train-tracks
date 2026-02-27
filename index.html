@@ -519,13 +519,13 @@ function createTrackSVG(type) {
       break;
 
     case 'curve':
-      // Semicircular arc through cell center (N→E)
-      // Arc center at (45,15), r=15√2≈21.21, passes exactly through (30,30)
-      svg.appendChild(arc(30,0, 60,30, 21.21, 0, '#A1887F',12));
-      svg.appendChild(arc(30,0, 60,30, 21.21, 0, trackColor,8));
-      // Rail arcs (concentric, same center at 45,15)
-      svg.appendChild(arc(26,0, 60,34, 24.21, 0, railColor,1.5));       // outer rail
-      svg.appendChild(arc(34,0, 60,26, 18.6, 0, railColor,1.5, 1));     // inner rail (large-arc)
+      // Quarter-circle arc centered at corner (60,0), r=30, sweep=0 (CCW)
+      // 4 of these form a perfect circle when tiles meet at a shared corner
+      svg.appendChild(arc(30,0, 60,30, 30, 0, '#A1887F',12));
+      svg.appendChild(arc(30,0, 60,30, 30, 0, trackColor,8));
+      // Concentric rail arcs (same center)
+      svg.appendChild(arc(26,0, 60,34, 34, 0, railColor,1.5));   // outer rail
+      svg.appendChild(arc(34,0, 60,26, 26, 0, railColor,1.5));   // inner rail
       break;
 
     case 'tjunction':
@@ -1107,32 +1107,41 @@ const EDGE_POS = {
   W: { x: 0, y: 0.5 },
 };
 
+// Corner shared by two adjacent edges (center of quarter-circle arc)
+function getCurveCorner(edgeA, edgeB) {
+  const key = [edgeA, edgeB].sort().join('');
+  switch(key) {
+    case 'EN': return { x: 1, y: 0 };
+    case 'ES': return { x: 1, y: 1 };
+    case 'SW': return { x: 0, y: 1 };
+    case 'NW': return { x: 0, y: 0 };
+  }
+  return null;
+}
+
 function getPathPoints(type, rotation, entryEdge, exitEdge) {
   const start = EDGE_POS[entryEdge];
   const end = EDGE_POS[exitEdge];
 
   // Curve/turn: adjacent edges (not crossover/bridge which go straight through)
   if (entryEdge !== OPPOSITE[exitEdge] && !['crossover','bridge'].includes(type)) {
-    // Semicircular arc through cell center (0.5, 0.5)
-    // Arc center = midpoint of start and end edge positions
-    const cx = (start.x + end.x) / 2;
-    const cy = (start.y + end.y) / 2;
-    const r = Math.sqrt((start.x - cx) ** 2 + (start.y - cy) ** 2);
-    const startAngle = Math.atan2(start.y - cy, start.x - cx);
-    // Determine sweep direction: must pass through tile center (0.5, 0.5)
-    const centerAngle = Math.atan2(0.5 - cy, 0.5 - cx);
-    let diff = centerAngle - startAngle;
-    if (diff > Math.PI) diff -= 2 * Math.PI;
-    if (diff < -Math.PI) diff += 2 * Math.PI;
-    const totalSweep = diff < 0 ? -Math.PI : Math.PI;
+    // Quarter-circle arc centered at shared corner, r=0.5
+    const corner = getCurveCorner(entryEdge, exitEdge);
+    if (!corner) return [start, end];
+    const r = 0.5;
+    const startAngle = Math.atan2(start.y - corner.y, start.x - corner.x);
+    const endAngle = Math.atan2(end.y - corner.y, end.x - corner.x);
+    let sweep = endAngle - startAngle;
+    if (sweep > Math.PI) sweep -= 2 * Math.PI;
+    if (sweep < -Math.PI) sweep += 2 * Math.PI;
 
     const points = [];
     const steps = 16;
     for (let i = 0; i <= steps; i++) {
-      const a = startAngle + totalSweep * (i / steps);
+      const a = startAngle + sweep * (i / steps);
       points.push({
-        x: cx + r * Math.cos(a),
-        y: cy + r * Math.sin(a),
+        x: corner.x + r * Math.cos(a),
+        y: corner.y + r * Math.sin(a),
       });
     }
     return points;
