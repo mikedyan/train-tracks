@@ -338,6 +338,7 @@ html, body {
       <div class="speed-control">
         🐢 <input type="range" id="speed-slider" min="0.3" max="4" step="0.1" value="1.2"> 🐇
       </div>
+      <button class="btn" id="btn-mute" onclick="toggleMute()" style="background:#78909C;color:white;padding:8px 12px;">🔊</button>
     </div>
   </div>
 </div>
@@ -346,6 +347,130 @@ html, body {
 <div id="toast"></div>
 
 <script>
+// ============================================================
+// SOUND ENGINE (Web Audio API — no external files)
+// ============================================================
+let audioCtx = null;
+let soundEnabled = true;
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function playNote(freq, duration, type = 'sine', volume = 0.15, delay = 0) {
+  if (!soundEnabled) return;
+  const ctx = getAudioCtx();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(volume, ctx.currentTime + delay);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + duration);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(ctx.currentTime + delay);
+  osc.stop(ctx.currentTime + delay + duration);
+}
+
+function playNoise(duration, volume = 0.08) {
+  if (!soundEnabled) return;
+  const ctx = getAudioCtx();
+  const bufferSize = ctx.sampleRate * duration;
+  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1);
+  const src = ctx.createBufferSource();
+  src.buffer = buffer;
+  const gain = ctx.createGain();
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.value = 800;
+  filter.Q.value = 0.5;
+  gain.gain.setValueAtTime(volume, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+  src.connect(filter);
+  filter.connect(gain);
+  gain.connect(ctx.destination);
+  src.start();
+  src.stop(ctx.currentTime + duration);
+}
+
+const SFX = {
+  place() {
+    // Satisfying snap
+    playNote(800, 0.08, 'square', 0.1);
+    playNote(1200, 0.06, 'sine', 0.08, 0.03);
+  },
+  rotate() {
+    // Quick click
+    playNote(600, 0.05, 'square', 0.08);
+    playNote(900, 0.04, 'sine', 0.06, 0.02);
+  },
+  remove() {
+    // Soft pop
+    playNote(400, 0.1, 'sine', 0.08);
+    playNote(300, 0.08, 'sine', 0.06, 0.04);
+  },
+  whistle() {
+    // Train whistle — two-tone
+    playNote(880, 0.4, 'sine', 0.12);
+    playNote(784, 0.5, 'sine', 0.10, 0.15);
+  },
+  chug() {
+    // Single chug beat
+    playNoise(0.06, 0.05);
+  },
+  station() {
+    // Station ding-ding
+    playNote(1047, 0.15, 'sine', 0.12);
+    playNote(1047, 0.15, 'sine', 0.10, 0.2);
+    playNote(1319, 0.2, 'sine', 0.08, 0.4);
+  },
+  crash() {
+    // Dead end / disconnect
+    playNote(200, 0.3, 'sawtooth', 0.1);
+    playNote(150, 0.4, 'sawtooth', 0.08, 0.1);
+    playNoise(0.3, 0.06);
+  },
+  clear() {
+    // Descending sweep
+    playNote(600, 0.1, 'sine', 0.08);
+    playNote(400, 0.1, 'sine', 0.07, 0.08);
+    playNote(300, 0.15, 'sine', 0.06, 0.16);
+  },
+  start() {
+    // Cheerful ascending
+    playNote(523, 0.12, 'sine', 0.1);
+    playNote(659, 0.12, 'sine', 0.1, 0.1);
+    playNote(784, 0.2, 'sine', 0.12, 0.2);
+  },
+  stop() {
+    // Brake squeal
+    playNote(600, 0.15, 'sawtooth', 0.06);
+    playNote(400, 0.2, 'sine', 0.08, 0.08);
+  }
+};
+
+// Chug rhythm during play
+let chugInterval = null;
+function startChugLoop() {
+  stopChugLoop();
+  let beat = 0;
+  chugInterval = setInterval(() => {
+    if (!state.playing || !soundEnabled) { stopChugLoop(); return; }
+    const speed = parseFloat(document.getElementById('speed-slider').value) || 1;
+    SFX.chug();
+    // Alternate louder/softer for rhythm
+    if (beat % 2 === 0) playNote(100, 0.04, 'square', 0.03);
+    beat++;
+  }, Math.max(80, 300 / (parseFloat(document.getElementById('speed-slider')?.value) || 1)));
+}
+function stopChugLoop() {
+  if (chugInterval) { clearInterval(chugInterval); chugInterval = null; }
+}
+
 // ============================================================
 // CONSTANTS
 // ============================================================
@@ -733,6 +858,7 @@ function undo() {
 function placePiece(row, col, type, rotation = 0) {
   saveUndo();
   state.grid[row][col] = { type, rotation };
+  SFX.place();
   renderCell(row, col);
   // Update neighbors' dots too
   ['N','S','E','W'].forEach(dir => {
@@ -743,6 +869,7 @@ function placePiece(row, col, type, rotation = 0) {
 
 function removePiece(row, col) {
   saveUndo();
+  SFX.remove();
   // If train is here, remove train too
   if (state.train && state.train.row === row && state.train.col === col) {
     state.train = null;
@@ -762,6 +889,7 @@ function rotatePiece(row, col) {
   const piece = state.grid[row][col];
   if (!piece || SCENERY_TYPES.includes(piece.type)) return;
   saveUndo();
+  SFX.rotate();
   piece.rotation = (piece.rotation + 90) % 360;
   renderCell(row, col);
   ['N','S','E','W'].forEach(dir => {
@@ -783,6 +911,7 @@ function placeTrain(row, col) {
 function clearAll() {
   if (state.playing) stopPlay();
   saveUndo();
+  SFX.clear();
   state.grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
   state.train = null;
   renderAllCells();
@@ -1271,6 +1400,9 @@ function startPlay() {
 
   // Compute path
   animState.path = getPathPoints(piece.type, piece.rotation, animState.entryEdge, animState.exitEdge);
+
+  SFX.whistle();
+  setTimeout(startChugLoop, 500);
   requestAnimationFrame(animateFrame);
 }
 
@@ -1295,6 +1427,7 @@ function animateFrame(timestamp) {
       // Hit grid boundary — stop
       animState.progress = 1;
       renderTrainAtProgress();
+      SFX.crash();
       stopPlay();
       showToast('End of the line! 🛑');
       return;
@@ -1305,6 +1438,7 @@ function animateFrame(timestamp) {
       // Dead end
       animState.progress = 1;
       renderTrainAtProgress();
+      SFX.crash();
       stopPlay();
       showToast('Dead end! 🛑');
       return;
@@ -1316,6 +1450,7 @@ function animateFrame(timestamp) {
       // Not connected
       animState.progress = 1;
       renderTrainAtProgress();
+      SFX.crash();
       stopPlay();
       showToast('Track not connected! 🔧');
       return;
@@ -1323,6 +1458,7 @@ function animateFrame(timestamp) {
 
     const newExit = getExitDir(nextPiece.type, nextPiece.rotation, newEntry);
     if (!newExit) {
+      SFX.crash();
       stopPlay();
       showToast('Dead end! 🛑');
       return;
@@ -1340,6 +1476,7 @@ function animateFrame(timestamp) {
 
     // Train whistle at stations!
     if (nextPiece.type === 'station') {
+      SFX.station();
       showToast('🚉 Toot toot!');
     }
   }
@@ -1370,7 +1507,14 @@ function renderTrainAtProgress() {
   animState.trainEl.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
 }
 
+function toggleMute() {
+  soundEnabled = !soundEnabled;
+  document.getElementById('btn-mute').textContent = soundEnabled ? '🔊' : '🔇';
+  if (!soundEnabled) stopChugLoop();
+}
+
 function stopPlay() {
+  stopChugLoop();
   state.playing = false;
   document.getElementById('app').classList.remove('playing');
   document.getElementById('btn-play').innerHTML = '▶️ Play';
