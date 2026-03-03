@@ -1502,9 +1502,9 @@ function renderTrainAtProgress() {
   animState.trainEl.style.left = (pixelX + gridRect.left - containerRect.left) + 'px';
   animState.trainEl.style.top = (pixelY + gridRect.top - containerRect.top) + 'px';
 
-  // Rotate train to face direction of travel
+  // Rotate train to face direction of travel (scaleX(-1) flips the emoji which faces left by default)
   const angle = (pos.angle || 0) * (180 / Math.PI);
-  animState.trainEl.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+  animState.trainEl.style.transform = `translate(-50%, -50%) scaleX(-1) rotate(${angle}deg)`;
 }
 
 function toggleMute() {
