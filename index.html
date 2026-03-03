@@ -1263,6 +1263,11 @@ function getPathPoints(type, rotation, entryEdge, exitEdge) {
     let sweep = endAngle - startAngle;
     if (sweep > Math.PI) sweep -= 2 * Math.PI;
     if (sweep < -Math.PI) sweep += 2 * Math.PI;
+    
+    // FIX: Negate sweep to match visual track direction
+    // The SVG curve uses sweep=0 (CCW), but our angle calculation
+    // in screen coords (where +y is down) needs to be inverted
+    sweep = -sweep;
 
     const points = [];
     const steps = 16;
