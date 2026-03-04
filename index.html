@@ -1502,9 +1502,17 @@ function renderTrainAtProgress() {
   animState.trainEl.style.left = (pixelX + gridRect.left - containerRect.left) + 'px';
   animState.trainEl.style.top = (pixelY + gridRect.top - containerRect.top) + 'px';
 
-  // Rotate train to face direction of travel (scaleX(-1) flips the emoji which faces left by default)
+  // Rotate train to face direction of travel
+  // 🚂 emoji faces LEFT by default. We split into two cases to keep it right-side-up:
+  // - Rightward travel (|angle| ≤ 90°): flip with scaleX(-1), negate rotation
+  // - Leftward travel (|angle| > 90°): no flip, small rotation offset from natural LEFT
   const angle = (pos.angle || 0) * (180 / Math.PI);
-  animState.trainEl.style.transform = `translate(-50%, -50%) scaleX(-1) rotate(${angle}deg)`;
+  if (angle >= -90 && angle <= 90) {
+    animState.trainEl.style.transform = `translate(-50%, -50%) scaleX(-1) rotate(${-angle}deg)`;
+  } else {
+    const adj = angle > 0 ? angle - 180 : angle + 180;
+    animState.trainEl.style.transform = `translate(-50%, -50%) rotate(${adj}deg)`;
+  }
 }
 
 function toggleMute() {
