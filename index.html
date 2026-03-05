@@ -167,6 +167,15 @@ html, body {
   transition: transform 0.1s;
 }
 
+.cell .train-svg {
+  position: absolute;
+  top: 5%; left: 5%;
+  width: 90%; height: 90%;
+  z-index: 6;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
+  pointer-events: none;
+}
+
 .cell .scenery-emoji {
   position: absolute;
   top: 50%; left: 50%;
@@ -713,13 +722,71 @@ function createTrackSVG(type) {
   return svg;
 }
 
+// Top-down train locomotive SVG (default: pointing NORTH/up)
+function createTrainSVG() {
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('viewBox', '0 0 60 60');
+  svg.setAttribute('fill', 'none');
+
+  function el(tag, attrs) {
+    const e = document.createElementNS(ns, tag);
+    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, String(v));
+    return e;
+  }
+
+  // Wheel trucks (dark rectangles visible under the body)
+  svg.appendChild(el('rect', { x:17, y:12, width:6, height:10, rx:2, fill:'#37474F' }));
+  svg.appendChild(el('rect', { x:37, y:12, width:6, height:10, rx:2, fill:'#37474F' }));
+  svg.appendChild(el('rect', { x:17, y:38, width:6, height:10, rx:2, fill:'#37474F' }));
+  svg.appendChild(el('rect', { x:37, y:38, width:6, height:10, rx:2, fill:'#37474F' }));
+
+  // Main body
+  svg.appendChild(el('rect', { x:19, y:8, width:22, height:44, rx:5, fill:'#E53935' }));
+
+  // Front hood (darker red)
+  svg.appendChild(el('rect', { x:21, y:8, width:18, height:14, rx:3, fill:'#C62828' }));
+
+  // Cowcatcher / front bumper
+  svg.appendChild(el('polygon', { points:'23,8 30,3 37,8', fill:'#FF8F00' }));
+
+  // Headlight
+  svg.appendChild(el('circle', { cx:30, cy:7, r:2.5, fill:'#FFF9C4' }));
+  svg.appendChild(el('circle', { cx:30, cy:7, r:1.2, fill:'#FFEE58' }));
+
+  // Smokestack
+  svg.appendChild(el('circle', { cx:30, cy:15, r:3.5, fill:'#424242' }));
+  svg.appendChild(el('circle', { cx:30, cy:15, r:2, fill:'#616161' }));
+
+  // Boiler details (horizontal lines)
+  svg.appendChild(el('line', { x1:22, y1:24, x2:38, y2:24, stroke:'#B71C1C', 'stroke-width':1 }));
+  svg.appendChild(el('line', { x1:22, y1:28, x2:38, y2:28, stroke:'#B71C1C', 'stroke-width':1 }));
+
+  // Side running boards
+  svg.appendChild(el('line', { x1:19, y1:22, x2:19, y2:36, stroke:'#FF8F00', 'stroke-width':1.5 }));
+  svg.appendChild(el('line', { x1:41, y1:22, x2:41, y2:36, stroke:'#FF8F00', 'stroke-width':1.5 }));
+
+  // Cab (rear section)
+  svg.appendChild(el('rect', { x:21, y:34, width:18, height:16, rx:2, fill:'#D32F2F' }));
+  svg.appendChild(el('rect', { x:22, y:35, width:16, height:14, rx:2, fill:'#B71C1C' }));
+
+  // Cab windows
+  svg.appendChild(el('rect', { x:24, y:37, width:5, height:4, rx:1, fill:'#90CAF9' }));
+  svg.appendChild(el('rect', { x:31, y:37, width:5, height:4, rx:1, fill:'#90CAF9' }));
+
+  // Rear bumper
+  svg.appendChild(el('rect', { x:24, y:50, width:12, height:2, rx:1, fill:'#795548' }));
+
+  return svg;
+}
+
 // Palette preview SVGs (smaller, centered)
 function createPaletteSVG(type) {
   if (type === 'train') {
-    const div = document.createElement('div');
-    div.textContent = '🚂';
-    div.style.fontSize = '32px';
-    return div;
+    const svg = createTrainSVG();
+    svg.style.width = '42px';
+    svg.style.height = '42px';
+    return svg;
   }
   if (SCENERY_TYPES.includes(type)) {
     const div = document.createElement('div');
@@ -760,7 +827,7 @@ function renderCell(row, col) {
   if (!cell) return;
 
   // Clear existing content except connection dots
-  cell.querySelectorAll('svg, .train-emoji, .scenery-emoji').forEach(el => el.remove());
+  cell.querySelectorAll('svg, .train-emoji, .train-svg, .scenery-emoji').forEach(el => el.remove());
   cell.classList.remove('occupied', 'has-train');
 
   const piece = state.grid[row][col];
@@ -779,12 +846,18 @@ function renderCell(row, col) {
     }
   }
 
-  // Train
+  // Train (top-down SVG)
   if (state.train && state.train.row === row && state.train.col === col && !state.playing) {
-    const te = document.createElement('div');
-    te.className = 'train-emoji';
-    te.textContent = '🚂';
-    cell.appendChild(te);
+    const ts = createTrainSVG();
+    ts.classList.add('train-svg');
+    // Orient based on track connections
+    const trackPiece = state.grid[row][col];
+    if (trackPiece) {
+      const conns = getConnections(trackPiece.type, trackPiece.rotation);
+      const dirAngles = { N: 0, E: 90, S: 180, W: 270 };
+      if (conns.length > 0) ts.style.transform = `rotate(${dirAngles[conns[0]] || 0}deg)`;
+    }
+    cell.appendChild(ts);
     cell.classList.add('has-train');
   }
 
@@ -1164,8 +1237,11 @@ function showGhost(type, x, y, rotation = 0) {
   ghost.style.top = y + 'px';
 
   if (type === 'train') {
-    ghost.textContent = '🚂';
-    ghost.style.fontSize = (cellSize * 0.6) + 'px';
+    const svg = createTrainSVG();
+    svg.style.width = (cellSize * 0.7) + 'px';
+    svg.style.height = (cellSize * 0.7) + 'px';
+    ghost.appendChild(svg);
+    ghost.style.fontSize = '';
   } else if (SCENERY_TYPES.includes(type)) {
     ghost.textContent = SCENERY_EMOJI[type];
     ghost.style.fontSize = (cellSize * 0.55) + 'px';
@@ -1363,23 +1439,28 @@ function startPlay() {
   document.getElementById('btn-play').innerHTML = '⏹️ Stop';
   document.getElementById('btn-play').className = 'btn btn-stop';
 
-  // Remove static train emoji
+  // Remove static train SVG
   if (state.train) {
     const cell = getCellEl(state.train.row, state.train.col);
-    if (cell) cell.querySelectorAll('.train-emoji').forEach(el => el.remove());
+    if (cell) cell.querySelectorAll('.train-svg, .train-emoji').forEach(el => el.remove());
   }
 
-  // Create animated train element
+  // Create animated train element (top-down SVG)
   const trainEl = document.createElement('div');
   trainEl.id = 'animated-train';
-  trainEl.textContent = '🚂';
+  const trainSvg = createTrainSVG();
+  const trainSize = cellSize * 0.75;
+  trainSvg.style.width = trainSize + 'px';
+  trainSvg.style.height = trainSize + 'px';
+  trainSvg.style.display = 'block';
+  trainEl.appendChild(trainSvg);
   trainEl.style.cssText = `
     position: absolute;
-    font-size: ${cellSize * 0.55}px;
     z-index: 50;
     pointer-events: none;
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
     transition: none;
+    line-height: 0;
   `;
   document.getElementById('grid-container').appendChild(trainEl);
 
@@ -1502,17 +1583,11 @@ function renderTrainAtProgress() {
   animState.trainEl.style.left = (pixelX + gridRect.left - containerRect.left) + 'px';
   animState.trainEl.style.top = (pixelY + gridRect.top - containerRect.top) + 'px';
 
-  // Rotate train to face direction of travel
-  // 🚂 emoji faces LEFT by default. We split into two cases to keep it right-side-up:
-  // - Rightward travel (|angle| ≤ 90°): flip with scaleX(-1), negate rotation
-  // - Leftward travel (|angle| > 90°): no flip, small rotation offset from natural LEFT
-  const angle = (pos.angle || 0) * (180 / Math.PI);
-  if (angle >= -90 && angle <= 90) {
-    animState.trainEl.style.transform = `translate(-50%, -50%) scaleX(-1) rotate(${-angle}deg)`;
-  } else {
-    const adj = angle > 0 ? angle - 180 : angle + 180;
-    animState.trainEl.style.transform = `translate(-50%, -50%) rotate(${adj}deg)`;
-  }
+  // Top-down SVG faces NORTH (up) by default.
+  // atan2 angle: East=0°, South=90°, North=-90°, West=±180°
+  // To point our north-facing train in the direction of travel: rotate = angle + 90°
+  const angleDeg = (pos.angle || 0) * (180 / Math.PI);
+  animState.trainEl.style.transform = `translate(-50%, -50%) rotate(${angleDeg + 90}deg)`;
 }
 
 function toggleMute() {
