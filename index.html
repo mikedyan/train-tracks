@@ -300,6 +300,16 @@ html, body {
 }
 #toast.show { transform: translateX(-50%) translateY(0); }
 
+/* TRAIN REPLACEMENT FLASH */
+@keyframes train-replace-flash {
+  0% { background: rgba(255, 200, 0, 0.8); transform: scale(1.2); }
+  50% { background: rgba(255, 200, 0, 0.4); transform: scale(1.1); }
+  100% { background: var(--grass); transform: scale(1); }
+}
+.cell.replacing-train {
+  animation: train-replace-flash 0.5s ease-out;
+}
+
 /* PLAYING STATE */
 #app.playing .cell { cursor: default; }
 #app.playing .cell:hover { background: var(--grass); }
@@ -1169,6 +1179,18 @@ function onPointerUp(e) {
       // Place train on a track cell
       const piece = state.grid[row][col];
       if (piece && !SCENERY_TYPES.includes(piece.type)) {
+        // FEATURE: Single Train Enforcement
+        // When placing train from palette, show flash at old location if replacing
+        if (dragInfo.source === 'palette' && state.train) {
+          const oldRow = state.train.row;
+          const oldCol = state.train.col;
+          const oldCell = getCellEl(oldRow, oldCol);
+          if (oldCell) {
+            oldCell.classList.add('replacing-train');
+            setTimeout(() => oldCell.classList.remove('replacing-train'), 500);
+          }
+          showToast('🚂 Train relocated!');
+        }
         placeTrain(row, col);
       } else {
         showToast('Place train on a track piece!');
