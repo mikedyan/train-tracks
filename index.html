@@ -310,6 +310,32 @@ html, body {
   animation: train-replace-flash 0.5s ease-out;
 }
 
+/* POOF ANIMATION (right-click removal) */
+@keyframes poof {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(1.3);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.6);
+  }
+}
+.poof-effect {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: calc(var(--cell-size) * 0.8);
+  pointer-events: none;
+  z-index: 10;
+  animation: poof 0.5s ease-out forwards;
+}
+
 /* PLAYING STATE */
 #app.playing .cell { cursor: default; }
 #app.playing .cell:hover { background: var(--grass); }
@@ -1002,6 +1028,67 @@ function clearAll() {
 }
 
 // ============================================================
+// RIGHT-CLICK TO REMOVE (Feature #2)
+// ============================================================
+let longPressTimer = null;
+let longPressTarget = null;
+
+function showPoofEffect(row, col) {
+  const cell = getCellEl(row, col);
+  if (!cell) return;
+  
+  const poof = document.createElement('div');
+  poof.className = 'poof-effect';
+  poof.textContent = '💨';
+  cell.appendChild(poof);
+  
+  // Remove after animation completes
+  setTimeout(() => poof.remove(), 500);
+}
+
+function handleRemoveCell(row, col) {
+  if (state.playing) return;
+  
+  const piece = state.grid[row][col];
+  const hasTrain = state.train && state.train.row === row && state.train.col === col;
+  
+  // Only remove if there's something to remove
+  if (!piece && !hasTrain) return;
+  
+  showPoofEffect(row, col);
+  removePiece(row, col);
+  
+  // Show appropriate toast message
+  if (hasTrain && piece) {
+    showToast('🚂 Train and track removed!');
+  } else if (hasTrain) {
+    showToast('🚂 Train removed!');
+  } else if (SCENERY_TYPES.includes(piece.type)) {
+    showToast(`${SCENERY_EMOJI[piece.type]} Scenery removed!`);
+  } else {
+    showToast('Track removed!');
+  }
+}
+
+function startLongPress(row, col) {
+  longPressTarget = { row, col };
+  longPressTimer = setTimeout(() => {
+    if (longPressTarget) {
+      handleRemoveCell(row, col);
+      longPressTarget = null;
+    }
+  }, 500);
+}
+
+function cancelLongPress() {
+  if (longPressTimer) {
+    clearTimeout(longPressTimer);
+    longPressTimer = null;
+  }
+  longPressTarget = null;
+}
+
+// ============================================================
 // DRAG & DROP (Pointer Events)
 // ============================================================
 let dragInfo = null;
@@ -1015,11 +1102,25 @@ function initDragAndDrop() {
   });
 
   // Grid cells
-  document.getElementById('grid').addEventListener('pointerdown', onGridDown);
+  const grid = document.getElementById('grid');
+  grid.addEventListener('pointerdown', onGridDown);
+  
+  // Right-click to remove
+  grid.addEventListener('contextmenu', onGridContextMenu);
 
   // Global move/up
   document.addEventListener('pointermove', onPointerMove);
   document.addEventListener('pointerup', onPointerUp);
+}
+
+function onGridContextMenu(e) {
+  e.preventDefault();
+  
+  const cell = e.target.closest('.cell');
+  if (!cell) return;
+  
+  const row = +cell.dataset.row, col = +cell.dataset.col;
+  handleRemoveCell(row, col);
 }
 
 function onPaletteDown(e) {
@@ -1047,6 +1148,9 @@ function onGridDown(e) {
   if (!cell) return;
   const row = +cell.dataset.row, col = +cell.dataset.col;
   const piece = state.grid[row][col];
+
+  // Start long-press timer for mobile (touch) removal
+  startLongPress(row, col);
 
   // If clicking an occupied cell and not starting a drag, rotate
   if (piece && !SCENERY_TYPES.includes(piece.type)) {
@@ -1103,6 +1207,9 @@ function onPointerMove(e) {
 
   if (!dragInfo.moved) {
     dragInfo.moved = true;
+    // Cancel long-press if we start dragging
+    cancelLongPress();
+    
     // If from grid, pick up the piece
     if (dragInfo.source === 'grid') {
       showGhost(dragInfo.type, e.clientX, e.clientY, dragInfo.rotation);
@@ -1132,6 +1239,9 @@ function onPointerMove(e) {
 }
 
 function onPointerUp(e) {
+  // Cancel long-press on pointer up
+  cancelLongPress();
+  
   if (!dragInfo) return;
 
   clearHighlight();
@@ -1681,9 +1791,6 @@ function init() {
       el.insertBefore(svg, el.firstChild);
     });
   });
-
-  // Prevent context menu on grid
-  document.getElementById('grid').addEventListener('contextmenu', e => e.preventDefault());
 
   showToast('Drag track pieces to build! 🚂');
 }

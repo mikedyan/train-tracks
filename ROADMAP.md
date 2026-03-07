@@ -7,7 +7,7 @@ One feature per day, shipped in the morning and pushed to repo.
 | # | Date | Feature | Status |
 |---|------|---------|--------|
 | 1 | Fri Mar 6 | Single Train Enforcement | ✅ DONE |
-| 2 | Sat Mar 7 | Right-Click to Remove | ⬜ TODO |
+| 2 | Sat Mar 7 | Right-Click to Remove | ✅ DONE |
 | 3 | Sun Mar 8 | Train Dragging (independent of tile) | ⬜ TODO |
 | 4 | Mon Mar 9 | Random Track Generator | ⬜ TODO |
 | 5 | Tue Mar 10 | Train Cars (multi-car train) | ⬜ TODO |
