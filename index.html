@@ -173,7 +173,17 @@ html, body {
   width: 90%; height: 90%;
   z-index: 6;
   filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
-  pointer-events: none;
+  pointer-events: auto;
+  cursor: grab;
+  transition: transform 0.2s ease-out;
+}
+
+.cell .train-svg:active {
+  cursor: grabbing;
+}
+
+.cell .train-svg.snapping-back {
+  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 .cell .scenery-emoji {
@@ -893,6 +903,10 @@ function renderCell(row, col) {
       const dirAngles = { N: 0, E: 90, S: 180, W: 270 };
       if (conns.length > 0) ts.style.transform = `rotate(${dirAngles[conns[0]] || 0}deg)`;
     }
+    
+    // Add pointer event handler for train-specific dragging
+    ts.addEventListener('pointerdown', onTrainDown);
+    
     cell.appendChild(ts);
     cell.classList.add('has-train');
   }
@@ -1123,6 +1137,33 @@ function onGridContextMenu(e) {
   handleRemoveCell(row, col);
 }
 
+function onTrainDown(e) {
+  if (state.playing) return;
+  e.preventDefault();
+  e.stopPropagation(); // Prevent grid cell handler from firing
+  
+  // Find which cell the train is in
+  const trainCell = e.target.closest('.cell');
+  if (!trainCell) return;
+  
+  const row = +trainCell.dataset.row;
+  const col = +trainCell.dataset.col;
+  
+  dragInfo = {
+    type: 'train',
+    source: 'train-only',
+    startX: e.clientX,
+    startY: e.clientY,
+    sourceRow: row,
+    sourceCol: col,
+    moved: false,
+  };
+  
+  // Start showing ghost immediately for train
+  showGhost('train', e.clientX, e.clientY);
+  trashZone.classList.add('visible');
+}
+
 function onPaletteDown(e) {
   if (state.playing) return;
   e.preventDefault();
@@ -1214,10 +1255,14 @@ function onPointerMove(e) {
     if (dragInfo.source === 'grid') {
       showGhost(dragInfo.type, e.clientX, e.clientY, dragInfo.rotation);
       trashZone.classList.add('visible');
-      // Temporarily hide piece in grid
-      const r = dragInfo.sourceRow, c = dragInfo.sourceCol;
-      if (dragInfo.type === 'train' || dragInfo.hasTrain) {
-        // Remove train visual temporarily
+    }
+    
+    // If train-only drag, hide train from source cell
+    if (dragInfo.source === 'train-only') {
+      const sourceCell = getCellEl(dragInfo.sourceRow, dragInfo.sourceCol);
+      if (sourceCell) {
+        const trainSvg = sourceCell.querySelector('.train-svg');
+        if (trainSvg) trainSvg.style.opacity = '0';
       }
     }
   }
@@ -1272,6 +1317,13 @@ function onPointerUp(e) {
     // Delete the piece
     if (dragInfo.source === 'grid') {
       removePiece(dragInfo.sourceRow, dragInfo.sourceCol);
+    } else if (dragInfo.source === 'train-only') {
+      // Remove train (but keep the track)
+      saveUndo();
+      state.train = null;
+      SFX.remove();
+      renderCell(dragInfo.sourceRow, dragInfo.sourceCol);
+      showToast('🚂 Train removed!');
     }
     hideGhost();
     dragInfo = null;
@@ -1286,27 +1338,46 @@ function onPointerUp(e) {
     const existing = state.grid[row][col];
 
     if (dragInfo.type === 'train') {
-      // Place train on a track cell
+      // FEATURE #3: Train Dragging with validation
       const piece = state.grid[row][col];
-      if (piece && !SCENERY_TYPES.includes(piece.type)) {
-        // FEATURE: Single Train Enforcement
-        // When placing train from palette, show flash at old location if replacing
-        if (dragInfo.source === 'palette' && state.train) {
-          const oldRow = state.train.row;
-          const oldCol = state.train.col;
-          const oldCell = getCellEl(oldRow, oldCol);
-          if (oldCell) {
-            oldCell.classList.add('replacing-train');
-            setTimeout(() => oldCell.classList.remove('replacing-train'), 500);
-          }
-          showToast('🚂 Train relocated!');
+      const isValidDrop = piece && !SCENERY_TYPES.includes(piece.type);
+      
+      if (dragInfo.source === 'train-only') {
+        // Train-only drag: validate and snap back if invalid
+        if (isValidDrop) {
+          saveUndo();
+          state.train = { row, col };
+          renderCell(dragInfo.sourceRow, dragInfo.sourceCol);
+          renderCell(row, col);
+          SFX.place();
+          showToast('🚂 Train moved!');
+        } else {
+          // Invalid drop: snap back animation
+          animateSnapBack(dragInfo.sourceRow, dragInfo.sourceCol);
+          showToast('Train needs a track! 🛤️');
         }
-        placeTrain(row, col);
       } else {
-        showToast('Place train on a track piece!');
-        // Return to source if from grid
-        if (dragInfo.source === 'grid') {
-          placeTrain(dragInfo.sourceRow, dragInfo.sourceCol);
+        // From palette or old grid drag
+        if (isValidDrop) {
+          // FEATURE: Single Train Enforcement
+          // When placing train from palette, show flash at old location if replacing
+          if (dragInfo.source === 'palette' && state.train) {
+            const oldRow = state.train.row;
+            const oldCol = state.train.col;
+            const oldCell = getCellEl(oldRow, oldCol);
+            if (oldCell) {
+              oldCell.classList.add('replacing-train');
+              setTimeout(() => oldCell.classList.remove('replacing-train'), 500);
+            }
+            showToast('🚂 Train relocated!');
+          }
+          placeTrain(row, col);
+        } else {
+          showToast('Place train on a track piece!');
+          // Return to source if from grid
+          if (dragInfo.source === 'grid') {
+            placeTrain(dragInfo.sourceRow, dragInfo.sourceCol);
+          }
         }
       }
     } else if (SCENERY_TYPES.includes(dragInfo.type)) {
@@ -1351,7 +1422,14 @@ function onPointerUp(e) {
     }
   } else {
     // Dropped outside grid
-    if (dragInfo.source === 'grid') {
+    if (dragInfo.source === 'train-only') {
+      // Train dragged off-grid: remove it
+      saveUndo();
+      state.train = null;
+      SFX.remove();
+      renderCell(dragInfo.sourceRow, dragInfo.sourceCol);
+      showToast('🚂 Train removed!');
+    } else if (dragInfo.source === 'grid') {
       // Remove piece (dragged off = delete)
       removePiece(dragInfo.sourceRow, dragInfo.sourceCol);
       showToast('Removed!');
@@ -1360,6 +1438,30 @@ function onPointerUp(e) {
 
   hideGhost();
   dragInfo = null;
+}
+
+function animateSnapBack(row, col) {
+  // Show the train snapping back to original position
+  const cell = getCellEl(row, col);
+  if (!cell) {
+    renderCell(row, col);
+    return;
+  }
+  
+  // Re-render to show train
+  renderCell(row, col);
+  
+  // Add snap-back animation class
+  const trainSvg = cell.querySelector('.train-svg');
+  if (trainSvg) {
+    trainSvg.classList.add('snapping-back');
+    trainSvg.style.transform = trainSvg.style.transform || 'rotate(0deg)';
+    
+    // Remove animation class after animation completes
+    setTimeout(() => {
+      trainSvg.classList.remove('snapping-back');
+    }, 400);
+  }
 }
 
 function showGhost(type, x, y, rotation = 0) {
