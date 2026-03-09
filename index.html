@@ -2039,8 +2039,8 @@ function generateWobblyLoop(startRow, startCol) {
     }
   }
   
-  // If path is too short or didn't close, use simple rect
-  if (path.length < 8) {
+  // If path is too short or didn't actually close back to start, use simple rect
+  if (path.length < 8 || !(row === startRow && col === startCol)) {
     return generateSimpleRectLoop(startRow, startCol);
   }
   
