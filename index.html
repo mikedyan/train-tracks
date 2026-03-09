@@ -388,6 +388,7 @@ html, body {
     </div>
     <div id="controls">
       <button class="btn btn-play" id="btn-play" onclick="togglePlay()">▶️ Play</button>
+      <button class="btn" onclick="generateRandomTrack()" style="background:#9C27B0;color:white;box-shadow:0 3px 10px rgba(156,39,176,0.3);">🎲 Random</button>
       <button class="btn btn-clear" onclick="clearAll()">🗑️ Clear</button>
       <button class="btn btn-undo" onclick="undo()">↩️ Undo</button>
       <div class="speed-control">
@@ -505,6 +506,18 @@ const SFX = {
     // Brake squeal
     playNote(600, 0.15, 'sawtooth', 0.06);
     playNote(400, 0.2, 'sine', 0.08, 0.08);
+  },
+  build() {
+    // Quick building snap (higher pitched than place)
+    playNote(1000, 0.04, 'square', 0.06);
+    playNote(1400, 0.03, 'sine', 0.04, 0.015);
+  },
+  generate() {
+    // Cheerful generation fanfare
+    playNote(523, 0.1, 'sine', 0.1);
+    playNote(659, 0.1, 'sine', 0.1, 0.08);
+    playNote(784, 0.12, 'sine', 0.12, 0.16);
+    playNote(1047, 0.15, 'sine', 0.12, 0.26);
   }
 };
 
@@ -1848,6 +1861,319 @@ function stopPlay() {
 
   animState = null;
   renderAllCells();
+}
+
+// ============================================================
+// RANDOM TRACK GENERATOR (Feature #4)
+// ============================================================
+function generateRandomTrack() {
+  if (state.playing) stopPlay();
+  
+  // Clear board
+  state.grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+  state.train = null;
+  renderAllCells();
+  
+  SFX.generate();
+  showToast('🎲 Generating track...');
+  
+  // Generate the loop path using random walk
+  const path = generateLoopPath();
+  
+  if (!path || path.length < 4) {
+    showToast('Generation failed, try again!');
+    return;
+  }
+  
+  // Animate placing pieces with cascading sound effect
+  let delay = 0;
+  const delayIncrement = 40; // ms between placements
+  
+  path.forEach((cell, index) => {
+    setTimeout(() => {
+      const { row, col, type, rotation } = cell;
+      state.grid[row][col] = { type, rotation };
+      renderCell(row, col);
+      updateConnectionDots(row, col);
+      SFX.build();
+    }, delay);
+    delay += delayIncrement;
+  });
+  
+  // Add scenery after track is built
+  setTimeout(() => {
+    addRandomScenery();
+    
+    // Place train on a straight section
+    setTimeout(() => {
+      placeTrainOnLoop(path);
+      showToast('🚂 Track ready! Press Play!');
+    }, 200);
+  }, delay + 100);
+}
+
+function generateLoopPath() {
+  // Pick random starting point (not on edges)
+  const startRow = 2 + Math.floor(Math.random() * (ROWS - 4));
+  const startCol = 2 + Math.floor(Math.random() * (COLS - 4));
+  
+  // Try multiple algorithms with different parameters for variety
+  const algorithm = Math.floor(Math.random() * 3);
+  
+  if (algorithm === 0) {
+    return generateSimpleRectLoop(startRow, startCol);
+  } else if (algorithm === 1) {
+    return generateWobblyLoop(startRow, startCol);
+  } else {
+    return generateSpiralLoop(startRow, startCol);
+  }
+}
+
+function generateSimpleRectLoop(startRow, startCol) {
+  // Generate a rectangular loop with slight variations
+  const width = 4 + Math.floor(Math.random() * 4); // 4-7 cells wide
+  const height = 3 + Math.floor(Math.random() * 3); // 3-5 cells tall
+  
+  const path = [];
+  
+  // Make sure it fits
+  if (startCol + width >= COLS || startRow + height >= ROWS) {
+    return generateSimpleRectLoop(Math.max(1, startRow - 1), Math.max(1, startCol - 1));
+  }
+  
+  // Top edge (going right)
+  for (let c = startCol; c < startCol + width; c++) {
+    const isCorner = (c === startCol || c === startCol + width - 1);
+    path.push({
+      row: startRow,
+      col: c,
+      type: isCorner ? 'curve' : 'straight',
+      rotation: isCorner ? (c === startCol ? 270 : 0) : 90
+    });
+  }
+  
+  // Right edge (going down)
+  for (let r = startRow + 1; r < startRow + height; r++) {
+    const isCorner = (r === startRow + height - 1);
+    path.push({
+      row: r,
+      col: startCol + width - 1,
+      type: isCorner ? 'curve' : 'straight',
+      rotation: isCorner ? 90 : 0
+    });
+  }
+  
+  // Bottom edge (going left)
+  for (let c = startCol + width - 2; c >= startCol; c--) {
+    const isCorner = (c === startCol);
+    path.push({
+      row: startRow + height - 1,
+      col: c,
+      type: isCorner ? 'curve' : 'straight',
+      rotation: isCorner ? 180 : 90
+    });
+  }
+  
+  // Left edge (going up)
+  for (let r = startRow + height - 2; r > startRow; r--) {
+    path.push({
+      row: r,
+      col: startCol,
+      type: 'straight',
+      rotation: 0
+    });
+  }
+  
+  return path;
+}
+
+function generateWobblyLoop(startRow, startCol) {
+  // Generate a loop with random turns
+  const visited = new Set();
+  const path = [];
+  let row = startRow, col = startCol;
+  let dir = 'E'; // Start going east
+  
+  const maxSteps = 30;
+  const turnChance = 0.3;
+  
+  for (let step = 0; step < maxSteps; step++) {
+    const key = `${row},${col}`;
+    
+    // Check if we're back at start (loop complete)
+    if (step > 6 && row === startRow && col === startCol) {
+      break;
+    }
+    
+    // If we've visited before, try to close the loop
+    if (visited.has(key) && step < maxSteps - 3) {
+      break;
+    }
+    
+    visited.add(key);
+    
+    // Randomly turn or go straight
+    const shouldTurn = Math.random() < turnChance;
+    const prevDir = dir;
+    
+    if (shouldTurn) {
+      dir = Math.random() < 0.5 ? ROTATE_MAP[dir] : ROTATE_MAP[ROTATE_MAP[ROTATE_MAP[dir]]];
+    }
+    
+    // Add appropriate track piece
+    const type = prevDir === dir ? 'straight' : 'curve';
+    const rotation = getTrackRotation(prevDir, dir);
+    
+    path.push({ row, col, type, rotation });
+    
+    // Move to next cell
+    const delta = DELTA[dir];
+    row += delta.r;
+    col += delta.c;
+    
+    // Boundary check - try to turn back
+    if (row < 1 || row >= ROWS - 1 || col < 1 || col >= COLS - 1) {
+      row -= delta.r;
+      col -= delta.c;
+      dir = OPPOSITE[dir];
+    }
+  }
+  
+  // If path is too short or didn't close, use simple rect
+  if (path.length < 8) {
+    return generateSimpleRectLoop(startRow, startCol);
+  }
+  
+  return path;
+}
+
+function generateSpiralLoop(startRow, startCol) {
+  // Generate an inward spiral that then connects back
+  const path = [];
+  let row = startRow, col = startCol;
+  
+  // Create a larger rectangle then spiral inward
+  const outerWidth = 6;
+  const outerHeight = 5;
+  
+  if (startCol + outerWidth >= COLS || startRow + outerHeight >= ROWS) {
+    return generateSimpleRectLoop(startRow, startCol);
+  }
+  
+  // Outer loop
+  for (let c = 0; c < outerWidth; c++) {
+    const isCorner = (c === outerWidth - 1);
+    path.push({
+      row: startRow,
+      col: startCol + c,
+      type: isCorner ? 'curve' : 'straight',
+      rotation: isCorner ? 0 : 90
+    });
+  }
+  
+  for (let r = 1; r < outerHeight; r++) {
+    const isCorner = (r === outerHeight - 1);
+    path.push({
+      row: startRow + r,
+      col: startCol + outerWidth - 1,
+      type: isCorner ? 'curve' : 'straight',
+      rotation: isCorner ? 90 : 0
+    });
+  }
+  
+  for (let c = outerWidth - 2; c >= 0; c--) {
+    const isCorner = (c === 0);
+    path.push({
+      row: startRow + outerHeight - 1,
+      col: startCol + c,
+      type: isCorner ? 'curve' : 'straight',
+      rotation: isCorner ? 180 : 90
+    });
+  }
+  
+  for (let r = outerHeight - 2; r > 0; r--) {
+    path.push({
+      row: startRow + r,
+      col: startCol,
+      type: 'straight',
+      rotation: 0
+    });
+  }
+  
+  return path;
+}
+
+function getTrackRotation(fromDir, toDir) {
+  // Straight pieces
+  if (fromDir === toDir) {
+    return (fromDir === 'N' || fromDir === 'S') ? 0 : 90;
+  }
+  
+  // Curves - map entry/exit to rotation
+  // Curve at rotation 0 connects N-E
+  const curveMap = {
+    'NE': 0, 'EN': 0,
+    'ES': 90, 'SE': 90,
+    'SW': 180, 'WS': 180,
+    'WN': 270, 'NW': 270,
+  };
+  
+  return curveMap[fromDir + toDir] || 0;
+}
+
+function addRandomScenery() {
+  const emptyCells = [];
+  
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if (!state.grid[r][c]) {
+        emptyCells.push({ row: r, col: c });
+      }
+    }
+  }
+  
+  // Fill 30-50% of empty cells with scenery
+  const targetFill = 0.3 + Math.random() * 0.2;
+  const numScenery = Math.floor(emptyCells.length * targetFill);
+  
+  // Shuffle and pick random cells
+  for (let i = 0; i < numScenery && i < emptyCells.length; i++) {
+    const idx = Math.floor(Math.random() * emptyCells.length);
+    const { row, col } = emptyCells[idx];
+    emptyCells.splice(idx, 1);
+    
+    // Random scenery type
+    const types = ['tree', 'house', 'cow'];
+    const type = types[Math.floor(Math.random() * types.length)];
+    
+    // Weight towards more trees
+    const weighted = Math.random();
+    const finalType = weighted < 0.6 ? 'tree' : (weighted < 0.8 ? 'house' : 'cow');
+    
+    state.grid[row][col] = { type: finalType, rotation: 0 };
+    
+    // Stagger the scenery rendering
+    setTimeout(() => {
+      renderCell(row, col);
+    }, i * 15);
+  }
+}
+
+function placeTrainOnLoop(path) {
+  // Find a straight section in the path
+  for (const cell of path) {
+    if (cell.type === 'straight') {
+      state.train = { row: cell.row, col: cell.col };
+      renderCell(cell.row, cell.col);
+      return;
+    }
+  }
+  
+  // If no straight section, place on first track piece
+  if (path.length > 0) {
+    state.train = { row: path[0].row, col: path[0].col };
+    renderCell(path[0].row, path[0].col);
+  }
 }
 
 // ============================================================
