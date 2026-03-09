@@ -1948,7 +1948,7 @@ function generateSimpleRectLoop(startRow, startCol) {
       row: startRow,
       col: c,
       type: isCorner ? 'curve' : 'straight',
-      rotation: isCorner ? (c === startCol ? 270 : 0) : 90
+      rotation: isCorner ? (c === startCol ? 90 : 180) : 90
     });
   }
   
@@ -1959,7 +1959,7 @@ function generateSimpleRectLoop(startRow, startCol) {
       row: r,
       col: startCol + width - 1,
       type: isCorner ? 'curve' : 'straight',
-      rotation: isCorner ? 90 : 0
+      rotation: isCorner ? 270 : 0
     });
   }
   
@@ -1970,7 +1970,7 @@ function generateSimpleRectLoop(startRow, startCol) {
       row: startRow + height - 1,
       col: c,
       type: isCorner ? 'curve' : 'straight',
-      rotation: isCorner ? 180 : 90
+      rotation: isCorner ? 0 : 90
     });
   }
   
@@ -2061,36 +2061,42 @@ function generateSpiralLoop(startRow, startCol) {
   }
   
   // Outer loop
+  // Top edge (including both corners)
   for (let c = 0; c < outerWidth; c++) {
-    const isCorner = (c === outerWidth - 1);
+    const isFirstCorner = (c === 0);
+    const isLastCorner = (c === outerWidth - 1);
+    const isCorner = isFirstCorner || isLastCorner;
     path.push({
       row: startRow,
       col: startCol + c,
       type: isCorner ? 'curve' : 'straight',
-      rotation: isCorner ? 0 : 90
+      rotation: isCorner ? (isFirstCorner ? 90 : 180) : 90
     });
   }
   
+  // Right edge (including bottom-right corner)
   for (let r = 1; r < outerHeight; r++) {
     const isCorner = (r === outerHeight - 1);
     path.push({
       row: startRow + r,
       col: startCol + outerWidth - 1,
       type: isCorner ? 'curve' : 'straight',
-      rotation: isCorner ? 90 : 0
+      rotation: isCorner ? 270 : 0
     });
   }
   
+  // Bottom edge (including bottom-left corner)
   for (let c = outerWidth - 2; c >= 0; c--) {
     const isCorner = (c === 0);
     path.push({
       row: startRow + outerHeight - 1,
       col: startCol + c,
       type: isCorner ? 'curve' : 'straight',
-      rotation: isCorner ? 180 : 90
+      rotation: isCorner ? 0 : 90
     });
   }
   
+  // Left edge (no corners, both handled by top and bottom edges)
   for (let r = outerHeight - 2; r > 0; r--) {
     path.push({
       row: startRow + r,
@@ -2109,8 +2115,13 @@ function getTrackRotation(fromDir, toDir) {
     return (fromDir === 'N' || fromDir === 'S') ? 0 : 90;
   }
   
-  // Curves - map entry/exit to rotation
-  // Curve at rotation 0 connects N-E
+  // Curves - convert travel directions to edge connections
+  // fromDir = direction we were traveling, so entry edge = OPPOSITE[fromDir]
+  // toDir = direction we're now traveling, so exit edge = toDir
+  const entryEdge = OPPOSITE[fromDir];
+  const exitEdge = toDir;
+  
+  // Curve at rotation 0 connects N-E edges
   const curveMap = {
     'NE': 0, 'EN': 0,
     'ES': 90, 'SE': 90,
@@ -2118,7 +2129,7 @@ function getTrackRotation(fromDir, toDir) {
     'WN': 270, 'NW': 270,
   };
   
-  return curveMap[fromDir + toDir] || 0;
+  return curveMap[entryEdge + exitEdge] || 0;
 }
 
 function addRandomScenery() {
