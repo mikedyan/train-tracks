@@ -31,4 +31,18 @@ Only logged here if a bug was found, for tracking purposes.
 
 ## Bugs Found During Roadmap
 
-*(QA agent adds entries here as bugs are found)*
+### BUG-003 | 🟢 FIXED | Single train enforcement leaves stale train SVG in DOM
+- **Found:** Tue Mar 10 — QA Agent
+- **Fixed:** Tue Mar 10 (commit f38a18c) — QA Agent
+- **Severity:** Medium (cosmetic/functional — 2 trains visible, only 1 in state)
+- **Root cause:** `placeTrain()` called `renderCell()` on the old train's cell BEFORE updating `state.train`. Since `renderCell` checks `state.train.row === row && state.train.col === col` to decide whether to draw the train SVG, the old cell re-drew the train (because `state.train` still pointed there). Result: 2 train SVGs in the DOM, even though state only tracked 1.
+- **Fix applied:** Save old train position to local variable, update `state.train` to new position FIRST, then re-render old cell (which now correctly sees it's no longer the train's position and doesn't draw a train SVG).
+- **Verification:** Confirmed on live site — placing train twice results in exactly 1 `.train-svg` element at the correct position.
+
+### BUG-004 | 🟢 FIXED | Stale connection dots after animated random track generation
+- **Found:** Tue Mar 10 — QA Agent
+- **Fixed:** Tue Mar 10 (commit f062880) — QA Agent
+- **Severity:** Low-Medium (cosmetic — red dots on a fully-connected loop)
+- **Root cause:** `generateRandomTrack()` places pieces with staggered `setTimeout()` calls (40ms apart for animation). Each piece calls `updateConnectionDots(row, col)` only for itself, not for its neighbors. When piece A is placed and checks its east neighbor — that neighbor might not exist yet. Later when the east neighbor IS placed, it updates its own dots but never goes back to update piece A's east dot. Result: after animation completes, some connection dots remain "disconnected" (red) even though the connections are actually valid.
+- **Fix applied:** Added a final `setTimeout` after all pieces are placed that refreshes connection dots for every cell in the path. This runs at `delay + 50ms` (after last piece but before scenery/train placement).
+- **Verification:** Ran Random 5 times on live site — 0 red dots in all 5 runs.
