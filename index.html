@@ -1038,9 +1038,10 @@ function placeTrain(row, col) {
   const piece = state.grid[row][col];
   if (!piece || SCENERY_TYPES.includes(piece.type)) return;
   saveUndo();
-  // Remove old train rendering
-  if (state.train) renderCell(state.train.row, state.train.col);
+  // Remove old train rendering — update state FIRST so renderCell won't re-draw
+  const oldTrain = state.train;
   state.train = { row, col };
+  if (oldTrain) renderCell(oldTrain.row, oldTrain.col);
   renderCell(row, col);
 }
 
