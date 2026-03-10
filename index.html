@@ -1901,6 +1901,13 @@ function generateRandomTrack() {
     delay += delayIncrement;
   });
   
+  // After all track pieces placed, refresh ALL connection dots (fixes stale dots from animated placement)
+  setTimeout(() => {
+    path.forEach(({ row, col }) => {
+      updateConnectionDots(row, col);
+    });
+  }, delay + 50);
+  
   // Add scenery after track is built
   setTimeout(() => {
     addRandomScenery();
