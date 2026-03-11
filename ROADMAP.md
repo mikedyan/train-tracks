@@ -22,7 +22,7 @@ One feature per day. Builder agent ships at 8 AM PST, QA agent tests at 11 AM PS
 | Day | Date | Feature | Status |
 |-----|------|---------|--------|
 | 1 | Tue Mar 10 | Fix Wobbly Loop + Figure-8 Generator | ⬜ (Builder not shipped; QA ran full regression, fixed 2 bugs) |
-| 2 | Wed Mar 11 | Train Cars (multi-car train) | ⬜ |
+| 2 | Wed Mar 11 | Train Cars (multi-car train) | ⬜ (Builder not shipped; QA ran full regression, 57/57 pass, 0 bugs) |
 | 3 | Thu Mar 12 | Smoke & Steam Particles | ⬜ |
 | 4 | Fri Mar 13 | Smart Auto-Connect | ⬜ |
 | 5 | Sat Mar 14 | Save & Load Layouts | ⬜ |
