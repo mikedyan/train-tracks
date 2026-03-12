@@ -1,0 +1,13 @@
+{
+  "project": "train-tracks",
+  "currentPhase": 2,
+  "phaseLabel": "Council Roadmap",
+  "lastCompletedDay": 0,
+  "nextDay": 1,
+  "nextItemStart": 1,
+  "lastRunDate": null,
+  "repo": "/Users/openclaw/.openclaw/workspace/factory/projects/train-tracks",
+  "githubPages": "https://mikedyan.github.io/train-tracks/",
+  "githubRepo": "mikedyan/train-tracks",
+  "notes": "Fresh start from 4-model council review. Previous 14-day roadmap replaced with council-synthesized 28-day plan."
+}
