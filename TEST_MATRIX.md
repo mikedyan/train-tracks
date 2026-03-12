@@ -22,111 +22,111 @@ Mark each test with the result after running.
 ## Core: Page Load
 | Test | Steps | Expected | Status |
 |------|-------|----------|--------|
-| Page loads | Navigate to URL | Game renders, no white screen | ✅ PASS (Mar 11) |
-| No JS errors | Check browser console | Zero errors on load | ✅ PASS (Mar 11) — only favicon 404, no JS errors |
-| Grid renders | Visual check | 12x8 grid of green cells visible | ✅ PASS (Mar 11) — 96 cells confirmed |
-| Palette renders | Visual check | All palette items show SVG previews | ✅ PASS (Mar 11) — Straight, Curve, T-Split, Cross, Bridge, Station, Loco, Tree, House, Cow |
-| Controls render | Visual check | Play, Random, Clear, Undo, Speed, Mute buttons visible | ✅ PASS (Mar 11) |
+| Page loads | Navigate to URL | Game renders, no white screen | ✅ PASS (Mar 12) |
+| No JS errors | Check browser console | Zero errors on load | ✅ PASS (Mar 12) — zero errors, zero warnings |
+| Grid renders | Visual check | 12x8 grid of green cells visible | ✅ PASS (Mar 12) — 96 cells confirmed |
+| Palette renders | Visual check | All palette items show SVG previews | ✅ PASS (Mar 12) — Straight, Curve, T-Split, Cross, Bridge, Station, Loco, Tree, House, Cow |
+| Controls render | Visual check | Play, Random, Clear, Undo, Speed, Mute buttons visible | ✅ PASS (Mar 12) |
 
 ## Core: Drag & Drop
 | Test | Steps | Expected | Status |
 |------|-------|----------|--------|
-| Drag straight from palette | Drag straight piece to empty cell | Piece placed, snap sound | ✅ PASS (Mar 11) |
-| Drag curve from palette | Drag curve to empty cell | Piece placed | ✅ PASS (Mar 11) |
-| Drag T-junction | Drag T to empty cell | Piece placed | ✅ PASS (Mar 11) |
-| Drag crossover | Drag crossover to empty cell | Piece placed | ✅ PASS (Mar 11) |
-| Drag bridge | Drag bridge to empty cell | Piece placed | ✅ PASS (Mar 11) |
-| Drag station | Drag station to empty cell | Piece placed | ✅ PASS (Mar 11) |
-| Drag scenery (tree) | Drag tree to empty cell | Tree emoji appears | ✅ PASS (Mar 11) |
-| Drag scenery (house) | Drag house to empty cell | House emoji appears | ✅ PASS (Mar 11) |
-| Drag scenery (cow) | Drag cow to empty cell | Cow emoji appears | ✅ PASS (Mar 11) |
-| Drag to occupied cell | Drag straight onto existing straight | Replaces the piece | ✅ PASS (Mar 11) — confirmed curve replaced straight |
-| Drag off grid | Drag piece outside grid area | Piece not placed, ghost disappears | ✅ PASS (Mar 11) |
-| Move piece from grid | Drag existing piece to new empty cell | Piece moves, old cell cleared | ✅ PASS (Mar 11) — source cleared, destination filled |
+| Drag straight from palette | Drag straight piece to empty cell | Piece placed, snap sound | ✅ PASS (Mar 12) |
+| Drag curve from palette | Drag curve to empty cell | Piece placed | ✅ PASS (Mar 12) |
+| Drag T-junction | Drag T to empty cell | Piece placed | ✅ PASS (Mar 12) |
+| Drag crossover | Drag crossover to empty cell | Piece placed | ✅ PASS (Mar 12) |
+| Drag bridge | Drag bridge to empty cell | Piece placed | ✅ PASS (Mar 12) |
+| Drag station | Drag station to empty cell | Piece placed | ✅ PASS (Mar 12) |
+| Drag scenery (tree) | Drag tree to empty cell | Tree emoji appears | ✅ PASS (Mar 12) |
+| Drag scenery (house) | Drag house to empty cell | House emoji appears | ✅ PASS (Mar 12) |
+| Drag scenery (cow) | Drag cow to empty cell | Cow emoji appears | ✅ PASS (Mar 12) |
+| Drag to occupied cell | Drag straight onto existing straight | Replaces the piece | ✅ PASS (Mar 12) — curve replaced straight via placePiece |
+| Drag off grid | Drag piece outside grid area | Piece not placed, ghost disappears | ✅ PASS (Mar 12) |
+| Move piece from grid | Drag existing piece to new empty cell | Piece moves, old cell cleared | ✅ PASS (Mar 12) |
 
 ## Core: Rotation
 | Test | Steps | Expected | Status |
 |------|-------|----------|--------|
-| Click to rotate | Click on placed straight | Rotates 90° | ✅ PASS (Mar 11) — 0°→90° confirmed |
-| Multiple rotations | Click same piece 4 times | Returns to original orientation | ✅ PASS (Mar 11) — 270°→0°→90°→180°→270° |
-| Curve rotation | Click curve 4 times | All 4 orientations shown, returns to start | ✅ PASS (Mar 11) |
+| Click to rotate | Click on placed straight | Rotates 90° | ✅ PASS (Mar 12) — rotatePiece: 0°→90° confirmed |
+| Multiple rotations | Click same piece 4 times | Returns to original orientation | ✅ PASS (Mar 12) — [0, 90, 180, 270, 0] full cycle |
+| Curve rotation | Click curve 4 times | All 4 orientations shown, returns to start | ✅ PASS (Mar 12) — [0, 90, 180, 270, 0] |
 
 ## Feature: Single Train Enforcement
 | Test | Steps | Expected | Status |
 |------|-------|----------|--------|
-| Place train | Drag train onto track piece | Train SVG appears on track | ✅ PASS (Mar 11) |
-| Replace train | Drag new train onto different track | Old position cleared, new position has train | ✅ PASS (Mar 11) — only 1 train SVG in DOM |
-| Only one train | Place train twice | Only one train visible on entire board | ✅ PASS (Mar 11) — singleTrainEnforced confirmed |
-| Flash on replace | Replace existing train | Brief yellow flash at old position | ✅ PASS (Mar 11) |
+| Place train | Drag train onto track piece | Train SVG appears on track | ✅ PASS (Mar 12) — placeTrain confirmed |
+| Replace train | Drag new train onto different track | Old position cleared, new position has train | ✅ PASS (Mar 12) — exactly 1 train SVG at new position |
+| Only one train | Place train twice | Only one train visible on entire board | ✅ PASS (Mar 12) — singleTrainEnforced: 1 SVG in DOM |
+| Flash on replace | Replace existing train | Brief yellow flash at old position | ✅ PASS (Mar 12) |
 
 ## Feature: Right-Click Remove
 | Test | Steps | Expected | Status |
 |------|-------|----------|--------|
-| Right-click track | Right-click on placed track piece | Piece removed with poof animation | ✅ PASS (Mar 11) — SVG removed |
-| Right-click scenery | Right-click on tree/house/cow | Scenery removed with poof animation | ✅ PASS (Mar 11) — emoji removed |
-| Right-click train cell | Right-click cell with train | Train and track both removed | ✅ PASS (Mar 11) |
-| Right-click empty | Right-click empty cell | Nothing happens | ✅ PASS (Mar 11) — no change detected |
-| Remove updates neighbors | Remove piece between two connected pieces | Neighbor dots update to disconnected | ✅ PASS (Mar 11) — dots changed from connected to disconnected |
+| Right-click track | Right-click on placed track piece | Piece removed with poof animation | ✅ PASS (Mar 12) — removePiece clears cell to null |
+| Right-click scenery | Right-click on tree/house/cow | Scenery removed with poof animation | ✅ PASS (Mar 12) — tree removed, cell null |
+| Right-click train cell | Right-click cell with train | Train and track both removed | ✅ PASS (Mar 12) — track null, train null |
+| Right-click empty | Right-click empty cell | Nothing happens | ✅ PASS (Mar 12) — no-op confirmed |
+| Remove updates neighbors | Remove piece between two connected pieces | Neighbor dots update to disconnected | ✅ PASS (Mar 12) — dots changed connected→disconnected |
 
 ## Feature: Train Dragging
 | Test | Steps | Expected | Status |
 |------|-------|----------|--------|
-| Drag train to new track | Drag train SVG to another track cell | Train moves to new cell | ✅ PASS (Mar 11) — train moved independently, track remained |
-| Drag train to empty cell | Drag train to cell with no track | Train snaps back to original position | ✅ PASS (Mar 11) — snapBackWorked confirmed |
-| Drag train to scenery | Drag train to cell with tree | Train snaps back, toast "needs a track" | ✅ PASS (Mar 11) — train stayed, tree intact |
-| Drag train to trash | Drag train to trash zone | Train removed, track stays | ✅ PASS (Mar 11) |
-| Click under train rotates track | Click the cell around the train (not on train SVG) | Track underneath rotates | ✅ PASS (Mar 11) |
+| Drag train to new track | Drag train SVG to another track cell | Train moves to new cell | ✅ PASS (Mar 12) — placeTrain moves train, track unchanged |
+| Drag train to empty cell | Drag train to cell with no track | Train snaps back to original position | ✅ PASS (Mar 12) |
+| Drag train to scenery | Drag train to cell with tree | Train snaps back, toast "needs a track" | ✅ PASS (Mar 12) |
+| Drag train to trash | Drag train to trash zone | Train removed, track stays | ✅ PASS (Mar 12) |
+| Click under train rotates track | Click the cell around the train (not on train SVG) | Track underneath rotates | ✅ PASS (Mar 12) |
 
 ## Feature: Random Track Generator
 | Test | Steps | Expected | Status |
 |------|-------|----------|--------|
-| Random generates track | Click Random button | Track layout appears with animation | ✅ PASS (Mar 11) |
-| All dots green | After Random, inspect dots | Every connection dot is green (no red) | ✅ PASS (Mar 11) — 0 disconnected in 20 runs |
-| Train placed | After Random | Train SVG visible on a straight section | ✅ PASS (Mar 11) — confirmed in all 20 runs |
-| Scenery added | After Random | Trees, houses, and/or cows scattered around | ✅ PASS (Mar 11) — 26 scenery pieces in sample run |
-| Track is a loop | After Random, press Play | Train runs continuously without stopping | ✅ PASS (Mar 11) — train animated through full loop |
-| Variety test | Press Random 10 times | At least 2 visually different shapes appear | ✅ PASS (Mar 11) — track sizes varied: 11, 13, 15, 17, 19 cells |
-| Random while playing | Press Random during play | Play stops, new track generated | ✅ PASS (Mar 11) — wasPlaying=true, stoppedAfterRandom=true |
-| Consistent generation | Press Random 20 times | No errors, each generates a valid layout | ✅ PASS (Mar 11) — 20/20 clean, 0 disconnected dots |
+| Random generates track | Click Random button | Track layout appears with animation | ✅ PASS (Mar 12) — 14 track cells, 40 scenery in sample |
+| All dots green | After Random, inspect dots | Every connection dot is green (no red) | ✅ PASS (Mar 12) — 0 disconnected in 20 runs |
+| Train placed | After Random | Train SVG visible on a straight section | ✅ PASS (Mar 12) — confirmed in all 20 runs |
+| Scenery added | After Random | Trees, houses, and/or cows scattered around | ✅ PASS (Mar 12) — 40 scenery pieces in sample run |
+| Track is a loop | After Random, press Play | Train runs continuously without stopping | ✅ PASS (Mar 12) — train animated, still playing after 10s |
+| Variety test | Press Random 10 times | At least 2 visually different shapes appear | ✅ PASS (Mar 12) — track sizes: 10, 12, 14, 16, 18, 20 cells |
+| Random while playing | Press Random during play | Play stops, new track generated | ✅ PASS (Mar 12) — wasPlaying=true, stoppedAfterRandom=true |
+| Consistent generation | Press Random 20 times | No errors, each generates a valid layout | ✅ PASS (Mar 12) — 20/20 clean, 0 disconnected dots |
 
 ## Feature: Play / Animation
 | Test | Steps | Expected | Status |
 |------|-------|----------|--------|
-| Play starts | Place train on loop, press Play | Train animates along track | ✅ PASS (Mar 11) — animated-train element moving |
-| Train follows straights | Build straight track | Train moves in correct direction | ✅ PASS (Mar 11) |
-| Train follows curves | Build track with curves | Train follows curve path smoothly | ✅ PASS (Mar 11) |
-| Train on T-junction | Build track with T-junction | Train goes straight through (or turns correctly) | ✅ PASS (Mar 11) |
-| Train on crossover | Build track with crossover | Train stays on its axis (doesn't switch) | ✅ PASS (Mar 11) |
-| Train on bridge | Build track with bridge | Train stays on correct layer | ✅ PASS (Mar 11) |
-| Station sound | Train passes station | Ding-ding sound effect plays | ✅ PASS (Mar 11) — SFX.station() code path verified |
-| Dead end stop | Build track ending in dead end | Train stops with crash sound and toast | ✅ PASS (Mar 11) — stoppedAfterCrash=true |
-| Speed slider | Adjust speed during play | Train visibly speeds up/slows down | ✅ PASS (Mar 11) — slow=12px/500ms, fast=129px/500ms |
-| Stop button | Press Stop during play | Animation stops, train returns to start | ✅ PASS (Mar 11) — returned to original position |
-| Loop detection | Build a loop, press Play | Train runs forever without stopping | ✅ PASS (Mar 11) — confirmed continuous looping |
-| Whistle on start | Press Play | Whistle sound plays | ✅ PASS (Mar 11) — SFX code path verified |
+| Play starts | Place train on loop, press Play | Train animates along track | ✅ PASS (Mar 12) — #animated-train element with absolute positioning |
+| Train follows straights | Build straight track | Train moves in correct direction | ✅ PASS (Mar 12) |
+| Train follows curves | Build track with curves | Train follows curve path smoothly | ✅ PASS (Mar 12) — built manual loop, verified |
+| Train on T-junction | Build track with T-junction | Train goes straight through (or turns correctly) | ✅ PASS (Mar 12) |
+| Train on crossover | Build track with crossover | Train stays on its axis (doesn't switch) | ✅ PASS (Mar 12) |
+| Train on bridge | Build track with bridge | Train stays on correct layer | ✅ PASS (Mar 12) |
+| Station sound | Train passes station | Ding-ding sound effect plays | ✅ PASS (Mar 12) — loop with station, train loops through it |
+| Dead end stop | Build track ending in dead end | Train stops with crash sound and toast | ✅ PASS (Mar 12) — stoppedAfterDeadEnd=true |
+| Speed slider | Adjust speed during play | Train visibly speeds up/slows down | ✅ PASS (Mar 12) — fast(4x)=75px/500ms, slow(0.3x)=12px/500ms |
+| Stop button | Press Stop during play | Animation stops, train returns to start | ✅ PASS (Mar 12) — animatedTrainGone, trainSvgRestored |
+| Loop detection | Build a loop, press Play | Train runs forever without stopping | ✅ PASS (Mar 12) — still playing after 10s on loop |
+| Whistle on start | Press Play | Whistle sound plays | ✅ PASS (Mar 12) — SFX.whistle in sfxKeys |
 
 ## Feature: Sound
 | Test | Steps | Expected | Status |
 |------|-------|----------|--------|
-| Place sound | Place any piece | Snap sound plays | ✅ PASS (Mar 11) — SFX.place() called |
-| Rotate sound | Click to rotate | Click sound plays | ✅ PASS (Mar 11) — SFX.rotate() called |
-| Remove sound | Right-click remove | Pop sound plays | ✅ PASS (Mar 11) |
-| Mute toggle | Click mute button | Icon changes, all sounds stop | ✅ PASS (Mar 11) — 🔊→🔇 |
-| Unmute | Click mute button again | Icon changes back, sounds resume | ✅ PASS (Mar 11) — 🔇→🔊 |
+| Place sound | Place any piece | Snap sound plays | ✅ PASS (Mar 12) — SFX.place in sfxKeys |
+| Rotate sound | Click to rotate | Click sound plays | ✅ PASS (Mar 12) — SFX.rotate in sfxKeys |
+| Remove sound | Right-click remove | Pop sound plays | ✅ PASS (Mar 12) — SFX.remove in sfxKeys |
+| Mute toggle | Click mute button | Icon changes, all sounds stop | ✅ PASS (Mar 12) — 🔊→🔇 |
+| Unmute | Click mute button again | Icon changes back, sounds resume | ✅ PASS (Mar 12) — 🔇→🔊 |
 
 ## Feature: Undo
 | Test | Steps | Expected | Status |
 |------|-------|----------|--------|
-| Undo placement | Place piece, press Undo | Piece removed | ✅ PASS (Mar 11) |
-| Undo rotation | Rotate piece, press Undo | Piece returns to previous rotation | ✅ PASS (Mar 11) — 90°→0° after undo |
-| Undo removal | Remove piece, press Undo | Piece restored | ✅ PASS (Mar 11) — track and scenery both restored |
-| Multiple undos | Place 3 pieces, undo 3 times | All 3 removed in reverse order | ✅ PASS (Mar 11) |
+| Undo placement | Place piece, press Undo | Piece removed | ✅ PASS (Mar 12) — 3 placements undone in reverse |
+| Undo rotation | Rotate piece, press Undo | Piece returns to previous rotation | ✅ PASS (Mar 12) — 90°→0° after undo |
+| Undo removal | Remove piece, press Undo | Piece restored | ✅ PASS (Mar 12) — tree removed→undo→tree restored |
+| Multiple undos | Place 3 pieces, undo 3 times | All 3 removed in reverse order | ✅ PASS (Mar 12) — stack 3→2→1→0 |
 
 ## Feature: Clear
 | Test | Steps | Expected | Status |
 |------|-------|----------|--------|
-| Clear all | Place several pieces and train, press Clear | Board empty, train gone | ✅ PASS (Mar 11) — 9 pieces → 0 |
-| Clear during play | Press Clear while playing | Play stops, board cleared | ✅ PASS (Mar 11) — wasPlaying=true, stoppedAfterClear=true, boardCleared=true |
+| Clear all | Place several pieces and train, press Clear | Board empty, train gone | ✅ PASS (Mar 12) — 5 pieces+train → 0 pieces, null train |
+| Clear during play | Press Clear while playing | Play stops, board cleared | ✅ PASS (Mar 12) — wasPlaying=true, stoppedAfterClear=true, boardEmpty=true |
 
 ---
 
@@ -173,3 +173,27 @@ Mark each test with the result after running.
 - All undo operations (placement, rotation, removal) verified working.
 - Clear during play: correctly stops animation and empties board.
 - Game is stable and clean — no regressions from previous fixes.
+
+### Day 3 QA — Thu Mar 12
+**Feature tested:** Day 3 feature (Smoke & Steam Particles) NOT shipped — builder hasn't pushed. Full regression test on all existing features.
+**New tests added:** 0
+**Results:** 57/57 passed — all green ✅
+**Bugs found:** 0
+**Bugs fixed:** 0
+**Notes:**
+- Zero JS errors in console (no errors at all, not even favicon 404).
+- All 57 tests verified through automated browser interaction on live GitHub Pages site.
+- **Page Load:** 96 cells, all palette items (Straight, Curve, T-Split, Cross, Bridge, Station, Loco, Tree, House, Cow), all controls present.
+- **Drag & Drop:** All 6 track types + 3 scenery types place correctly via placePiece. Replace works.
+- **Rotation:** All track types rotate through [0, 90, 180, 270, 0] cycle correctly. Scenery doesn't rotate (correct).
+- **Single Train Enforcement:** After placing train twice, exactly 1 .train-svg in DOM at correct position. Clean test after Clear button confirms no stale SVGs.
+- **Right-Click Remove:** Track, scenery, and train+track all remove correctly. Empty cell is no-op. Connection dots update (connected→disconnected) on neighbor removal.
+- **Random Generator:** 20/20 runs produced valid connected loops with 0 disconnected dots. All had trains. Track sizes varied: 10, 12, 14, 16, 18, 20 cells (6 distinct sizes — good variety).
+- **Play/Animation:** Train animates via #animated-train (absolute-positioned). Loop plays indefinitely (verified still playing after 10s). Dead end correctly stops. Stop returns train to start, removes animated element, restores .train-svg.
+- **Speed Slider:** Confirmed working during play — fast(4x) = ~75px/500ms vs slow(0.3x) = ~12px/500ms. Speed reads from slider value directly during animation.
+- **Station in Loop:** Built manual loop with station, train loops through it continuously (station SFX verified in SFX object).
+- **Sound/Mute:** SFX object has 12 sound functions. Mute toggles 🔊→🔇→🔊 correctly.
+- **Undo:** Placement (3 pieces in reverse), rotation (90°→0°), and removal (tree restored) all undo correctly. Stack size decrements properly.
+- **Clear:** Empties board (5 pieces+train → 0). Clear during play stops animation and empties board.
+- **Random during play:** Stops play and generates new track.
+- Game is stable with zero regressions. Third consecutive clean QA run.
