@@ -39,6 +39,20 @@ Only logged here if a bug was found, for tracking purposes.
 - **Fix applied:** Save old train position to local variable, update `state.train` to new position FIRST, then re-render old cell (which now correctly sees it's no longer the train's position and doesn't draw a train SVG).
 - **Verification:** Confirmed on live site — placing train twice results in exactly 1 `.train-svg` element at the correct position.
 
+### BUG-005 | 🟢 FIXED | Toast override on auto-restore
+- **Found:** Fri Mar 13 — QA Agent (Day 1)
+- **Fixed:** Fri Mar 13 (Day 1 QA)
+- **Severity:** Low (cosmetic — welcome toast invisible)
+- **Root cause:** `init()` showed "Welcome back!" toast followed immediately by "Drag track pieces!" default toast, which overwrote it.
+- **Fix applied:** Wrapped default toast in `if (!restored)` condition.
+
+### BUG-006 | 🟢 FIXED | XSS risk in save slot name rendering
+- **Found:** Fri Mar 13 — QA Agent (Day 1)
+- **Fixed:** Fri Mar 13 (Day 1 QA)
+- **Severity:** Low (security — only affects localStorage data the user controls)
+- **Root cause:** Slot names inserted via innerHTML with unescaped `value` attribute.
+- **Fix applied:** Added `escapeAttr()` function to sanitize `& " < >` characters.
+
 ### BUG-004 | 🟢 FIXED | Stale connection dots after animated random track generation
 - **Found:** Tue Mar 10 — QA Agent
 - **Fixed:** Tue Mar 10 (commit f062880) — QA Agent

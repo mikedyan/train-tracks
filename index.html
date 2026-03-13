@@ -2492,6 +2492,10 @@ function deleteSlot(slotNum) {
   } catch (e) {}
 }
 
+function escapeAttr(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
 function renderSaveSlots() {
   const container = document.getElementById('save-slots');
   if (!container) return;
@@ -2510,8 +2514,9 @@ function renderSaveSlots() {
     info.className = 'slot-info';
 
     if (data) {
+      const safeName = escapeAttr(data.name || 'Slot ' + i);
       info.innerHTML = `
-        <input class="slot-name" id="slot-name-${i}" value="${data.name || 'Slot ' + i}" maxlength="20">
+        <input class="slot-name" id="slot-name-${i}" value="${safeName}" maxlength="20">
         <div class="slot-time">${formatTimestamp(data.timestamp)}</div>
         <div class="slot-actions">
           <button class="btn-save-slot" onclick="saveToSlot(${i})">💾 Save</button>
@@ -2603,7 +2608,9 @@ function init() {
     });
   });
 
-  showToast('Drag track pieces to build! 🚂');
+  if (!restored) {
+    showToast('Drag track pieces to build! 🚂');
+  }
 }
 
 init();

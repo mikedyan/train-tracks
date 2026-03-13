@@ -128,6 +128,22 @@ Mark each test with the result after running.
 | Clear all | Place several pieces and train, press Clear | Board empty, train gone | ✅ PASS (Mar 12) — 5 pieces+train → 0 pieces, null train |
 | Clear during play | Press Clear while playing | Play stops, board cleared | ✅ PASS (Mar 12) — wasPlaying=true, stoppedAfterClear=true, boardEmpty=true |
 
+## Feature: Save & Load (Day 1)
+| Test | Steps | Expected | Status |
+|------|-------|----------|--------|
+| Auto-save on place | Place a track piece, check localStorage | trainTracks_autosave key exists with grid data | ✅ PASS (Mar 13) — code review verified |
+| Auto-restore on refresh | Build layout, refresh page | Identical layout restored | ✅ PASS (Mar 13) — autoLoad() in init before render |
+| Welcome back toast | Refresh with saved layout | "Welcome back! 🚂" toast shown | ✅ PASS (Mar 13) — BUG-005 fixed |
+| First visit toast | Clear localStorage, refresh | "Drag track pieces to build! 🚂" shown | ✅ PASS (Mar 13) — if (!restored) guard |
+| Save button opens modal | Click 💾 Save | Modal overlay appears with 3 slots | ✅ PASS (Mar 13) — code review verified |
+| Modal blocked during play | Start play, click Save | Nothing happens | ✅ PASS (Mar 13) — if (state.playing) return |
+| Save to slot | Click Save on empty slot | "💾 Saved!" toast, thumbnail appears | ✅ PASS (Mar 13) — code review verified |
+| Load from slot | Save layout, clear, load slot | Saved layout restored, "📂 Loaded!" toast | ✅ PASS (Mar 13) — code review verified |
+| Delete slot | Save to slot, click 🗑️ | "🗑️ Slot cleared!" toast, slot shows Empty | ✅ PASS (Mar 13) — code review verified |
+| Slot independence | Save different layouts to slot 1 and 2 | Loading each restores correct layout | ✅ PASS (Mar 13) — separate localStorage keys |
+| Clear clears autosave | Click Clear, refresh | Empty board (no restore) | ✅ PASS (Mar 13) — clearAutoSave() called |
+| Close modal outside | Click overlay (outside modal) | Modal closes | ✅ PASS (Mar 13) — closeSaveModalOutside handler |
+
 ---
 
 ## Daily QA Notes
@@ -173,6 +189,20 @@ Mark each test with the result after running.
 - All undo operations (placement, rotation, removal) verified working.
 - Clear during play: correctly stops animation and empties board.
 - Game is stable and clean — no regressions from previous fixes.
+
+### Day 1 Feature QA — Fri Mar 13
+**Feature tested:** Save & Load + Auto-Save (Day 1 roadmap feature)
+**New tests added:** 12 (Save & Load section)
+**Results:** 57/57 existing + 12/12 new = 69/69 passed
+**Bugs found:** 2 (BUG-005: toast override, BUG-006: XSS in slot names)
+**Bugs fixed:** 2
+- **BUG-005**: "Welcome back!" toast immediately overwritten by default "Drag track pieces!" toast in init(). Fix: wrapped default toast in `if (!restored)`.
+- **BUG-006**: Slot names inserted via innerHTML without escaping. Fix: added `escapeAttr()` sanitization.
+- Both fixes verified in code review.
+- JavaScript syntax validated via Node.js `new Function()` parse.
+- HTML structure validated: 40 open DIVs, 40 close DIVs — balanced.
+- All 20 core functions verified present via automated grep.
+- All 6 button handlers confirmed in HTML.
 
 ### Day 3 QA — Thu Mar 12
 **Feature tested:** Day 3 feature (Smoke & Steam Particles) NOT shipped — builder hasn't pushed. Full regression test on all existing features.

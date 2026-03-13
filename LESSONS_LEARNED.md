@@ -20,7 +20,16 @@
 - LESSON-013: Performance budget: maintain 60fps with max 30 particles active.
 - LESSON-014: localStorage for all persistence (save slots, preferences, progress).
 
+## Persistence Patterns (Day 1)
+- LESSON-018: Auto-save must hook into ALL state mutation paths — not just the obvious functions, but also drag-and-drop handlers that modify state directly (e.g., train-to-trash, train-off-grid).
+- LESSON-019: When adding a new toast in init(), check if it conflicts with existing toasts (only one toast shows at a time).
+- LESSON-020: Always sanitize user-provided strings before inserting into innerHTML — use escapeAttr() for attribute values.
+- LESSON-021: localStorage operations should always be wrapped in try/catch (storage full, private browsing, etc.).
+- LESSON-022: Save slot data serialization must be complete — grid + train + trainDir. Undo stack is session-only and intentionally excluded.
+
 ## QA Patterns
 - LESSON-015: Random → Play → watch full loop is the core regression test.
 - LESSON-016: Test on both desktop (mouse) and mobile (touch) for any interaction changes.
 - LESSON-017: Check sound after every audio change — Web Audio can produce clicks/pops if not handled.
+- LESSON-023: Verify all core functions still exist after edits (use automated grep/node parse check).
+- LESSON-024: Check HTML tag balance (open vs close tags) as a quick structural integrity test.
