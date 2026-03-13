@@ -1,0 +1,69 @@
+{
+  "day": 1,
+  "title": "Save & Load + Auto-Save",
+  "description": "Add persistence so layouts survive page refreshes, plus 3 named save slots with thumbnails.",
+  "bugs_to_fix": [],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Auto-save grid state to localStorage on every change",
+      "details": "Create a saveToLocalStorage() function that serializes the full game state (grid, train position, trainDir) and writes it to localStorage key 'trainTracks_autosave'. Call this after every mutation: placePiece, removePiece, rotatePiece, placeTrain, clearAll, and after random track generation completes.",
+      "file": "index.html",
+      "section": "STATE / new PERSISTENCE section"
+    },
+    {
+      "id": "T2",
+      "title": "Auto-restore on page load",
+      "details": "Create loadFromLocalStorage() that reads 'trainTracks_autosave', parses it, and restores the grid and train state. Call this in init() before the first renderAllCells(). The user should never notice — seamless restore.",
+      "file": "index.html",
+      "section": "INIT"
+    },
+    {
+      "id": "T3",
+      "title": "Save modal with 3 named slots",
+      "details": "Add a 💾 Save button to the controls bar. Clicking it opens an overlay/modal with 3 save slots. Each slot shows: editable name (default 'Slot 1/2/3'), mini canvas thumbnail of the layout, timestamp of last save. Buttons per slot: Save, Load, Delete. Modal has a close/X button.",
+      "file": "index.html",
+      "section": "New SAVE MODAL HTML + CSS + JS"
+    },
+    {
+      "id": "T4",
+      "title": "Render mini thumbnail for save slots",
+      "details": "Create renderThumbnail(gridData, trainData) that draws a small (120x80) canvas representing the grid. Track cells get brown squares, scenery gets green dots, train gets a red dot, empty cells get grass green. This is fast and recognizable without needing full SVG rendering.",
+      "file": "index.html",
+      "section": "PERSISTENCE section"
+    },
+    {
+      "id": "T5",
+      "title": "Save/Load/Delete per slot",
+      "details": "Save: serialize current state + name + timestamp to localStorage key 'trainTracks_slot_{1-3}'. Load: parse slot data, restore grid/train, close modal, show toast. Delete: clear slot from localStorage, update modal UI. Each operation shows a toast confirmation.",
+      "file": "index.html",
+      "section": "PERSISTENCE section"
+    },
+    {
+      "id": "T6",
+      "title": "Toast confirmations for save/load operations",
+      "details": "Show '💾 Saved!' on save, '📂 Loaded!' on load, '🗑️ Slot cleared!' on delete. Use existing showToast() function.",
+      "file": "index.html",
+      "section": "Existing toast system"
+    }
+  ],
+  "acceptance_criteria": [
+    "AC1: Build a track layout, refresh page → identical layout restored (grid + train position)",
+    "AC2: All 3 save slots work independently (save to slot 1, different layout to slot 2, load slot 1 → original layout)",
+    "AC3: Thumbnails in save modal show recognizable mini layout (track = brown, scenery = green, train = red)",
+    "AC4: Save/Load/Delete buttons function correctly with toast confirmations",
+    "AC5: Works with all piece types (straight, curve, tjunction, crossover, bridge, station), scenery (tree, house, cow), and train position",
+    "AC6: clearAll() clears the autosave too (fresh start)",
+    "AC7: Save modal can be opened and closed without side effects",
+    "AC8: Slot names are editable and persist across saves",
+    "AC9: Timestamps display in human-readable format",
+    "AC10: No regressions — drag-and-drop, rotation, undo, random generation, play/stop all still work"
+  ],
+  "testing_focus": [
+    "Refresh persistence (the most critical test)",
+    "Save slot independence",
+    "State serialization completeness (all piece types + rotations)",
+    "Modal open/close doesn't interfere with game state",
+    "Random generate → auto-save → refresh → layout intact"
+  ]
+}

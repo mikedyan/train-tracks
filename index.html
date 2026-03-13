@@ -346,6 +346,117 @@ html, body {
   animation: poof 0.5s ease-out forwards;
 }
 
+/* SAVE MODAL */
+#save-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 300;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2px);
+}
+#save-overlay.open { display: flex; }
+
+#save-modal {
+  background: #FFF;
+  border-radius: 16px;
+  padding: 24px;
+  width: 380px;
+  max-width: 90vw;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+  position: relative;
+}
+
+#save-modal h2 {
+  font-size: 20px;
+  color: #3E2723;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+#save-modal .close-btn {
+  position: absolute;
+  top: 12px; right: 14px;
+  background: none; border: none;
+  font-size: 22px; cursor: pointer;
+  color: #999;
+  line-height: 1;
+}
+#save-modal .close-btn:hover { color: #333; }
+
+.save-slot {
+  border: 2px solid #E0E0E0;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  transition: border-color 0.2s;
+}
+.save-slot:hover { border-color: #BDBDBD; }
+
+.save-slot canvas {
+  width: 100px;
+  height: 67px;
+  border-radius: 6px;
+  background: #E8F5E9;
+  flex-shrink: 0;
+}
+
+.save-slot .slot-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.save-slot .slot-name {
+  font-family: 'Nunito', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  border: 1px solid #E0E0E0;
+  border-radius: 6px;
+  padding: 4px 8px;
+  width: 100%;
+  outline: none;
+  color: #3E2723;
+}
+.save-slot .slot-name:focus { border-color: #4CAF50; }
+
+.save-slot .slot-time {
+  font-size: 11px;
+  color: #999;
+  margin-top: 4px;
+}
+
+.save-slot .slot-empty {
+  font-size: 12px;
+  color: #BDBDBD;
+  font-style: italic;
+}
+
+.save-slot .slot-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.save-slot .slot-actions button {
+  padding: 4px 10px;
+  border: none;
+  border-radius: 6px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.save-slot .slot-actions button:hover { transform: scale(1.05); }
+.save-slot .slot-actions .btn-save-slot { background: #4CAF50; color: white; }
+.save-slot .slot-actions .btn-load-slot { background: #2196F3; color: white; }
+.save-slot .slot-actions .btn-delete-slot { background: #F44336; color: white; }
+
 /* PLAYING STATE */
 #app.playing .cell { cursor: default; }
 #app.playing .cell:hover { background: var(--grass); }
@@ -395,9 +506,20 @@ html, body {
         🐢 <input type="range" id="speed-slider" min="0.3" max="4" step="0.1" value="1.2"> 🐇
       </div>
       <button class="btn" id="btn-mute" onclick="toggleMute()" style="background:#78909C;color:white;padding:8px 12px;">🔊</button>
+      <button class="btn" onclick="openSaveModal()" style="background:#607D8B;color:white;box-shadow:0 3px 10px rgba(96,125,139,0.3);">💾 Save</button>
     </div>
   </div>
 </div>
+
+<!-- Save/Load Modal -->
+<div id="save-overlay" onclick="closeSaveModalOutside(event)">
+  <div id="save-modal">
+    <button class="close-btn" onclick="closeSaveModal()">✕</button>
+    <h2>💾 Save & Load</h2>
+    <div id="save-slots"></div>
+  </div>
+</div>
+
 <div id="ghost"></div>
 <div id="trash-zone">🗑️</div>
 <div id="toast"></div>
@@ -1001,6 +1123,7 @@ function placePiece(row, col, type, rotation = 0) {
     const nb = getNeighbor(row, col, dir);
     if (nb) updateConnectionDots(nb.row, nb.col);
   });
+  autoSave();
 }
 
 function removePiece(row, col) {
@@ -1019,6 +1142,7 @@ function removePiece(row, col) {
       renderCell(nb.row, nb.col);
     }
   });
+  autoSave();
 }
 
 function rotatePiece(row, col) {
@@ -1032,6 +1156,7 @@ function rotatePiece(row, col) {
     const nb = getNeighbor(row, col, dir);
     if (nb) updateConnectionDots(nb.row, nb.col);
   });
+  autoSave();
 }
 
 function placeTrain(row, col) {
@@ -1043,6 +1168,7 @@ function placeTrain(row, col) {
   state.train = { row, col };
   if (oldTrain) renderCell(oldTrain.row, oldTrain.col);
   renderCell(row, col);
+  autoSave();
 }
 
 function clearAll() {
@@ -1052,6 +1178,7 @@ function clearAll() {
   state.grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
   state.train = null;
   renderAllCells();
+  clearAutoSave();
   showToast('Board cleared!');
 }
 
@@ -1337,6 +1464,7 @@ function onPointerUp(e) {
       state.train = null;
       SFX.remove();
       renderCell(dragInfo.sourceRow, dragInfo.sourceCol);
+      autoSave();
       showToast('🚂 Train removed!');
     }
     hideGhost();
@@ -1442,6 +1570,7 @@ function onPointerUp(e) {
       state.train = null;
       SFX.remove();
       renderCell(dragInfo.sourceRow, dragInfo.sourceCol);
+      autoSave();
       showToast('🚂 Train removed!');
     } else if (dragInfo.source === 'grid') {
       // Remove piece (dragged off = delete)
@@ -1915,6 +2044,7 @@ function generateRandomTrack() {
     // Place train on a straight section
     setTimeout(() => {
       placeTrainOnLoop(path);
+      autoSave();
       showToast('🚂 Track ready! Press Play!');
     }, 200);
   }, delay + 100);
@@ -2196,6 +2326,232 @@ function placeTrainOnLoop(path) {
 }
 
 // ============================================================
+// PERSISTENCE (Auto-save, Save Slots, Thumbnails)
+// ============================================================
+const AUTOSAVE_KEY = 'trainTracks_autosave';
+const SLOT_KEY_PREFIX = 'trainTracks_slot_';
+
+function serializeState() {
+  return JSON.stringify({
+    grid: state.grid,
+    train: state.train,
+    trainDir: state.trainDir,
+  });
+}
+
+function deserializeState(json) {
+  try {
+    const data = JSON.parse(json);
+    if (data && Array.isArray(data.grid)) {
+      state.grid = data.grid;
+      state.train = data.train || null;
+      state.trainDir = data.trainDir || 'E';
+      state.undoStack = [];
+      return true;
+    }
+  } catch (e) { /* ignore parse errors */ }
+  return false;
+}
+
+function autoSave() {
+  try {
+    localStorage.setItem(AUTOSAVE_KEY, serializeState());
+  } catch (e) { /* localStorage full or unavailable */ }
+}
+
+function autoLoad() {
+  try {
+    const saved = localStorage.getItem(AUTOSAVE_KEY);
+    if (saved) return deserializeState(saved);
+  } catch (e) { /* ignore */ }
+  return false;
+}
+
+function clearAutoSave() {
+  try { localStorage.removeItem(AUTOSAVE_KEY); } catch (e) {}
+}
+
+// Mini thumbnail: draws a small representation of the grid to a canvas
+function renderThumbnail(canvas, gridData, trainData) {
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width = 120;
+  const h = canvas.height = 80;
+  const cw = w / COLS;
+  const ch = h / ROWS;
+
+  // Grass background
+  ctx.fillStyle = '#7CB342';
+  ctx.fillRect(0, 0, w, h);
+
+  if (!gridData) return;
+
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const piece = gridData[r]?.[c];
+      if (!piece) continue;
+      const x = c * cw, y = r * ch;
+
+      if (SCENERY_TYPES.includes(piece.type)) {
+        // Scenery: subtle green dot
+        ctx.fillStyle = '#558B2F';
+        ctx.beginPath();
+        ctx.arc(x + cw / 2, y + ch / 2, Math.min(cw, ch) * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        // Track: brown square
+        ctx.fillStyle = '#5D4037';
+        const pad = 1;
+        ctx.fillRect(x + pad, y + pad, cw - pad * 2, ch - pad * 2);
+
+        // Station marker
+        if (piece.type === 'station') {
+          ctx.fillStyle = '#E0E0E0';
+          ctx.fillRect(x + cw * 0.6, y + pad, cw * 0.35, ch - pad * 2);
+        }
+      }
+    }
+  }
+
+  // Train: red dot
+  if (trainData) {
+    ctx.fillStyle = '#E53935';
+    const tx = trainData.col * cw + cw / 2;
+    const ty = trainData.row * ch + ch / 2;
+    ctx.beginPath();
+    ctx.arc(tx, ty, Math.min(cw, ch) * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+    // White highlight
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.beginPath();
+    ctx.arc(tx - 1, ty - 1, Math.min(cw, ch) * 0.15, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function formatTimestamp(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const month = months[d.getMonth()];
+  const day = d.getDate();
+  const hour = d.getHours();
+  const min = String(d.getMinutes()).padStart(2, '0');
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const h12 = hour % 12 || 12;
+  return `${month} ${day}, ${h12}:${min} ${ampm}`;
+}
+
+function getSlotData(slotNum) {
+  try {
+    const raw = localStorage.getItem(SLOT_KEY_PREFIX + slotNum);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return null;
+}
+
+function saveToSlot(slotNum) {
+  const nameInput = document.querySelector(`#slot-name-${slotNum}`);
+  const name = nameInput ? nameInput.value.trim() : `Slot ${slotNum}`;
+  const data = {
+    name: name || `Slot ${slotNum}`,
+    timestamp: Date.now(),
+    grid: state.grid,
+    train: state.train,
+    trainDir: state.trainDir,
+  };
+  try {
+    localStorage.setItem(SLOT_KEY_PREFIX + slotNum, JSON.stringify(data));
+    SFX.place();
+    showToast('💾 Saved!');
+    renderSaveSlots();
+  } catch (e) {
+    showToast('Save failed — storage full!');
+  }
+}
+
+function loadFromSlot(slotNum) {
+  const data = getSlotData(slotNum);
+  if (!data) return;
+  saveUndo();
+  state.grid = data.grid;
+  state.train = data.train || null;
+  state.trainDir = data.trainDir || 'E';
+  renderAllCells();
+  autoSave();
+  SFX.generate();
+  showToast('📂 Loaded!');
+  closeSaveModal();
+}
+
+function deleteSlot(slotNum) {
+  try {
+    localStorage.removeItem(SLOT_KEY_PREFIX + slotNum);
+    showToast('🗑️ Slot cleared!');
+    SFX.remove();
+    renderSaveSlots();
+  } catch (e) {}
+}
+
+function renderSaveSlots() {
+  const container = document.getElementById('save-slots');
+  if (!container) return;
+  container.innerHTML = '';
+
+  for (let i = 1; i <= 3; i++) {
+    const data = getSlotData(i);
+    const slot = document.createElement('div');
+    slot.className = 'save-slot';
+
+    const canvas = document.createElement('canvas');
+    canvas.id = `slot-canvas-${i}`;
+    renderThumbnail(canvas, data ? data.grid : null, data ? data.train : null);
+
+    const info = document.createElement('div');
+    info.className = 'slot-info';
+
+    if (data) {
+      info.innerHTML = `
+        <input class="slot-name" id="slot-name-${i}" value="${data.name || 'Slot ' + i}" maxlength="20">
+        <div class="slot-time">${formatTimestamp(data.timestamp)}</div>
+        <div class="slot-actions">
+          <button class="btn-save-slot" onclick="saveToSlot(${i})">💾 Save</button>
+          <button class="btn-load-slot" onclick="loadFromSlot(${i})">📂 Load</button>
+          <button class="btn-delete-slot" onclick="deleteSlot(${i})">🗑️</button>
+        </div>
+      `;
+    } else {
+      info.innerHTML = `
+        <input class="slot-name" id="slot-name-${i}" value="Slot ${i}" maxlength="20">
+        <div class="slot-empty">Empty</div>
+        <div class="slot-actions">
+          <button class="btn-save-slot" onclick="saveToSlot(${i})">💾 Save</button>
+        </div>
+      `;
+    }
+
+    slot.appendChild(canvas);
+    slot.appendChild(info);
+    container.appendChild(slot);
+  }
+}
+
+function openSaveModal() {
+  if (state.playing) return;
+  renderSaveSlots();
+  document.getElementById('save-overlay').classList.add('open');
+}
+
+function closeSaveModal() {
+  document.getElementById('save-overlay').classList.remove('open');
+}
+
+function closeSaveModalOutside(e) {
+  if (e.target === document.getElementById('save-overlay')) {
+    closeSaveModal();
+  }
+}
+
+// ============================================================
 // SIZING
 // ============================================================
 function calculateSize() {
@@ -2213,7 +2569,15 @@ function calculateSize() {
 function init() {
   calculateSize();
   initGrid();
+
+  // Restore saved state before first render
+  const restored = autoLoad();
+
   renderAllCells();
+
+  if (restored) {
+    showToast('Welcome back! 🚂');
+  }
 
   // Render palette SVGs
   document.querySelectorAll('.palette-piece').forEach(el => {
