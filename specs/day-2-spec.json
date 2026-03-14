@@ -1,0 +1,60 @@
+{
+  "day": 2,
+  "title": "Smart Auto-Connect",
+  "date": "2026-03-14",
+  "bugs_to_fix": [],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Add findBestRotation() function",
+      "description": "Create a new function that evaluates all 4 rotations (0, 90, 180, 270) for a given piece type at a given cell. For each rotation, count how many of the piece's connection directions match a neighbor that also has a compatible connection (i.e., neighbor has OPPOSITE[dir] in its connections). Return the rotation with the highest match count. Tie-break: first rotation encountered with the highest score wins. If no rotation has any matches (score 0), return 0 (default).",
+      "file": "index.html",
+      "location": "New function, place it in the UTILITY section after neighborConnected()",
+      "code_changes": "Add function findBestRotation(row, col, type) that loops rotations [0,90,180,270], computes connections via getConnections(type, rotation), counts neighbor matches, returns best rotation."
+    },
+    {
+      "id": "T2",
+      "title": "Integrate auto-connect into palette drops only",
+      "description": "In the onPointerUp() handler, when a piece is dropped from the palette (dragInfo.source === 'palette') and it's a track piece (not train, not scenery), call findBestRotation() to determine the optimal rotation before calling placePiece(). Grid-source drops must preserve their existing rotation (dragInfo.rotation).",
+      "file": "index.html",
+      "location": "Inside onPointerUp(), in the track piece placement section for palette source",
+      "code_changes": "Before calling placePiece() for palette-sourced track pieces, compute rotation via findBestRotation(row, col, dragInfo.type) and pass it to placePiece()."
+    },
+    {
+      "id": "T3",
+      "title": "Add green pulse animation on auto-connected edges",
+      "description": "When a piece is placed with auto-connect and achieves at least 1 connection, play a brief green pulse animation on the connected edge dots. Add a CSS @keyframes 'connect-pulse' that scales up and glows the connected dots, then returns to normal. Apply the class 'pulsing' to connected dots after placement.",
+      "file": "index.html",
+      "location": "CSS section (after connection-dot styles) and in the placePiece flow",
+      "code_changes": "1. Add @keyframes connect-pulse CSS animation. 2. Add .connection-dot.pulsing class. 3. After auto-connect placement, find connected dots and add 'pulsing' class, remove after animation ends."
+    },
+    {
+      "id": "T4",
+      "title": "Add showAutoConnectPulse() function",
+      "description": "Create a function that, given a row/col, finds all .connection-dot.connected elements in that cell and its connected neighbors, adds a 'pulsing' class, and removes it after 600ms. This is called only when auto-connect actually found a rotation with score > 0.",
+      "file": "index.html",
+      "location": "After the placePiece function or in a new VISUAL EFFECTS section",
+      "code_changes": "New function showAutoConnectPulse(row, col) that queries connected dots and triggers pulse animation."
+    }
+  ],
+  "acceptance_criteria": [
+    "AC1: Drop a curve from palette next to a straight track → curve auto-rotates to connect",
+    "AC2: Drop a straight from palette between two parallel pieces → connects to both sides",
+    "AC3: Manual click-to-rotate still works after placement (rotatePiece unchanged)",
+    "AC4: Moving an existing piece from one cell to another preserves its rotation (no auto-rotate on grid-source drag)",
+    "AC5: When no neighbors exist, piece drops with default rotation (0°)",
+    "AC6: Brief green pulse animation visible on connected dots after auto-connect",
+    "AC7: Auto-connect works with all track types: straight, curve, tjunction, crossover, bridge, station",
+    "AC8: Random track generator still works correctly (it sets rotations explicitly, not affected by auto-connect)"
+  ],
+  "testing_focus": [
+    "Drag curve from palette next to straight → verify auto-rotation",
+    "Drag straight between two pieces → verify double connection",
+    "Click existing piece → rotation still works manually",
+    "Drag existing piece from grid → preserves its rotation at new position",
+    "Place piece with no neighbors → default rotation 0",
+    "Random generate → full loop works, no broken connections",
+    "Verify green pulse animation fires and clears",
+    "All 6 track types auto-connect correctly"
+  ]
+}

@@ -208,6 +208,22 @@ html, body {
 }
 .cell .connection-dot.connected { opacity: 1; }
 .cell .connection-dot.disconnected { background: #FF5252; box-shadow: 0 0 6px #FF5252; opacity: 0.7; }
+
+/* Auto-connect pulse animation */
+@keyframes connect-pulse {
+  0% { transform: translateX(-50%) scale(1); box-shadow: 0 0 6px #76FF03; }
+  40% { transform: translateX(-50%) scale(2.2); box-shadow: 0 0 14px #76FF03, 0 0 24px rgba(118,255,3,0.4); }
+  100% { transform: translateX(-50%) scale(1); box-shadow: 0 0 6px #76FF03; }
+}
+@keyframes connect-pulse-y {
+  0% { transform: translateY(-50%) scale(1); box-shadow: 0 0 6px #76FF03; }
+  40% { transform: translateY(-50%) scale(2.2); box-shadow: 0 0 14px #76FF03, 0 0 24px rgba(118,255,3,0.4); }
+  100% { transform: translateY(-50%) scale(1); box-shadow: 0 0 6px #76FF03; }
+}
+.cell .connection-dot.pulsing.n,
+.cell .connection-dot.pulsing.s { animation: connect-pulse 0.6s ease-out; }
+.cell .connection-dot.pulsing.e,
+.cell .connection-dot.pulsing.w { animation: connect-pulse-y 0.6s ease-out; }
 .cell .connection-dot.n { top: -3px; left: 50%; transform: translateX(-50%); }
 .cell .connection-dot.s { bottom: -3px; left: 50%; transform: translateX(-50%); }
 .cell .connection-dot.e { right: -3px; top: 50%; transform: translateY(-50%); }
@@ -770,6 +786,33 @@ function neighborConnected(row, col, dir) {
   return getConnections(piece.type, piece.rotation).includes(OPPOSITE[dir]);
 }
 
+// Smart Auto-Connect: find the rotation that maximizes neighbor connections
+function findBestRotation(row, col, type) {
+  let bestRotation = 0;
+  let bestScore = 0;
+
+  for (const rotation of [0, 90, 180, 270]) {
+    const conns = getConnections(type, rotation);
+    let score = 0;
+    for (const dir of conns) {
+      const nb = getNeighbor(row, col, dir);
+      if (!nb) continue;
+      const nbPiece = state.grid[nb.row][nb.col];
+      if (!nbPiece || SCENERY_TYPES.includes(nbPiece.type)) continue;
+      const nbConns = getConnections(nbPiece.type, nbPiece.rotation);
+      if (nbConns.includes(OPPOSITE[dir])) {
+        score++;
+      }
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      bestRotation = rotation;
+    }
+  }
+
+  return { rotation: bestRotation, score: bestScore };
+}
+
 // ============================================================
 // TRACK SVG RENDERING
 // ============================================================
@@ -1113,6 +1156,33 @@ function undo() {
 // ============================================================
 // PIECE PLACEMENT
 // ============================================================
+// Visual pulse on auto-connected edges
+function showAutoConnectPulse(row, col) {
+  const cell = getCellEl(row, col);
+  if (!cell) return;
+  const dots = cell.querySelectorAll('.connection-dot.connected');
+  dots.forEach(dot => {
+    dot.classList.add('pulsing');
+    dot.addEventListener('animationend', () => dot.classList.remove('pulsing'), { once: true });
+  });
+  // Also pulse the neighbor's matching dot
+  const piece = state.grid[row][col];
+  if (!piece) return;
+  const conns = getConnections(piece.type, piece.rotation);
+  conns.forEach(dir => {
+    const nb = getNeighbor(row, col, dir);
+    if (!nb) return;
+    const nbCell = getCellEl(nb.row, nb.col);
+    if (!nbCell) return;
+    const oppDir = OPPOSITE[dir].toLowerCase();
+    const nbDot = nbCell.querySelector(`.connection-dot.connected.${oppDir}`);
+    if (nbDot) {
+      nbDot.classList.add('pulsing');
+      nbDot.addEventListener('animationend', () => nbDot.classList.remove('pulsing'), { once: true });
+    }
+  });
+}
+
 function placePiece(row, col, type, rotation = 0) {
   saveUndo();
   state.grid[row][col] = { type, rotation };
@@ -1554,11 +1624,18 @@ function onPointerUp(e) {
         if (existing && SCENERY_TYPES.includes(existing.type)) {
           removePiece(row, col);
         }
+        // Smart Auto-Connect: find best rotation for palette drops
+        const autoResult = findBestRotation(row, col, dragInfo.type);
+        const autoRotation = autoResult.rotation;
         if (state.train && state.train.row === row && state.train.col === col) {
           // Keep train, replace track under it
-          placePiece(row, col, dragInfo.type, 0);
+          placePiece(row, col, dragInfo.type, autoRotation);
         } else {
-          placePiece(row, col, dragInfo.type, existing && !SCENERY_TYPES.includes(existing.type) ? 0 : 0);
+          placePiece(row, col, dragInfo.type, autoRotation);
+        }
+        // Pulse connected dots if auto-connect found matches
+        if (autoResult.score > 0) {
+          showAutoConnectPulse(row, col);
         }
       }
     }
