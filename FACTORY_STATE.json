@@ -2,12 +2,12 @@
   "project": "train-tracks",
   "currentPhase": 2,
   "phaseLabel": "Council Roadmap",
-  "lastCompletedDay": 1,
-  "nextDay": 2,
-  "nextItemStart": 2,
-  "lastRunDate": "2026-03-13",
+  "lastCompletedDay": 2,
+  "nextDay": 3,
+  "nextItemStart": 3,
+  "lastRunDate": "2026-03-14",
   "repo": "/Users/openclaw/.openclaw/workspace/factory/projects/train-tracks",
   "githubPages": "https://mikedyan.github.io/train-tracks/",
   "githubRepo": "mikedyan/train-tracks",
-  "notes": "Day 1 shipped: Save & Load + Auto-Save. 2 bugs found and fixed by QA (toast override, XSS sanitization)."
+  "notes": "Day 2 shipped: Smart Auto-Connect. 0 bugs found. Git push blocked — GitHub PAT expired, needs re-auth."
 }
