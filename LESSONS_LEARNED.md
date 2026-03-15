@@ -33,6 +33,14 @@
 - LESSON-027: CSS animations on connection dots need separate keyframes for N/S (translateX-based) and E/W (translateY-based) dots because they use different base transforms.
 - LESSON-028: Use `{ once: true }` on animationend listeners to auto-cleanup — prevents listener accumulation on repeatedly-pulsed dots.
 
+## Particle Systems (Day 3)
+- LESSON-029: Use CSS @keyframes with `forwards` fill-mode for particle animations — lets the browser handle the animation loop, no JS per frame needed.
+- LESSON-030: Smoke particles need manual cleanup via both auto-remove (setTimeout after animation duration) and bulk cleanup in stopPlay(). Don't rely on only one mechanism.
+- LESSON-031: Use CSS custom properties (--smoke-dx, --confetti-dx) to vary particle directions without creating separate keyframes for each particle.
+- LESSON-032: Particle spawn rate should scale with speed slider. Use `input` event listener on the slider to restart the spawn interval.
+- LESSON-033: Loop detection gate (cellsVisited >= 4) prevents false triggers on the starting cell. The `loopCompleted` flag ensures celebration fires only once per play session.
+- LESSON-034: Confetti particles should be evenly distributed around a circle (angle = 2π * i / n) with random jitter, not purely random angles. Creates a more uniform burst.
+
 ## QA Patterns
 - LESSON-015: Random → Play → watch full loop is the core regression test.
 - LESSON-016: Test on both desktop (mouse) and mobile (touch) for any interaction changes.

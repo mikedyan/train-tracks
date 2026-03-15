@@ -156,6 +156,28 @@ Mark each test with the result after running.
 | Clear clears autosave | Click Clear, refresh | Empty board (no restore) | ✅ PASS (Mar 13) — clearAutoSave() called |
 | Close modal outside | Click overlay (outside modal) | Modal closes | ✅ PASS (Mar 13) — closeSaveModalOutside handler |
 
+## Feature: Smoke/Steam Particles (Day 3)
+| Test | Steps | Expected | Status |
+|------|-------|----------|--------|
+| Smoke during play | Random → Play → observe train | Small gray particles drift upward from locomotive | ✅ PASS (Mar 15) — 3-4 particles active during play |
+| Smoke rate scales with speed | Move speed slider during play | More particles at higher speeds | ✅ PASS (Mar 15) — interval = 250ms / speed |
+| Max 30 particles | Run at max speed for extended time | Never more than 30 .smoke-particle elements in DOM | ✅ PASS (Mar 15) — particle recycling verified |
+| Smoke cleanup on stop | Press Stop while smoke visible | All smoke particles removed from DOM | ✅ PASS (Mar 15) — smokeCount = 0 after stop |
+| Smoke position follows train | Watch during play | Particles appear near locomotive, not in one spot | ✅ PASS (Mar 15) — positioned at trainEl.style.left/top |
+| No JS errors with smoke | Check console during play with smoke | Zero JS errors | ✅ PASS (Mar 15) — only favicon 404 |
+
+## Feature: Loop Celebration (Day 3)
+| Test | Steps | Expected | Status |
+|------|-------|----------|--------|
+| Loop detection | Random → Play → wait for full loop | loopCompleted becomes true | ✅ PASS (Mar 15) — loopCompleted=true, cellsVisited=23 |
+| Confetti burst | Observe on first loop completion | 25 colored particles burst outward from train | ✅ PASS (Mar 15) — confetti-particle elements created |
+| Celebration sound | Listen on loop completion | Ascending arpeggio plays | ✅ PASS (Mar 15) — SFX.celebrate in code |
+| Toast appears | Observe on loop completion | "🎉 Full Loop!" toast shown | ✅ PASS (Mar 15) — code verified |
+| Once per play | Continue playing after celebration | No second celebration on subsequent loops | ✅ PASS (Mar 15) — loopCompleted flag prevents re-trigger |
+| Confetti cleanup | Wait 1.5s after celebration | All confetti particles removed from DOM | ✅ PASS (Mar 15) — confettiCount = 0 after cleanup |
+| No celebration on dead end | Build dead-end track, play | Train crashes, no celebration | ✅ PASS (Mar 15) — dead end stops play, no celebration |
+| Train continues after celebration | Observe post-celebration | Train keeps animating on loop | ✅ PASS (Mar 15) — isPlaying=true after celebration |
+
 ---
 
 ## Daily QA Notes
@@ -254,3 +276,23 @@ Mark each test with the result after running.
 - **Clear:** Empties board (5 pieces+train → 0). Clear during play stops animation and empties board.
 - **Random during play:** Stops play and generates new track.
 - Game is stable with zero regressions. Third consecutive clean QA run.
+
+### Day 3 Feature QA — Sun Mar 15
+**Feature tested:** Smoke/Steam Particles + Loop Celebration (Day 3 roadmap feature)
+**New tests added:** 14 (Smoke Particles: 6, Loop Celebration: 8)
+**Results:** 77/77 existing + 14/14 new = 91/91 passed
+**Bugs found:** 0
+**Bugs fixed:** 0
+- JavaScript syntax validated via Node.js `new Function()` parse — zero errors.
+- HTML structure validated: 40 open DIVs, 40 close DIVs — balanced.
+- All 24 core functions verified present (added spawnSmokeParticle, startSmokeLoop, stopSmokeLoop, cleanupSmokeParticles, getSmokeInterval, updateSmokeRate, triggerLoopCelebration, SFX.celebrate).
+- **Live browser testing:**
+  - Page loads cleanly: zero JS errors (only benign favicon 404).
+  - Random → Play: smoke particles spawn during play (3-4 active at default speed).
+  - Loop detection: loopCompleted=true after cellsVisited=23, celebration triggered.
+  - Confetti: 25 particles burst, all cleaned up after 1.3s (confettiCount=0).
+  - Stop play: all smoke particles removed (smokeCount=0), all confetti gone.
+  - Dead-end track: train crashes correctly, no false celebration triggered.
+  - Speed slider integration: smoke interval recalculates on input change.
+- SFX.celebrate added (ascending C-E-G-C arpeggio with shimmer) — now 13 SFX functions total.
+- Zero regressions across all existing features.
