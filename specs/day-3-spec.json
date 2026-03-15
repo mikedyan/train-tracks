@@ -1,0 +1,85 @@
+{
+  "day": 3,
+  "title": "Smoke/Steam Particles + Loop Celebration",
+  "date": "2026-03-15",
+  "bugs_to_fix": [],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Smoke/Steam CSS Particle System",
+      "description": "Add a CSS-based particle system that emits small gray/white smoke puffs from the locomotive smokestack during play. Particles should drift upward, expand slightly, and fade out.",
+      "implementation": [
+        "Add @keyframes smoke-rise animation: translate upward 30-50px, scale from 1 to 1.8, opacity from 0.7 to 0",
+        "Add .smoke-particle CSS class with absolute positioning, 3-6px diameter, gray/white background, border-radius 50%",
+        "Create spawnSmokeParticle() function that creates a div, positions it at the locomotive's current screen position (smokestack area), adds animation, removes after animation completes",
+        "Start a smoke interval in startPlay() that spawns particles at a rate of ~3-5 per second at 1x speed",
+        "Scale spawn rate with speed slider: interval = 300ms / speed (so faster train = more smoke)",
+        "Maintain a particle pool: max 30 alive particles. If limit reached, remove oldest before spawning new",
+        "Stop smoke interval in stopPlay()",
+        "Particles must be appended to #grid-container (same parent as animated train) so they stay in grid coordinate space",
+        "Add slight random horizontal drift to each particle for natural look (randomize translateX ±10px)"
+      ],
+      "files": ["index.html"],
+      "acceptance_criteria": [
+        "Visible smoke puffs trail from locomotive during play",
+        "Smoke rate increases when speed slider is moved right",
+        "Smoke stops when play stops",
+        "Max 30 particles in DOM at any time",
+        "No performance degradation (CSS-only animations, no JS per frame for particles)",
+        "Particles appear near the locomotive's smokestack area and drift upward"
+      ]
+    },
+    {
+      "id": "T2",
+      "title": "Loop Completion Detection",
+      "description": "Detect when the train completes a full loop (returns to its starting cell after visiting at least one other cell). Track this in animState.",
+      "implementation": [
+        "Add animState.loopCompleted = false flag in startPlay()",
+        "Add animState.cellsVisited = 0 counter",
+        "In animateFrame(), when entering a new cell, increment cellsVisited",
+        "When new cell matches startRow/startCol and cellsVisited >= 4, set loopCompleted = true",
+        "Only trigger celebration once per play session (check !animState.loopCompleted before triggering)"
+      ],
+      "files": ["index.html"],
+      "acceptance_criteria": [
+        "Loop detected when train returns to start after traversing the loop",
+        "Does not false-trigger on start (cellsVisited gate)",
+        "Only triggers once per play session",
+        "Train continues playing after loop detection (doesn't stop)"
+      ]
+    },
+    {
+      "id": "T3",
+      "title": "Confetti Celebration Effect",
+      "description": "When a full loop is completed, trigger a confetti burst: 20-30 colored dots burst outward from the train's position and fade. Play a triumphant sound and show a toast.",
+      "implementation": [
+        "Add @keyframes confetti-burst: translate outward in random direction (50-120px), scale from 1 to 0.5, opacity from 1 to 0, with slight gravity (translateY adds extra downward)",
+        "Add .confetti-particle CSS class: 6-10px circles, random bright colors, position absolute",
+        "Create triggerLoopCelebration() function that spawns 25 confetti particles at train's current position",
+        "Each confetti particle gets a random direction (CSS custom properties --dx, --dy for varied directions)",
+        "Add SFX.celebrate() sound: ascending arpeggio (C-E-G-C) with a bright timbre",
+        "Show toast: '🎉 Full Loop!'",
+        "Confetti particles auto-remove after 1.5s animation",
+        "Call triggerLoopCelebration() from the loop detection code in T2"
+      ],
+      "files": ["index.html"],
+      "acceptance_criteria": [
+        "Confetti burst visible at train location on loop completion",
+        "20-30 colored particles burst outward and fade",
+        "Triumphant sound plays (ascending notes)",
+        "'🎉 Full Loop!' toast appears",
+        "Confetti particles are cleaned up after animation",
+        "Effect doesn't block or interrupt train animation"
+      ]
+    }
+  ],
+  "testing_focus": [
+    "Random → Play → watch full loop: smoke visible, celebration triggers on loop completion",
+    "Speed slider: smoke rate visibly changes with speed",
+    "Stop/restart: smoke cleans up on stop, reappears on restart",
+    "No performance issues: check for smooth 60fps with particles active",
+    "Multiple loops: celebration only triggers once per play session",
+    "Dead end: smoke works until crash, no celebration on non-loop",
+    "All existing features still work (drag/drop, save/load, auto-connect, undo)"
+  ]
+}
