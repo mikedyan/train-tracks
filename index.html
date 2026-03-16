@@ -147,6 +147,30 @@ html, body {
 
 .cell:hover { background: #85BB4A; }
 .cell.highlight { background: #A5D64E; box-shadow: inset 0 0 0 2px #FFF; }
+.cell .ghost-preview {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 3;
+}
+.cell .ghost-preview-emoji {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 3;
+}
+.cell.highlight.ghost-match {
+  background: #A5D64E;
+  box-shadow: inset 0 0 0 3px rgba(76, 175, 80, 0.9), inset 0 0 12px rgba(76, 175, 80, 0.3);
+}
+.cell.highlight.ghost-mismatch {
+  background: #E8A5A5;
+  box-shadow: inset 0 0 0 3px rgba(244, 67, 54, 0.9), inset 0 0 12px rgba(244, 67, 54, 0.3);
+}
 .cell.occupied { cursor: pointer; }
 .cell.has-train { z-index: 5; }
 
@@ -621,14 +645,20 @@ function playNoise(duration, volume = 0.08) {
 
 const SFX = {
   place() {
-    // Satisfying snap
-    playNote(800, 0.08, 'square', 0.1);
-    playNote(1200, 0.06, 'sine', 0.08, 0.03);
+    // Wooden thunk for track placement
+    playNote(250, 0.12, 'triangle', 0.14);
+    playNote(180, 0.08, 'sine', 0.08, 0.02);
+    playNoise(0.05, 0.04);
   },
   rotate() {
-    // Quick click
-    playNote(600, 0.05, 'square', 0.08);
-    playNote(900, 0.04, 'sine', 0.06, 0.02);
+    // Mechanical click for rotation
+    playNote(440, 0.04, 'square', 0.06);
+    playNote(660, 0.05, 'sine', 0.05, 0.02);
+  },
+  placeScenery() {
+    // Softer click for scenery placement
+    playNote(1000, 0.05, 'sine', 0.06);
+    playNote(1400, 0.04, 'sine', 0.04, 0.02);
   },
   remove() {
     // Soft pop
@@ -1224,7 +1254,11 @@ function showAutoConnectPulse(row, col) {
 function placePiece(row, col, type, rotation = 0) {
   saveUndo();
   state.grid[row][col] = { type, rotation };
-  SFX.place();
+  if (SCENERY_TYPES.includes(type)) {
+    SFX.placeScenery();
+  } else {
+    SFX.place();
+  }
   renderCell(row, col);
   // Update neighbors' dots too
   ['N','S','E','W'].forEach(dir => {
@@ -1764,17 +1798,126 @@ function getCellUnder(x, y) {
   return null;
 }
 
+// Ghost preview state
+let ghostPreviewCell = null;
+let ghostPreviewRow = -1;
+let ghostPreviewCol = -1;
+
+function showCellGhostPreview(row, col) {
+  const cell = getCellEl(row, col);
+  if (!cell || !dragInfo) return;
+
+  const type = dragInfo.type;
+
+  if (type === 'train') {
+    const svg = createTrainSVG();
+    svg.classList.add('ghost-preview');
+    svg.style.position = 'absolute';
+    svg.style.top = '5%';
+    svg.style.left = '5%';
+    svg.style.width = '90%';
+    svg.style.height = '90%';
+    const trackPiece = state.grid[row][col];
+    if (trackPiece && !SCENERY_TYPES.includes(trackPiece.type)) {
+      const conns = getConnections(trackPiece.type, trackPiece.rotation);
+      const dirAngles = { N: 0, E: 90, S: 180, W: 270 };
+      if (conns.length > 0) svg.style.transform = `rotate(${dirAngles[conns[0]] || 0}deg)`;
+    }
+    cell.appendChild(svg);
+  } else if (SCENERY_TYPES.includes(type)) {
+    const emoji = document.createElement('div');
+    emoji.className = 'ghost-preview-emoji';
+    emoji.textContent = SCENERY_EMOJI[type];
+    emoji.style.fontSize = (cellSize * 0.55) + 'px';
+    cell.appendChild(emoji);
+  } else {
+    // Track piece — compute rotation
+    let rotation = 0;
+    if (dragInfo.source === 'palette') {
+      rotation = findBestRotation(row, col, type).rotation;
+    } else {
+      rotation = dragInfo.rotation || 0;
+    }
+
+    const svg = createTrackSVG(type);
+    svg.classList.add('ghost-preview');
+    svg.style.transform = `rotate(${rotation}deg)`;
+    cell.appendChild(svg);
+
+    // Connection scoring for border color
+    const conns = getConnections(type, rotation);
+    let matchCount = 0;
+    let hasTrackNeighbors = false;
+
+    for (const dir of conns) {
+      const nb = getNeighbor(row, col, dir);
+      if (!nb) continue;
+      const nbPiece = state.grid[nb.row][nb.col];
+      if (!nbPiece || SCENERY_TYPES.includes(nbPiece.type)) continue;
+      hasTrackNeighbors = true;
+      if (getConnections(nbPiece.type, nbPiece.rotation).includes(OPPOSITE[dir])) matchCount++;
+    }
+
+    // Check for track neighbors even if our connections don't face them
+    if (!hasTrackNeighbors) {
+      for (const dir of ['N', 'S', 'E', 'W']) {
+        const nb = getNeighbor(row, col, dir);
+        if (!nb) continue;
+        const nbPiece = state.grid[nb.row][nb.col];
+        if (nbPiece && !SCENERY_TYPES.includes(nbPiece.type)) {
+          hasTrackNeighbors = true;
+          break;
+        }
+      }
+    }
+
+    if (hasTrackNeighbors && matchCount > 0) {
+      cell.classList.add('ghost-match');
+    } else if (hasTrackNeighbors) {
+      cell.classList.add('ghost-mismatch');
+    }
+  }
+
+  ghostPreviewCell = cell;
+  ghostPreviewRow = row;
+  ghostPreviewCol = col;
+}
+
+function clearCellGhostPreview() {
+  if (ghostPreviewCell) {
+    ghostPreviewCell.querySelectorAll('.ghost-preview, .ghost-preview-emoji').forEach(el => el.remove());
+    ghostPreviewCell.classList.remove('ghost-match', 'ghost-mismatch');
+    ghostPreviewCell = null;
+  }
+  ghostPreviewRow = -1;
+  ghostPreviewCol = -1;
+}
+
 let highlightedCell = null;
 function highlightCellUnder(x, y) {
-  clearHighlight();
+  // Remove previous cell highlight (preserve ghost preview if same cell)
+  if (highlightedCell) {
+    highlightedCell.classList.remove('highlight');
+    highlightedCell = null;
+  }
   const target = getCellUnder(x, y);
   if (target) {
     const el = getCellEl(target.row, target.col);
     if (el) { el.classList.add('highlight'); highlightedCell = el; }
+    // Update ghost preview only when cell changes
+    if (dragInfo && dragInfo.moved) {
+      if (target.row !== ghostPreviewRow || target.col !== ghostPreviewCol) {
+        clearCellGhostPreview();
+        showCellGhostPreview(target.row, target.col);
+      }
+    }
+  } else {
+    clearCellGhostPreview();
   }
 }
 
 function clearHighlight() {
+  clearCellGhostPreview();
   if (highlightedCell) {
     highlightedCell.classList.remove('highlight');
     highlightedCell = null;

@@ -1,0 +1,82 @@
+{
+  "day": 4,
+  "title": "Ghost Preview + Placement Sounds",
+  "date": "2026-03-16",
+  "bugs_to_fix": [],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Ghost preview in target cell during drag",
+      "description": "When dragging any piece (track, scenery, train) over the grid, show a translucent 50% opacity preview of the piece at the target cell. The preview renders inside the actual cell (separate from the cursor ghost). Clean up preview when leaving cell or ending drag.",
+      "changes": [
+        "Add CSS classes: .ghost-preview (opacity 0.5, pointer-events none), .cell.ghost-match (green inset border), .cell.ghost-mismatch (red inset border)",
+        "New function showCellGhostPreview(row, col) — renders translucent SVG/emoji in the cell based on dragInfo",
+        "New function clearCellGhostPreview() — removes ghost preview elements and border classes",
+        "Modify highlightCellUnder() to call showCellGhostPreview when dragInfo exists",
+        "Modify clearHighlight() to call clearCellGhostPreview"
+      ],
+      "acceptance_criteria": [
+        "Ghost preview visible in target cell during drag at ~50% opacity",
+        "Preview appears/disappears as cursor moves between cells",
+        "Works for all track types, scenery types, and train"
+      ]
+    },
+    {
+      "id": "T2",
+      "title": "Ghost shows auto-connected rotation",
+      "description": "When dragging a track piece from the palette, the ghost preview shows the auto-connected rotation (from findBestRotation). When dragging from the grid, it shows the piece's existing rotation.",
+      "changes": [
+        "In showCellGhostPreview: if dragInfo.source === 'palette' and type is a track, call findBestRotation to determine preview rotation",
+        "If dragInfo.source === 'grid', use dragInfo.rotation for preview"
+      ],
+      "acceptance_criteria": [
+        "Palette drag: ghost preview rotates to best-fit rotation at each cell",
+        "Grid drag: ghost preview keeps original rotation",
+        "Rotation matches what would actually be placed"
+      ]
+    },
+    {
+      "id": "T3",
+      "title": "Green/red border on ghost preview",
+      "description": "When the ghost preview shows a track piece, add a colored inset border: green if at least one connection will match neighbors, red if track neighbors exist but no connections match. No colored border for scenery or if no track neighbors.",
+      "changes": [
+        "In showCellGhostPreview: compute connection score for track pieces",
+        "Add .ghost-match class (green inset glow) if score > 0",
+        "Add .ghost-mismatch class (red inset glow) if score === 0 but track neighbors exist"
+      ],
+      "acceptance_criteria": [
+        "Green border when ghost preview will connect to at least one neighbor",
+        "Red border when ghost preview won't connect to any adjacent track",
+        "No colored border for scenery, train, or cells with no track neighbors"
+      ]
+    },
+    {
+      "id": "T4",
+      "title": "Differentiated placement sounds",
+      "description": "Replace the uniform SFX.place() with context-specific sounds. Wooden 'thunk' for track placement, softer 'click' for scenery, distinct pitch for rotation.",
+      "changes": [
+        "Modify SFX.place() to produce a deeper wooden thunk sound (lower freq, noise component)",
+        "Add SFX.placeScenery() — softer, lighter click sound",
+        "Adjust SFX.rotate() to have a more distinct pitch (slightly lower, click-like)",
+        "Modify placePiece() to choose SFX.place() vs SFX.placeScenery() based on type"
+      ],
+      "acceptance_criteria": [
+        "Track placement produces a satisfying wooden thunk",
+        "Scenery placement produces a softer click sound",
+        "Rotation has a distinctly different pitch from placement",
+        "No audio glitches or clicks",
+        "All sounds still respect mute toggle"
+      ]
+    }
+  ],
+  "files_to_modify": ["index.html"],
+  "testing_focus": [
+    "Drag from palette over grid: ghost preview appears with correct rotation",
+    "Drag from grid over empty cells: ghost preview at original rotation",
+    "Green/red borders update correctly as cursor moves between cells",
+    "Ghost preview cleans up on drop and on drag cancel",
+    "Sound differentiation between track/scenery placement and rotation",
+    "No performance degradation from ghost preview rendering",
+    "All existing features still work (regression check)"
+  ]
+}
