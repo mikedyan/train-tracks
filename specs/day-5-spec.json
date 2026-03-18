@@ -1,0 +1,74 @@
+{
+  "day": 5,
+  "feature": "Train Cars",
+  "date": "2026-03-17",
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Add car SVGs (Freight, Passenger, Caboose)",
+      "description": "Create top-down SVG rendering functions for 3 car types matching locomotive aesthetic. Freight = brown box with door, Passenger = blue with windows, Caboose = red with cupola.",
+      "file": "index.html",
+      "acceptance": "createCarSVG('freight'), createCarSVG('passenger'), createCarSVG('caboose') each return valid SVG elements"
+    },
+    {
+      "id": "T2",
+      "title": "Add car palette items",
+      "description": "Add Freight, Passenger, Caboose to sidebar palette under a new 'Cars' section with divider",
+      "file": "index.html",
+      "acceptance": "3 new palette items visible below train section, each showing car SVG preview"
+    },
+    {
+      "id": "T3",
+      "title": "Car state management",
+      "description": "Add state.cars array, CAR_TYPES constant, MAX_CARS=5. Include cars in undo/redo stack, serialize/deserialize, clearAll.",
+      "file": "index.html",
+      "acceptance": "Cars persist through save/load/undo, max 5 enforced, caboose auto-sorts to end"
+    },
+    {
+      "id": "T4",
+      "title": "Drop cars onto locomotive",
+      "description": "Drag car from palette and drop onto locomotive cell to append to train. Reject drops on non-locomotive cells with toast. Max 5 cars enforced.",
+      "file": "index.html",
+      "acceptance": "Can add all 3 car types by dropping on loco cell, toast for invalid drops"
+    },
+    {
+      "id": "T5",
+      "title": "Static car rendering on grid",
+      "description": "In stopped state, render cars on track cells behind locomotive by tracing backward along connected track. Show car count badge on locomotive cell.",
+      "file": "index.html",
+      "acceptance": "Cars visible on grid cells behind locomotive, oriented correctly along track direction"
+    },
+    {
+      "id": "T6",
+      "title": "Animated car following with position history",
+      "description": "During play, cars follow locomotive using distance-based position history ring buffer. Each car reads position at offset = (carIndex+1) * spacingDist from current locomotive position.",
+      "file": "index.html",
+      "acceptance": "Cars follow locomotive smoothly through curves without jitter, consistent spacing maintained"
+    },
+    {
+      "id": "T7",
+      "title": "Right-click car removal",
+      "description": "Right-click on a static car cell removes that car. Right-click on locomotive cell with cars removes locomotive and all cars. Car removal takes priority over track removal.",
+      "file": "index.html",
+      "acceptance": "Right-click on car removes it, removing loco clears all cars"
+    },
+    {
+      "id": "T8",
+      "title": "Ghost preview and drag handling for cars",
+      "description": "Show car SVG as ghost when dragging from palette. Locomotive cell shows green highlight, other cells show red. Handle car types in showGhost and showCellGhostPreview.",
+      "file": "index.html",
+      "acceptance": "Ghost cursor shows car SVG, locomotive cell highlighted as valid drop target"
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "All 3 car types addable and removable",
+    "Cars follow locomotive smoothly through curves",
+    "Consistent spacing between cars during animation",
+    "Caboose always stays at end of train",
+    "Max 5 cars enforced",
+    "Right-click removes individual cars",
+    "Cars survive save/load/undo cycles",
+    "No regressions in drag/drop, rotation, random, play, smoke, celebration"
+  ]
+}

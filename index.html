@@ -93,6 +93,11 @@ html, body {
   border: 2px dashed rgba(255,200,0,0.5);
 }
 
+.palette-car {
+  background: rgba(139,195,74,0.2) !important;
+  border: 2px dashed rgba(139,195,74,0.5);
+}
+
 .palette-divider {
   width: 50px;
   height: 1px;
@@ -525,6 +530,31 @@ html, body {
   animation: confetti-burst 1.2s ease-out forwards;
 }
 
+/* CAR RENDERING */
+.cell .car-svg {
+  position: absolute;
+  top: 5%; left: 5%;
+  width: 90%; height: 90%;
+  z-index: 6;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.car-count-badge {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  font-size: 9px;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  padding: 1px 4px;
+  border-radius: 6px;
+  z-index: 8;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
 /* PLAYING STATE */
 #app.playing .cell { cursor: default; }
 #app.playing .cell:hover { background: var(--grass); }
@@ -552,6 +582,11 @@ html, body {
     <div class="palette-divider"></div>
     <h2>Train</h2>
     <div class="palette-piece palette-train" data-type="train"><div class="label">Loco</div></div>
+    <div class="palette-divider"></div>
+    <h2>Cars</h2>
+    <div class="palette-piece palette-car" data-type="freight"><div class="label">Freight</div></div>
+    <div class="palette-piece palette-car" data-type="passenger"><div class="label">Passenger</div></div>
+    <div class="palette-piece palette-car" data-type="caboose"><div class="label">Caboose</div></div>
     <div class="palette-divider"></div>
     <h2>Scenery</h2>
     <div class="palette-piece" data-type="tree"><div class="label">Tree</div></div>
@@ -724,6 +759,12 @@ const SFX = {
     // Bright shimmer
     playNote(1319, 0.2, 'sine', 0.08, 0.35);
     playNote(1568, 0.25, 'sine', 0.06, 0.4);
+  },
+  couple() {
+    // Metallic coupling clank
+    playNote(200, 0.15, 'triangle', 0.12);
+    playNote(350, 0.08, 'square', 0.06, 0.02);
+    playNoise(0.08, 0.05);
   }
 };
 
@@ -757,6 +798,8 @@ const ROTATE_MAP = { N: 'E', E: 'S', S: 'W', W: 'N' };
 const TRACK_TYPES = ['straight', 'curve', 'tjunction', 'crossover', 'bridge', 'station'];
 const SCENERY_TYPES = ['tree', 'house', 'cow'];
 const SCENERY_EMOJI = { tree: '🌲', house: '🏠', cow: '🐄' };
+const CAR_TYPES = ['freight', 'passenger', 'caboose'];
+const MAX_CARS = 5;
 
 // Base connections at rotation 0
 const BASE_CONNECTIONS = {
@@ -782,6 +825,7 @@ const state = {
   // Each cell: { type, rotation } or null
   train: null, // { row, col }
   trainDir: 'E', // initial facing
+  cars: [], // [{type: 'freight'|'passenger'|'caboose'}]
   playing: false,
   speed: 1.2,
   undoStack: [],
@@ -1072,10 +1116,89 @@ function createTrainSVG() {
   return svg;
 }
 
+// Train car SVGs (top-down, matching locomotive style)
+function createCarSVG(carType) {
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('viewBox', '0 0 60 60');
+  svg.setAttribute('fill', 'none');
+
+  function el(tag, attrs) {
+    const e = document.createElementNS(ns, tag);
+    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, String(v));
+    return e;
+  }
+
+  // Shared wheel trucks
+  svg.appendChild(el('rect', { x:17, y:8, width:6, height:8, rx:2, fill:'#37474F' }));
+  svg.appendChild(el('rect', { x:37, y:8, width:6, height:8, rx:2, fill:'#37474F' }));
+  svg.appendChild(el('rect', { x:17, y:44, width:6, height:8, rx:2, fill:'#37474F' }));
+  svg.appendChild(el('rect', { x:37, y:44, width:6, height:8, rx:2, fill:'#37474F' }));
+
+  // Coupling hooks (front and back)
+  svg.appendChild(el('rect', { x:27, y:5, width:6, height:4, rx:1, fill:'#616161' }));
+  svg.appendChild(el('rect', { x:27, y:51, width:6, height:4, rx:1, fill:'#616161' }));
+
+  switch(carType) {
+    case 'freight':
+      // Main body - brown
+      svg.appendChild(el('rect', { x:19, y:10, width:22, height:40, rx:3, fill:'#795548' }));
+      // Roof - darker brown
+      svg.appendChild(el('rect', { x:21, y:12, width:18, height:36, rx:2, fill:'#5D4037' }));
+      // Sliding door
+      svg.appendChild(el('rect', { x:24, y:22, width:12, height:16, rx:1, fill:'#6D4C41' }));
+      svg.appendChild(el('line', { x1:30, y1:22, x2:30, y2:38, stroke:'#4E342E', 'stroke-width':1 }));
+      // Door handle
+      svg.appendChild(el('circle', { cx:28, cy:30, r:1, fill:'#A1887F' }));
+      break;
+
+    case 'passenger':
+      // Main body - blue
+      svg.appendChild(el('rect', { x:19, y:10, width:22, height:40, rx:3, fill:'#1976D2' }));
+      // Roof
+      svg.appendChild(el('rect', { x:21, y:12, width:18, height:36, rx:2, fill:'#1565C0' }));
+      // Windows (rows on both sides)
+      [16, 23, 30, 37].forEach(y => {
+        svg.appendChild(el('rect', { x:21, y:y, width:5, height:4, rx:1, fill:'#90CAF9' }));
+        svg.appendChild(el('rect', { x:34, y:y, width:5, height:4, rx:1, fill:'#90CAF9' }));
+      });
+      // Center stripe
+      svg.appendChild(el('line', { x1:19, y1:30, x2:41, y2:30, stroke:'#BBDEFB', 'stroke-width':1 }));
+      break;
+
+    case 'caboose':
+      // Main body - red
+      svg.appendChild(el('rect', { x:19, y:10, width:22, height:40, rx:3, fill:'#D32F2F' }));
+      // Cupola (raised section on top)
+      svg.appendChild(el('rect', { x:24, y:18, width:12, height:14, rx:2, fill:'#C62828' }));
+      // Cupola windows
+      svg.appendChild(el('rect', { x:26, y:20, width:3, height:3, rx:0.5, fill:'#FFCDD2' }));
+      svg.appendChild(el('rect', { x:31, y:20, width:3, height:3, rx:0.5, fill:'#FFCDD2' }));
+      // End windows
+      svg.appendChild(el('rect', { x:24, y:37, width:5, height:4, rx:1, fill:'#FFCDD2' }));
+      svg.appendChild(el('rect', { x:31, y:37, width:5, height:4, rx:1, fill:'#FFCDD2' }));
+      // Rear railing/platform
+      svg.appendChild(el('rect', { x:22, y:46, width:16, height:3, rx:1, fill:'#B71C1C' }));
+      svg.appendChild(el('line', { x1:22, y1:46, x2:22, y2:49, stroke:'#795548', 'stroke-width':1.5 }));
+      svg.appendChild(el('line', { x1:38, y1:46, x2:38, y2:49, stroke:'#795548', 'stroke-width':1.5 }));
+      // Tail light
+      svg.appendChild(el('circle', { cx:30, cy:53, r:2, fill:'#FF5252' }));
+      break;
+  }
+
+  return svg;
+}
+
 // Palette preview SVGs (smaller, centered)
 function createPaletteSVG(type) {
   if (type === 'train') {
     const svg = createTrainSVG();
+    svg.style.width = '42px';
+    svg.style.height = '42px';
+    return svg;
+  }
+  if (CAR_TYPES.includes(type)) {
+    const svg = createCarSVG(type);
     svg.style.width = '42px';
     svg.style.height = '42px';
     return svg;
@@ -1119,7 +1242,7 @@ function renderCell(row, col) {
   if (!cell) return;
 
   // Clear existing content except connection dots
-  cell.querySelectorAll('svg, .train-emoji, .train-svg, .scenery-emoji').forEach(el => el.remove());
+  cell.querySelectorAll('svg, .train-emoji, .train-svg, .scenery-emoji, .car-svg, .car-count-badge').forEach(el => el.remove());
   cell.classList.remove('occupied', 'has-train');
 
   const piece = state.grid[row][col];
@@ -1164,6 +1287,7 @@ function renderAllCells() {
   for (let r = 0; r < ROWS; r++)
     for (let c = 0; c < COLS; c++)
       renderCell(r, c);
+  renderStaticCars();
 }
 
 function getCellEl(row, col) {
@@ -1201,6 +1325,96 @@ function updateAllConnectionDots() {
 }
 
 // ============================================================
+// CAR POSITIONING (Static display)
+// ============================================================
+function getCarCellPositions() {
+  if (!state.train || state.cars.length === 0) return [];
+
+  const loco = state.train;
+  const trackPiece = state.grid[loco.row][loco.col];
+  if (!trackPiece || SCENERY_TYPES.includes(trackPiece.type)) return [];
+
+  const conns = getConnections(trackPiece.type, trackPiece.rotation);
+  if (conns.length < 2) return [];
+
+  // Locomotive faces first connection direction; cars trail from the other
+  const forwardDir = conns[0];
+  const backwardExit = conns.find(d => d !== forwardDir);
+  if (!backwardExit) return [];
+
+  const positions = [];
+  let currentRow = loco.row;
+  let currentCol = loco.col;
+  let exitDir = backwardExit;
+
+  for (let i = 0; i < state.cars.length; i++) {
+    const next = getNeighbor(currentRow, currentCol, exitDir);
+    if (!next) break;
+
+    const nextPiece = state.grid[next.row][next.col];
+    if (!nextPiece || SCENERY_TYPES.includes(nextPiece.type)) break;
+
+    const entryEdge = OPPOSITE[exitDir];
+    const nextConns = getConnections(nextPiece.type, nextPiece.rotation);
+    if (!nextConns.includes(entryEdge)) break;
+
+    // Car faces toward the locomotive (forward direction of travel)
+    positions.push({
+      row: next.row,
+      col: next.col,
+      facingDir: OPPOSITE[exitDir],
+      carIndex: i,
+    });
+
+    // Continue backward through this cell
+    const nextExit = getExitDir(nextPiece.type, nextPiece.rotation, entryEdge);
+    if (!nextExit) break;
+
+    currentRow = next.row;
+    currentCol = next.col;
+    exitDir = nextExit;
+  }
+
+  return positions;
+}
+
+function sortCarsWithCabooseEnd() {
+  const caboose = state.cars.filter(c => c.type === 'caboose');
+  const others = state.cars.filter(c => c.type !== 'caboose');
+  state.cars = [...others, ...caboose];
+}
+
+function renderStaticCars() {
+  // Remove all existing car SVGs and badges
+  document.querySelectorAll('.car-svg, .car-count-badge').forEach(el => el.remove());
+
+  if (state.playing || state.cars.length === 0 || !state.train) return;
+
+  // Show car count badge on locomotive cell
+  const locoCell = getCellEl(state.train.row, state.train.col);
+  if (locoCell) {
+    const badge = document.createElement('div');
+    badge.className = 'car-count-badge';
+    badge.textContent = '🚃×' + state.cars.length;
+    locoCell.appendChild(badge);
+  }
+
+  // Render cars on track cells behind locomotive
+  const positions = getCarCellPositions();
+  const dirAngles = { N: 0, E: 90, S: 180, W: 270 };
+  positions.forEach(pos => {
+    const cell = getCellEl(pos.row, pos.col);
+    if (!cell) return;
+
+    const car = state.cars[pos.carIndex];
+    const cs = createCarSVG(car.type);
+    cs.classList.add('car-svg');
+    cs.style.transform = 'rotate(' + (dirAngles[pos.facingDir] || 0) + 'deg)';
+    cell.appendChild(cs);
+  });
+}
+
+// ============================================================
 // UNDO
 // ============================================================
 function saveUndo() {
@@ -1208,6 +1422,7 @@ function saveUndo() {
     grid: state.grid.map(row => row.map(cell => cell ? { ...cell } : null)),
     train: state.train ? { ...state.train } : null,
     trainDir: state.trainDir,
+    cars: state.cars.map(c => ({ ...c })),
   });
   if (state.undoStack.length > 50) state.undoStack.shift();
 }
@@ -1218,6 +1433,7 @@ function undo() {
   state.grid = prev.grid;
   state.train = prev.train;
   state.trainDir = prev.trainDir;
+  state.cars = prev.cars || [];
   renderAllCells();
 }
 
@@ -1265,6 +1481,7 @@ function placePiece(row, col, type, rotation = 0) {
     const nb = getNeighbor(row, col, dir);
     if (nb) updateConnectionDots(nb.row, nb.col);
   });
+  renderStaticCars();
   autoSave();
 }
 
@@ -1284,6 +1501,7 @@ function removePiece(row, col) {
       renderCell(nb.row, nb.col);
     }
   });
+  renderStaticCars();
   autoSave();
 }
 
@@ -1298,6 +1516,7 @@ function rotatePiece(row, col) {
     const nb = getNeighbor(row, col, dir);
     if (nb) updateConnectionDots(nb.row, nb.col);
   });
+  renderStaticCars();
   autoSave();
 }
 
@@ -1310,6 +1529,7 @@ function placeTrain(row, col) {
   state.train = { row, col };
   if (oldTrain) renderCell(oldTrain.row, oldTrain.col);
   renderCell(row, col);
+  renderStaticCars();
   autoSave();
 }
 
@@ -1319,6 +1539,7 @@ function clearAll() {
   SFX.clear();
   state.grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
   state.train = null;
+  state.cars = [];
   renderAllCells();
   clearAutoSave();
   showToast('Board cleared!');
@@ -1345,23 +1566,45 @@ function showPoofEffect(row, col) {
 
 function handleRemoveCell(row, col) {
   if (state.playing) return;
-  
+
+  // Check if this cell has a car (takes priority over track removal)
+  const carPositions = getCarCellPositions();
+  const carPos = carPositions.find(p => p.row === row && p.col === col);
+  if (carPos) {
+    saveUndo();
+    const removed = state.cars.splice(carPos.carIndex, 1)[0];
+    SFX.remove();
+    showPoofEffect(row, col);
+    const typeName = removed.type.charAt(0).toUpperCase() + removed.type.slice(1);
+    showToast('🚃 ' + typeName + ' car removed!');
+    renderAllCells();
+    autoSave();
+    return;
+  }
+
   const piece = state.grid[row][col];
   const hasTrain = state.train && state.train.row === row && state.train.col === col;
-  
+
   // Only remove if there's something to remove
   if (!piece && !hasTrain) return;
-  
+
   showPoofEffect(row, col);
+
+  // Track how many cars are removed when removing locomotive
+  const carsRemoved = (hasTrain && state.cars.length > 0) ? state.cars.length : 0;
+  if (carsRemoved > 0) state.cars = [];
+
   removePiece(row, col);
-  
+
   // Show appropriate toast message
-  if (hasTrain && piece) {
+  if (hasTrain && piece && carsRemoved > 0) {
+    showToast('🚂 Train + ' + carsRemoved + ' car' + (carsRemoved > 1 ? 's' : '') + ' removed!');
+  } else if (hasTrain && piece) {
     showToast('🚂 Train and track removed!');
   } else if (hasTrain) {
     showToast('🚂 Train removed!');
   } else if (SCENERY_TYPES.includes(piece.type)) {
-    showToast(`${SCENERY_EMOJI[piece.type]} Scenery removed!`);
+    showToast(SCENERY_EMOJI[piece.type] + ' Scenery removed!');
   } else {
     showToast('Track removed!');
   }
@@ -1604,8 +1847,10 @@ function onPointerUp(e) {
       // Remove train (but keep the track)
       saveUndo();
       state.train = null;
+      state.cars = [];
       SFX.remove();
       renderCell(dragInfo.sourceRow, dragInfo.sourceCol);
+      renderStaticCars();
       autoSave();
       showToast('🚂 Train removed!');
     }
@@ -1633,6 +1878,7 @@ function onPointerUp(e) {
           state.train = { row, col };
           renderCell(dragInfo.sourceRow, dragInfo.sourceCol);
           renderCell(row, col);
+          renderStaticCars();
           SFX.place();
           showToast('🚂 Train moved!');
         } else {
@@ -1676,6 +1922,26 @@ function onPointerUp(e) {
       if (dragInfo.source === 'grid' && (row !== dragInfo.sourceRow || col !== dragInfo.sourceCol)) {
         removePiece(dragInfo.sourceRow, dragInfo.sourceCol);
         if (!state.grid[row][col]) placePiece(row, col, dragInfo.type);
+      }
+    } else if (CAR_TYPES.includes(dragInfo.type)) {
+      // Car: must be dropped on the locomotive to attach
+      if (state.train && row === state.train.row && col === state.train.col) {
+        if (state.cars.length >= MAX_CARS) {
+          showToast('🚃 Train is full! (max ' + MAX_CARS + ' cars)');
+        } else {
+          saveUndo();
+          state.cars.push({ type: dragInfo.type });
+          sortCarsWithCabooseEnd();
+          SFX.couple();
+          const typeName = dragInfo.type.charAt(0).toUpperCase() + dragInfo.type.slice(1);
+          showToast('🚃 ' + typeName + ' car added!');
+          renderAllCells();
+          autoSave();
+        }
+      } else if (state.train) {
+        showToast('Drop on the locomotive! 🚂');
+      } else {
+        showToast('Place a locomotive first! 🚂');
       }
     } else {
       // Track piece
@@ -1768,6 +2034,12 @@ function showGhost(type, x, y, rotation = 0) {
     svg.style.height = (cellSize * 0.7) + 'px';
     ghost.appendChild(svg);
     ghost.style.fontSize = '';
+  } else if (CAR_TYPES.includes(type)) {
+    const svg = createCarSVG(type);
+    svg.style.width = (cellSize * 0.65) + 'px';
+    svg.style.height = (cellSize * 0.65) + 'px';
+    ghost.appendChild(svg);
+    ghost.style.fontSize = '';
   } else if (SCENERY_TYPES.includes(type)) {
     ghost.textContent = SCENERY_EMOJI[type];
     ghost.style.fontSize = (cellSize * 0.55) + 'px';
@@ -1824,6 +2096,13 @@ function showCellGhostPreview(row, col) {
       if (conns.length > 0) svg.style.transform = `rotate(${dirAngles[conns[0]] || 0}deg)`;
     }
     cell.appendChild(svg);
+  } else if (CAR_TYPES.includes(type)) {
+    // Cars: highlight loco cell green, others red
+    if (state.train && row === state.train.row && col === state.train.col) {
+      cell.classList.add('ghost-match');
+    } else {
+      cell.classList.add('ghost-mismatch');
+    }
   } else if (SCENERY_TYPES.includes(type)) {
     const emoji = document.createElement('div');
     emoji.className = 'ghost-preview-emoji';
@@ -2162,6 +2441,38 @@ function triggerLoopCelebration() {
   }
 }
 
+// ============================================================
+// CAR ANIMATION HELPERS
+// ============================================================
+function findHistoryEntry(history, targetDist) {
+  if (history.length === 0) return null;
+  let lo = 0, hi = history.length - 1;
+  if (targetDist <= history[lo].dist) return history[lo];
+  if (targetDist >= history[hi].dist) return history[hi];
+  while (lo < hi - 1) {
+    const mid = (lo + hi) >> 1;
+    if (history[mid].dist <= targetDist) lo = mid;
+    else hi = mid;
+  }
+  const loE = history[lo], hiE = history[hi];
+  const range = hiE.dist - loE.dist;
+  if (range < 0.01) return loE;
+  const t = (targetDist - loE.dist) / range;
+  return {
+    x: loE.x + (hiE.x - loE.x) * t,
+    y: loE.y + (hiE.y - loE.y) * t,
+    angle: lerpAngle(loE.angle, hiE.angle, t),
+    dist: targetDist,
+  };
+}
+
+function lerpAngle(a, b, t) {
+  let diff = b - a;
+  while (diff > 180) diff -= 360;
+  while (diff < -180) diff += 360;
+  return a + diff * t;
+}
+
 function togglePlay() {
   if (state.playing) {
     stopPlay();
@@ -2207,11 +2518,12 @@ function startPlay() {
   document.getElementById('btn-play').innerHTML = '⏹️ Stop';
   document.getElementById('btn-play').className = 'btn btn-stop';
 
-  // Remove static train SVG
+  // Remove static train SVG and car displays
   if (state.train) {
     const cell = getCellEl(state.train.row, state.train.col);
     if (cell) cell.querySelectorAll('.train-svg, .train-emoji').forEach(el => el.remove());
   }
+  document.querySelectorAll('.car-svg, .car-count-badge').forEach(el => el.remove());
 
   // Create animated train element (top-down SVG)
   const trainEl = document.createElement('div');
@@ -2247,10 +2559,64 @@ function startPlay() {
     startCol: state.train.col,
     cellsVisited: 0,
     loopCompleted: false,
+    positionHistory: [],
+    cumulativeDistance: 0,
+    lastRenderPos: null,
+    carEls: [],
   };
 
   // Compute path
   animState.path = getPathPoints(piece.type, piece.rotation, animState.entryEdge, animState.exitEdge);
+
+  // Create animated car elements with pre-seeded position history
+  if (state.cars.length > 0) {
+    const carSpacing = cellSize * 0.85;
+    const gridEl = document.getElementById('grid');
+    const gRect = gridEl.getBoundingClientRect();
+    const cRect = document.getElementById('grid-container').getBoundingClientRect();
+    const offX = gRect.left - cRect.left;
+    const offY = gRect.top - cRect.top;
+    const dirAngles = { N: 0, E: 90, S: 180, W: 270 };
+
+    // Pre-seed position history with static car positions (farthest first)
+    const staticCarPos = getCarCellPositions();
+    for (let i = Math.min(staticCarPos.length, state.cars.length) - 1; i >= 0; i--) {
+      const cp = staticCarPos[i];
+      animState.positionHistory.push({
+        x: cp.col * (cellSize + 1) + cellSize / 2 + offX,
+        y: cp.row * (cellSize + 1) + cellSize / 2 + offY,
+        angle: dirAngles[cp.facingDir] || 0,
+        dist: -(i + 1) * carSpacing,
+      });
+    }
+
+    for (let i = 0; i < state.cars.length; i++) {
+      const carEl = document.createElement('div');
+      carEl.className = 'animated-car';
+      const carSvg = createCarSVG(state.cars[i].type);
+      const carSize = cellSize * 0.7;
+      carSvg.style.width = carSize + 'px';
+      carSvg.style.height = carSize + 'px';
+      carSvg.style.display = 'block';
+      carEl.appendChild(carSvg);
+      carEl.style.cssText = 'position:absolute;z-index:' + (49 - i) + ';pointer-events:none;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.25));line-height:0;';
+
+      // Position at static position initially
+      if (i < staticCarPos.length) {
+        const cp = staticCarPos[i];
+        const cx = cp.col * (cellSize + 1) + cellSize / 2 + offX;
+        const cy = cp.row * (cellSize + 1) + cellSize / 2 + offY;
+        carEl.style.left = cx + 'px';
+        carEl.style.top = cy + 'px';
+        carEl.style.transform = 'translate(-50%, -50%) rotate(' + (dirAngles[cp.facingDir] || 0) + 'deg)';
+      } else {
+        carEl.style.opacity = '0';
+      }
+
+      document.getElementById('grid-container').appendChild(carEl);
+      animState.carEls.push(carEl);
+    }
+  }
 
   SFX.whistle();
   setTimeout(startChugLoop, 500);
@@ -2356,14 +2722,49 @@ function renderTrainAtProgress() {
   const pixelX = cellX + pos.x * cellSize;
   const pixelY = cellY + pos.y * cellSize;
 
-  animState.trainEl.style.left = (pixelX + gridRect.left - containerRect.left) + 'px';
-  animState.trainEl.style.top = (pixelY + gridRect.top - containerRect.top) + 'px';
+  const locoX = pixelX + gridRect.left - containerRect.left;
+  const locoY = pixelY + gridRect.top - containerRect.top;
+
+  animState.trainEl.style.left = locoX + 'px';
+  animState.trainEl.style.top = locoY + 'px';
 
   // Top-down SVG faces NORTH (up) by default.
   // atan2 angle: East=0°, South=90°, North=-90°, West=±180°
   // To point our north-facing train in the direction of travel: rotate = angle + 90°
   const angleDeg = (pos.angle || 0) * (180 / Math.PI);
   animState.trainEl.style.transform = `translate(-50%, -50%) rotate(${angleDeg + 90}deg)`;
+
+  // Update car positions via distance-based position history
+  if (animState.carEls && animState.carEls.length > 0) {
+    if (animState.lastRenderPos) {
+      const dx = locoX - animState.lastRenderPos.x;
+      const dy = locoY - animState.lastRenderPos.y;
+      animState.cumulativeDistance += Math.sqrt(dx * dx + dy * dy);
+    }
+    animState.positionHistory.push({
+      x: locoX, y: locoY,
+      angle: angleDeg + 90,
+      dist: animState.cumulativeDistance,
+    });
+    animState.lastRenderPos = { x: locoX, y: locoY };
+
+    // Trim history to prevent memory growth
+    if (animState.positionHistory.length > 600) {
+      animState.positionHistory.splice(0, animState.positionHistory.length - 600);
+    }
+
+    const carSpacing = cellSize * 0.85;
+    for (let i = 0; i < animState.carEls.length; i++) {
+      const targetDist = animState.cumulativeDistance - (i + 1) * carSpacing;
+      const entry = findHistoryEntry(animState.positionHistory, targetDist);
+      if (entry) {
+        animState.carEls[i].style.left = entry.x + 'px';
+        animState.carEls[i].style.top = entry.y + 'px';
+        animState.carEls[i].style.transform = 'translate(-50%, -50%) rotate(' + entry.angle + 'deg)';
+        animState.carEls[i].style.opacity = '1';
+      }
+    }
+  }
 }
 
 function toggleMute() {
@@ -2383,6 +2784,10 @@ function stopPlay() {
 
   if (animState && animState.trainEl) {
     animState.trainEl.remove();
+  }
+  // Clean up animated car elements
+  if (animState && animState.carEls) {
+    animState.carEls.forEach(el => el.remove());
   }
 
   // Update train position to where it ended up
@@ -2737,6 +3142,7 @@ function serializeState() {
     grid: state.grid,
     train: state.train,
     trainDir: state.trainDir,
+    cars: state.cars,
   });
 }
 
@@ -2747,6 +3153,7 @@ function deserializeState(json) {
       state.grid = data.grid;
       state.train = data.train || null;
       state.trainDir = data.trainDir || 'E';
+      state.cars = Array.isArray(data.cars) ? data.cars : [];
       state.undoStack = [];
       return true;
     }
@@ -2859,6 +3266,7 @@ function saveToSlot(slotNum) {
     grid: state.grid,
     train: state.train,
     trainDir: state.trainDir,
+    cars: state.cars,
   };
   try {
     localStorage.setItem(SLOT_KEY_PREFIX + slotNum, JSON.stringify(data));
@@ -2877,6 +3285,7 @@ function loadFromSlot(slotNum) {
   state.grid = data.grid;
   state.train = data.train || null;
   state.trainDir = data.trainDir || 'E';
+  state.cars = Array.isArray(data.cars) ? data.cars : [];
   renderAllCells();
   autoSave();
   SFX.generate();
