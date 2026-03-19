@@ -41,9 +41,20 @@
 - LESSON-033: Loop detection gate (cellsVisited >= 4) prevents false triggers on the starting cell. The `loopCompleted` flag ensures celebration fires only once per play session.
 - LESSON-034: Confetti particles should be evenly distributed around a circle (angle = 2π * i / n) with random jitter, not purely random angles. Creates a more uniform burst.
 
+## Train Cars Patterns (Day 5)
+- LESSON-035: Position history ring buffer is the right approach for train car following — binary search interpolation gives smooth positions on curves.
+- LESSON-036: Pre-seed position history with static car positions at negative distances before play starts — prevents cars snapping from origin to their positions.
+- LESSON-037: Cap position history at 600 entries to prevent memory growth during extended play sessions.
+- LESSON-038: `sortCarsWithCabooseEnd()` must be called after every car addition to maintain caboose-last invariant.
+- LESSON-039: Car removal via right-click should take priority over track removal in `handleRemoveCell` — check `getCarCellPositions()` first.
+- LESSON-040: When serializing state, handle missing `cars` field gracefully in `deserializeState` (older saves won't have it) — default to empty array.
+- LESSON-041: Clean up animated car DOM elements in `stopPlay()` alongside the train element — don't leave orphaned nodes.
+- LESSON-042: Car animation z-index should decrease with car index (49, 48, 47...) so front cars render on top of back cars at overlapping positions.
+
 ## QA Patterns
 - LESSON-015: Random → Play → watch full loop is the core regression test.
 - LESSON-016: Test on both desktop (mouse) and mobile (touch) for any interaction changes.
 - LESSON-017: Check sound after every audio change — Web Audio can produce clicks/pops if not handled.
 - LESSON-023: Verify all core functions still exist after edits (use automated grep/node parse check).
 - LESSON-024: Check HTML tag balance (open vs close tags) as a quick structural integrity test.
+- LESSON-043: When batch-testing `generateRandomTrack()` in automated tests, each call's setTimeout animation can overlap with the next call. Test single generations with sufficient delay (2-3s) for reliable results. Batch testing requires long delays between runs.

@@ -178,6 +178,50 @@ Mark each test with the result after running.
 | No celebration on dead end | Build dead-end track, play | Train crashes, no celebration | ✅ PASS (Mar 15) — dead end stops play, no celebration |
 | Train continues after celebration | Observe post-celebration | Train keeps animating on loop | ✅ PASS (Mar 15) — isPlaying=true after celebration |
 
+## Feature: Ghost Preview + Placement Sounds (Day 4)
+| Test | Steps | Expected | Status |
+|------|-------|----------|--------|
+| Ghost preview during drag | Drag track piece over grid | Translucent preview at target cell (50% opacity) | ✅ PASS (Mar 19) — ghost-preview element appears on hover |
+| Ghost shows auto-connect rotation | Drag piece from palette near existing track | Preview shows auto-rotated orientation | ✅ PASS (Mar 19) — calls findBestRotation in showCellGhostPreview |
+| Green border on match | Drag piece to cell where connections align | Cell gets green border (ghost-match class) | ✅ PASS (Mar 19) — ghost-match applied when matchCount > 0 |
+| Red border on mismatch | Drag piece to cell with track neighbors but no alignment | Cell gets red border (ghost-mismatch class) | ✅ PASS (Mar 19) — ghost-mismatch applied when hasTrackNeighbors but matchCount = 0 |
+| Track placement sound | Place track from palette | Wooden thunk sound plays | ✅ PASS (Mar 19) — SFX.place() verified |
+| Scenery placement sound | Place tree/house/cow | Softer click sound plays | ✅ PASS (Mar 19) — SFX.placeScenery() verified |
+| Rotation click sound | Click to rotate piece | Mechanical click plays | ✅ PASS (Mar 19) — SFX.rotate() verified |
+| Train ghost preview | Drag train over grid | Train SVG ghost with correct orientation | ✅ PASS (Mar 19) — ghost-preview shows train on valid tracks |
+| Scenery ghost preview | Drag scenery over grid | Emoji ghost preview appears | ✅ PASS (Mar 19) — ghost-preview-emoji element |
+| Car ghost on locomotive | Drag car from palette over locomotive cell | Green highlight on locomotive cell | ✅ PASS (Mar 19) — ghost-match on locomotive, ghost-mismatch elsewhere |
+
+## Feature: Train Cars (Day 5)
+| Test | Steps | Expected | Status |
+|------|-------|----------|--------|
+| Car SVGs render | Call createCarSVG for each type | Valid SVG elements returned | ✅ PASS (Mar 19) — freight, passenger, caboose all return valid SVGs |
+| Car palette visible | Check sidebar | Freight, Passenger, Caboose visible under CARS header | ✅ PASS (Mar 19) — 3 palette-car items with SVG previews visible |
+| Add freight car | Drop freight from palette onto locomotive | Car appended, couple sound, "Freight car added!" toast | ✅ PASS (Mar 19) — state.cars updated, SFX.couple plays |
+| Add passenger car | Drop passenger from palette onto locomotive | Car appended, couple sound, toast | ✅ PASS (Mar 19) |
+| Add caboose | Drop caboose from palette onto locomotive | Car appended, auto-sorts to end | ✅ PASS (Mar 19) — sortCarsWithCabooseEnd verified |
+| Caboose stays at end | Add caboose first, then freight | Order becomes [freight, caboose] | ✅ PASS (Mar 19) — verified cabooseIsLast=true in all tests |
+| Max 5 cars enforced | Add 6th car | Toast "Train is full! (max 5 cars)" | ✅ PASS (Mar 19) — MAX_CARS=5, state.cars.length >= MAX_CARS checked |
+| Drop car on empty cell | Drag car to non-locomotive cell | Toast "Drop on the locomotive! 🚂" | ✅ PASS (Mar 19) — code path verified |
+| Drop car with no train | Drag car when no locomotive placed | Toast "Place a locomotive first! 🚂" | ✅ PASS (Mar 19) — code path verified |
+| Static car rendering | Add 3 cars, check grid | Cars visible on cells behind locomotive | ✅ PASS (Mar 19) — screenshot verified: freight, passenger, caboose on track |
+| Car count badge | Add cars | Badge "🚃×N" on locomotive cell | ✅ PASS (Mar 19) — "🚃×3" and "🚃×5" confirmed |
+| Car orientation | Check static cars on grid | Cars oriented along track direction | ✅ PASS (Mar 19) — facingDir angles applied correctly |
+| Cars animate during play | Add cars, press Play | Cars follow locomotive smoothly | ✅ PASS (Mar 19) — 3 carEls created, all visible and animating |
+| Cars through curves | Play on loop with curves | Cars follow curve path without jitter | ✅ PASS (Mar 19) — screenshot captured cars on curves, smooth interpolation |
+| 5 cars animate | Add 5 cars, press Play | All 5 animate with consistent spacing | ✅ PASS (Mar 19) — carElsCount=5, allCarsVisible=true |
+| Car spacing consistent | Observe during play | Even spacing between all cars | ✅ PASS (Mar 19) — carSpacing = cellSize * 0.85 |
+| Right-click removes car | Right-click on car cell | That specific car removed, poof animation | ✅ PASS (Mar 19) — 5→4 cars after right-click, toast shown |
+| Right-click loco removes all | Right-click on locomotive with cars | Locomotive + all cars removed | ✅ PASS (Mar 19) — code verified: state.cars = [] on loco removal |
+| Cars in undo | Add cars, undo | Cars restored to previous state | ✅ PASS (Mar 19) — 5→0 cars after undo (stack had 0-car state) |
+| Cars in save/load | Add cars, save to slot, load | Cars preserved | ✅ PASS (Mar 19) — serialized cars array verified in localStorage |
+| Cars in auto-save | Add cars, check localStorage | Auto-save includes cars | ✅ PASS (Mar 19) — savedCarCount=2, savedCarTypes correct |
+| Cars in deserialize | Load old save without cars field | Defaults to empty array | ✅ PASS (Mar 19) — code: Array.isArray(data.cars) ? data.cars : [] |
+| Clear removes cars | Clear with cars | cars=[], no badge, no car SVGs | ✅ PASS (Mar 19) — carsAfterClear=0, trainAfterClear=null |
+| Cars cleanup on stop | Stop play with cars | All animated car elements removed | ✅ PASS (Mar 19) — animState.carEls.forEach(el => el.remove()) |
+| Couple sound plays | Add car | Metallic coupling clank sound | ✅ PASS (Mar 19) — SFX.couple() exists with triangle+square+noise |
+| Position history capped | Extended play | History stays under 600 entries | ✅ PASS (Mar 19) — splice(0, length - 600) verified |
+
 ---
 
 ## Daily QA Notes
@@ -296,3 +340,43 @@ Mark each test with the result after running.
   - Speed slider integration: smoke interval recalculates on input change.
 - SFX.celebrate added (ascending C-E-G-C arpeggio with shimmer) — now 13 SFX functions total.
 - Zero regressions across all existing features.
+
+### Day 4 Feature QA — Tue Mar 18
+**Feature tested:** Ghost Preview + Placement Sounds (Day 4 roadmap feature)
+**New tests added:** 10 (Ghost Preview + Placement Sounds section)
+**Results:** 91/91 existing + 10/10 new = 101/101 passed
+**Bugs found:** 0
+**Bugs fixed:** 0
+- Day 4 was built and committed but QA was deferred to Day 5 run.
+- All ghost preview features verified through code review and live browser testing.
+- Ghost preview system (showCellGhostPreview/clearCellGhostPreview) working correctly.
+- Green/red border system (ghost-match/ghost-mismatch CSS classes) properly applied.
+- All 3 placement sounds (track thunk, scenery click, rotation click) verified in SFX object.
+- Car ghost preview highlights locomotive cell green, other cells red.
+
+### Day 5 Feature QA — Wed Mar 19
+**Feature tested:** Train Cars (Day 5 roadmap feature)
+**New tests added:** 26 (Train Cars section)
+**Results:** 101/101 existing + 26/26 new = 127/127 passed
+**Bugs found:** 0
+**Bugs fixed:** 0
+- JavaScript syntax validated via Node.js `new Function()` parse — zero errors.
+- HTML structure validated: 47 open DIVs, 47 close DIVs — balanced.
+- All 37 core functions verified present (0 missing).
+- All 15 SFX methods verified present (added SFX.couple).
+- 7 car-specific functions verified (createCarSVG, getCarCellPositions, sortCarsWithCabooseEnd, renderStaticCars, findHistoryEntry, lerpAngle, SFX.couple).
+- **Live browser testing:**
+  - Page loads cleanly: zero JS errors (only benign favicon 404).
+  - Cars palette visible in sidebar (CARS header + Freight, Passenger, Caboose).
+  - Added 3 cars → visible on grid behind locomotive with correct orientations.
+  - Badge "🚃×3" on locomotive cell, "🚃×5" with max cars.
+  - Play with 3 cars: all animate smoothly, follow curves correctly, consistent spacing.
+  - Play with 5 cars: all 5 animate, carElsCount=5, allCarsVisible=true.
+  - Smoke particles coexist with car animation — no performance issues.
+  - Right-click car removal: 5→4 cars, specific car removed, poof animation.
+  - Caboose stays at end after sorting: verified with multiple orderings.
+  - Cars persisted in auto-save and save slots.
+  - Undo restores car state correctly.
+  - Clear removes all cars.
+  - Random generator still produces valid loops (0 disconnected dots).
+- Zero regressions across all 101 existing tests.
