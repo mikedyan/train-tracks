@@ -1,0 +1,97 @@
+{
+  "day": 6,
+  "feature": "Day/Night Mode",
+  "councilConsensus": "3/4 models",
+  "bugs": [],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Add CSS custom properties for night theme",
+      "description": "Define night-mode CSS custom properties on body.night-mode for: grass, grass-dark, sky, sidebar background, track colors, cell hover. Use 0.5s CSS transition on all color properties.",
+      "file": "index.html",
+      "acceptance": [
+        "Night mode variables defined in body.night-mode selector",
+        "All themed elements use CSS custom properties (already partially done with var(--grass) etc)",
+        "0.5s transition on background, color properties"
+      ]
+    },
+    {
+      "id": "T2",
+      "title": "Add ☀️/🌙 toggle button to controls bar",
+      "description": "Add a toggle button in the #controls div that switches between ☀️ and 🌙. Clicking toggles body.night-mode class. Save preference to localStorage key 'trainTracks_nightMode'. Restore on page load.",
+      "file": "index.html",
+      "acceptance": [
+        "Button visible in controls bar",
+        "Clicking toggles day/night",
+        "Button text changes between ☀️ and 🌙",
+        "Preference persists across refreshes"
+      ]
+    },
+    {
+      "id": "T3",
+      "title": "Night sky with stars background",
+      "description": "In night mode, the body/main background becomes dark blue (#1A237E to #0D1B2A gradient). Add CSS-generated stars using multiple small radial-gradient dots on the #main background. Stars should be subtle white dots scattered randomly (use a fixed repeating pattern via CSS).",
+      "file": "index.html",
+      "acceptance": [
+        "Dark blue sky in night mode",
+        "Visible star dots on background",
+        "Stars don't interfere with grid visibility"
+      ]
+    },
+    {
+      "id": "T4",
+      "title": "Train headlight glow during play",
+      "description": "During night mode play, add a radial gradient glow (warm yellow, ~2 cell radius) that follows the train. Implement as an absolutely-positioned div in grid-container with radial-gradient background, positioned at train coordinates. Update position in renderTrainAtProgress().",
+      "file": "index.html",
+      "acceptance": [
+        "Yellow glow visible around train during night play",
+        "Glow follows train smoothly",
+        "Glow only appears in night mode",
+        "Glow removed when play stops"
+      ]
+    },
+    {
+      "id": "T5",
+      "title": "House windows glow at night",
+      "description": "In night mode, house scenery emoji gets a warm yellow CSS glow effect (box-shadow or text-shadow). The glow should be subtle but visible.",
+      "file": "index.html",
+      "acceptance": [
+        "House emoji has warm yellow glow in night mode",
+        "Glow disappears in day mode",
+        "Transition is smooth"
+      ]
+    },
+    {
+      "id": "T6",
+      "title": "Darker sidebar and grid in night mode",
+      "description": "Sidebar background gradient switches to darker tones. Grid background, cell background, cell hover all switch to dark variants. Connection dots remain visible. Track SVGs remain clearly visible.",
+      "file": "index.html",
+      "acceptance": [
+        "Sidebar is darker in night mode",
+        "Grid cells are dark green/teal in night mode",
+        "All track pieces remain clearly visible",
+        "Connection dots (green/red) still visible"
+      ]
+    },
+    {
+      "id": "T7",
+      "title": "Smooth transitions between modes",
+      "description": "All color changes use CSS transitions (0.5s ease). Toggle should feel smooth, not jarring. Grid, sidebar, background all transition together.",
+      "file": "index.html",
+      "acceptance": [
+        "Toggle transition is smooth (~0.5s)",
+        "No flash or jarring color changes",
+        "All elements transition simultaneously"
+      ]
+    }
+  ],
+  "testingFocus": [
+    "Toggle day/night repeatedly — no visual glitches",
+    "Play train in night mode — headlight follows correctly",
+    "Random generate in night mode — all pieces visible",
+    "Save/load in night mode — preference persists",
+    "Check smoke particles visible in night mode",
+    "Check confetti visible in night mode",
+    "Verify all existing features still work in both modes"
+  ]
+}

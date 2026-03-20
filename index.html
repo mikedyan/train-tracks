@@ -13,14 +13,52 @@
   --cell-size: 60px;
   --grass: #7CB342;
   --grass-dark: #689F38;
+  --grass-hover: #85BB4A;
   --wood: #8D6E63;
   --wood-light: #BCAAA4;
   --track: #5D4037;
   --track-light: #A1887F;
   --sky: #E8F5E9;
+  --sky-gradient-start: #E8F5E9;
+  --sky-gradient-end: #C8E6C9;
+  --sidebar-top: #6D4C41;
+  --sidebar-bottom: #5D4037;
+  --header-color: #3E2723;
   --accent: #FF6B6B;
   --play-green: #4CAF50;
   --stop-red: #F44336;
+  --house-glow: none;
+  --star-bg: none;
+}
+
+body.night-mode {
+  --grass: #2E4A3A;
+  --grass-dark: #1E3A2A;
+  --grass-hover: #3A5A4A;
+  --sky: #0D1B2A;
+  --sky-gradient-start: #0D1B2A;
+  --sky-gradient-end: #1B2838;
+  --sidebar-top: #1A2332;
+  --sidebar-bottom: #0F1923;
+  --header-color: #B0BEC5;
+  --house-glow: 0 0 12px 4px rgba(255, 200, 50, 0.6);
+  --star-bg:
+    radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.8), transparent),
+    radial-gradient(1px 1px at 25% 42%, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1.5px 1.5px at 45% 8%, rgba(255,255,255,0.9), transparent),
+    radial-gradient(1px 1px at 60% 35%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1px 1px at 75% 18%, rgba(255,255,255,0.7), transparent),
+    radial-gradient(1.5px 1.5px at 88% 48%, rgba(255,255,255,0.8), transparent),
+    radial-gradient(1px 1px at 15% 65%, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1px 1px at 35% 78%, rgba(255,255,255,0.7), transparent),
+    radial-gradient(1.5px 1.5px at 55% 58%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1px 1px at 70% 72%, rgba(255,255,255,0.8), transparent),
+    radial-gradient(1px 1px at 92% 82%, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1px 1px at 5% 90%, rgba(255,255,255,0.7), transparent),
+    radial-gradient(1.5px 1.5px at 40% 92%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1px 1px at 82% 5%, rgba(255,255,255,0.8), transparent),
+    radial-gradient(1px 1px at 50% 25%, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1px 1px at 20% 50%, rgba(255,255,255,0.5), transparent);
 }
 
 html, body {
@@ -31,6 +69,7 @@ html, body {
   touch-action: none;
   -webkit-user-select: none;
   user-select: none;
+  transition: background 0.5s ease;
 }
 
 #app {
@@ -41,7 +80,7 @@ html, body {
 /* SIDEBAR */
 #sidebar {
   width: var(--sidebar-w);
-  background: linear-gradient(180deg, #6D4C41, #5D4037);
+  background: linear-gradient(180deg, var(--sidebar-top), var(--sidebar-bottom));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -50,7 +89,7 @@ html, body {
   box-shadow: 2px 0 8px rgba(0,0,0,0.2);
   z-index: 10;
   overflow-y: auto;
-  transition: width 0.25s ease, padding 0.25s ease, opacity 0.2s ease;
+  transition: width 0.25s ease, padding 0.25s ease, opacity 0.2s ease, background 0.5s ease;
 }
 
 #app.sidebar-hidden #sidebar {
@@ -68,7 +107,7 @@ html, body {
   transform: translateY(-50%);
   width: 24px;
   height: 48px;
-  background: #5D4037;
+  background: var(--sidebar-bottom);
   border: none;
   border-radius: 0 8px 8px 0;
   color: white;
@@ -79,12 +118,12 @@ html, body {
   align-items: center;
   justify-content: center;
   box-shadow: 2px 0 6px rgba(0,0,0,0.2);
-  transition: left 0.25s ease;
+  transition: left 0.25s ease, background 0.5s ease;
   padding: 0;
 }
 
 #sidebar-toggle:hover {
-  background: #6D4C41;
+  background: var(--sidebar-top);
 }
 
 #app.sidebar-hidden #sidebar-toggle {
@@ -153,6 +192,9 @@ html, body {
   padding: 10px;
   gap: 10px;
   overflow: hidden;
+  background-image: var(--star-bg);
+  background-size: 100% 100%;
+  transition: background-color 0.5s ease;
 }
 
 #header {
@@ -164,7 +206,8 @@ html, body {
 #header h1 {
   font-size: 22px;
   font-weight: 800;
-  color: #3E2723;
+  color: var(--header-color);
+  transition: color 0.5s ease;
 }
 
 /* GRID */
@@ -173,12 +216,18 @@ html, body {
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0,0,0,0.15), inset 0 0 0 3px rgba(0,0,0,0.1);
+  transition: box-shadow 0.5s ease;
+}
+
+body.night-mode #grid-container {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4), inset 0 0 0 3px rgba(0,0,0,0.3);
 }
 
 #grid {
   display: grid;
   background: var(--grass-dark);
   gap: 1px;
+  transition: background 0.5s ease;
 }
 
 .cell {
@@ -189,7 +238,7 @@ html, body {
   transition: background 0.15s;
 }
 
-.cell:hover { background: #85BB4A; }
+.cell:hover { background: var(--grass-hover); }
 .cell.highlight { background: #A5D64E; box-shadow: inset 0 0 0 2px #FFF; }
 .cell .ghost-preview {
   position: absolute;
@@ -333,9 +382,10 @@ html, body {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #5D4037;
+  color: var(--header-color);
   font-weight: 700;
   font-size: 13px;
+  transition: color 0.5s ease;
 }
 
 .speed-control input[type=range] {
@@ -594,6 +644,38 @@ html, body {
   white-space: nowrap;
 }
 
+/* HOUSE GLOW (Night Mode) */
+body.night-mode .cell .scenery-emoji {
+  transition: text-shadow 0.5s ease;
+}
+
+/* HEADLIGHT GLOW (Night Mode) */
+#train-headlight {
+  position: absolute;
+  width: 0; height: 0;
+  pointer-events: none;
+  z-index: 45;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+body.night-mode #train-headlight.active {
+  opacity: 1;
+}
+
+/* Night mode toggle button */
+.btn-night {
+  background: #607D8B;
+  color: white;
+  box-shadow: 0 3px 10px rgba(96,125,139,0.3);
+}
+
+body.night-mode .btn-night {
+  background: #263238;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+}
+
 /* PLAYING STATE */
 #app.playing .cell { cursor: default; }
 #app.playing .cell:hover { background: var(--grass); }
@@ -640,6 +722,7 @@ html, body {
     </div>
     <div id="grid-container">
       <div id="grid"></div>
+      <div id="train-headlight"></div>
     </div>
     <div id="controls">
       <button class="btn btn-play" id="btn-play" onclick="togglePlay()">▶️ Play</button>
@@ -650,6 +733,7 @@ html, body {
         🐢 <input type="range" id="speed-slider" min="0.3" max="4" step="0.1" value="1.2"> 🐇
       </div>
       <button class="btn" id="btn-mute" onclick="toggleMute()" style="background:#78909C;color:white;padding:8px 12px;">🔊</button>
+      <button class="btn btn-night" id="btn-night" onclick="toggleNightMode()" style="padding:8px 12px;">☀️</button>
       <button class="btn" onclick="openSaveModal()" style="background:#607D8B;color:white;box-shadow:0 3px 10px rgba(96,125,139,0.3);">💾 Save</button>
     </div>
   </div>
@@ -825,6 +909,55 @@ function startChugLoop() {
 }
 function stopChugLoop() {
   if (chugInterval) { clearInterval(chugInterval); chugInterval = null; }
+}
+
+// ============================================================
+// NIGHT MODE
+// ============================================================
+const NIGHT_MODE_KEY = 'trainTracks_nightMode';
+
+function isNightMode() {
+  return document.body.classList.contains('night-mode');
+}
+
+function toggleNightMode() {
+  const night = !isNightMode();
+  document.body.classList.toggle('night-mode', night);
+  document.getElementById('btn-night').textContent = night ? '🌙' : '☀️';
+  // Update house glows
+  updateHouseGlows();
+  // Update headlight visibility
+  updateHeadlightVisibility();
+  try { localStorage.setItem(NIGHT_MODE_KEY, night ? '1' : '0'); } catch (e) {}
+}
+
+function restoreNightMode() {
+  try {
+    const val = localStorage.getItem(NIGHT_MODE_KEY);
+    if (val === '1') {
+      document.body.classList.add('night-mode');
+      document.getElementById('btn-night').textContent = '🌙';
+    }
+  } catch (e) {}
+}
+
+function updateHouseGlows() {
+  const night = isNightMode();
+  document.querySelectorAll('.cell .scenery-emoji').forEach(el => {
+    if (el.textContent === '🏠') {
+      el.style.textShadow = night ? '0 0 12px rgba(255, 200, 50, 0.7), 0 0 24px rgba(255, 180, 30, 0.4)' : 'none';
+    }
+  });
+}
+
+function updateHeadlightVisibility() {
+  const hl = document.getElementById('train-headlight');
+  if (!hl) return;
+  if (isNightMode() && state.playing) {
+    hl.classList.add('active');
+  } else {
+    hl.classList.remove('active');
+  }
 }
 
 // ============================================================
@@ -1292,6 +1425,10 @@ function renderCell(row, col) {
       const emoji = document.createElement('div');
       emoji.className = 'scenery-emoji';
       emoji.textContent = SCENERY_EMOJI[piece.type];
+      // House glow in night mode
+      if (piece.type === 'house' && isNightMode()) {
+        emoji.style.textShadow = '0 0 12px rgba(255, 200, 50, 0.7), 0 0 24px rgba(255, 180, 30, 0.4)';
+      }
       cell.appendChild(emoji);
       cell.classList.add('occupied');
     } else {
@@ -2386,9 +2523,11 @@ function spawnSmokeParticle() {
   const duration = 0.6 + Math.random() * 0.4;
   particle.style.setProperty('--smoke-duration', duration + 's');
 
-  // Random gray shade
-  const shade = 180 + Math.floor(Math.random() * 50);
-  particle.style.background = `rgba(${shade}, ${shade}, ${shade}, 0.7)`;
+  // Random gray shade (lighter in night mode for visibility)
+  const nightMode = isNightMode();
+  const shade = nightMode ? (210 + Math.floor(Math.random() * 40)) : (180 + Math.floor(Math.random() * 50));
+  const alpha = nightMode ? 0.5 : 0.7;
+  particle.style.background = `rgba(${shade}, ${shade}, ${shade}, ${alpha})`;
 
   // Position at smokestack (slightly above center of train)
   particle.style.left = left + 'px';
@@ -2662,6 +2801,7 @@ function startPlay() {
   SFX.whistle();
   setTimeout(startChugLoop, 500);
   setTimeout(startSmokeLoop, 300);
+  updateHeadlightVisibility();
   requestAnimationFrame(animateFrame);
 }
 
@@ -2775,6 +2915,20 @@ function renderTrainAtProgress() {
   const angleDeg = (pos.angle || 0) * (180 / Math.PI);
   animState.trainEl.style.transform = `translate(-50%, -50%) rotate(${angleDeg + 90}deg)`;
 
+  // Update headlight position (night mode)
+  const hl = document.getElementById('train-headlight');
+  if (hl && isNightMode()) {
+    const hlRadius = cellSize * 2;
+    hl.style.width = hlRadius * 2 + 'px';
+    hl.style.height = hlRadius * 2 + 'px';
+    hl.style.left = (locoX - hlRadius) + 'px';
+    hl.style.top = (locoY - hlRadius) + 'px';
+    hl.style.background = 'radial-gradient(circle, rgba(255,230,100,0.35) 0%, rgba(255,210,60,0.15) 40%, transparent 70%)';
+    hl.classList.add('active');
+  } else if (hl) {
+    hl.classList.remove('active');
+  }
+
   // Update car positions via distance-based position history
   if (animState.carEls && animState.carEls.length > 0) {
     if (animState.lastRenderPos) {
@@ -2839,6 +2993,10 @@ function stopPlay() {
   if (animState && animState.carEls) {
     animState.carEls.forEach(el => el.remove());
   }
+
+  // Hide headlight
+  const hl = document.getElementById('train-headlight');
+  if (hl) hl.classList.remove('active');
 
   // Update train position to where it ended up
   if (animState) {
@@ -3237,8 +3395,8 @@ function renderThumbnail(canvas, gridData, trainData) {
   const cw = w / COLS;
   const ch = h / ROWS;
 
-  // Grass background
-  ctx.fillStyle = '#7CB342';
+  // Grass background (respects night mode)
+  ctx.fillStyle = isNightMode() ? '#2E4A3A' : '#7CB342';
   ctx.fillRect(0, 0, w, h);
 
   if (!gridData) return;
@@ -3435,6 +3593,9 @@ function calculateSize() {
 function init() {
   calculateSize();
   initGrid();
+
+  // Restore night mode preference
+  restoreNightMode();
 
   // Restore saved state before first render
   const restored = autoLoad();
