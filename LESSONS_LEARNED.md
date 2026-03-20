@@ -51,6 +51,16 @@
 - LESSON-041: Clean up animated car DOM elements in `stopPlay()` alongside the train element — don't leave orphaned nodes.
 - LESSON-042: Car animation z-index should decrease with car index (49, 48, 47...) so front cars render on top of back cars at overlapping positions.
 
+## Day/Night Mode Patterns (Day 6)
+- LESSON-044: Use CSS custom properties for all theme-dependent colors — makes night mode a simple body class toggle.
+- LESSON-045: Stars via CSS radial-gradient on background-image avoids extra DOM elements and canvas overhead.
+- LESSON-046: Headlight glow as a positioned div with radial-gradient is simpler and performs better than canvas-based approaches.
+- LESSON-047: House glow uses text-shadow on emoji elements — works across browsers, no extra markup needed.
+- LESSON-048: restoreNightMode() must run before renderAllCells() in init() so house glows and theme colors are correct on first render.
+- LESSON-049: When toggling night mode during play, updateHeadlightVisibility() activates the headlight div, but position is only set on next animation frame in renderTrainAtProgress() — this is fine since it's <16ms.
+- LESSON-050: Smoke particles get their color at spawn time (inline style), so particles spawned before a mode toggle keep their original color — acceptable since they last <1s.
+- LESSON-051: CSS transitions on custom property changes work through the cascade — setting transition on the element that reads var(--prop) is sufficient.
+
 ## QA Patterns
 - LESSON-015: Random → Play → watch full loop is the core regression test.
 - LESSON-016: Test on both desktop (mouse) and mobile (touch) for any interaction changes.
