@@ -50,6 +50,45 @@ html, body {
   box-shadow: 2px 0 8px rgba(0,0,0,0.2);
   z-index: 10;
   overflow-y: auto;
+  transition: width 0.25s ease, padding 0.25s ease, opacity 0.2s ease;
+}
+
+#app.sidebar-hidden #sidebar {
+  width: 0;
+  padding: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#sidebar-toggle {
+  position: fixed;
+  left: var(--sidebar-w);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 48px;
+  background: #5D4037;
+  border: none;
+  border-radius: 0 8px 8px 0;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 2px 0 6px rgba(0,0,0,0.2);
+  transition: left 0.25s ease;
+  padding: 0;
+}
+
+#sidebar-toggle:hover {
+  background: #6D4C41;
+}
+
+#app.sidebar-hidden #sidebar-toggle {
+  left: 0;
 }
 
 #sidebar h2 {
@@ -566,11 +605,13 @@ html, body {
   .palette-piece { width: 54px; height: 54px; }
   #header h1 { font-size: 18px; }
   .btn { padding: 6px 14px; font-size: 12px; }
+  #sidebar-toggle { width: 28px; height: 56px; font-size: 16px; }
 }
 </style>
 </head>
 <body>
 <div id="app">
+  <button id="sidebar-toggle" onclick="toggleSidebar()" title="Toggle palette">◀</button>
   <div id="sidebar">
     <h2>Tracks</h2>
     <div class="palette-piece" data-type="straight"><div class="label">Straight</div></div>
@@ -2767,6 +2808,15 @@ function renderTrainAtProgress() {
   }
 }
 
+function toggleSidebar() {
+  const app = document.getElementById('app');
+  const btn = document.getElementById('sidebar-toggle');
+  app.classList.toggle('sidebar-hidden');
+  btn.textContent = app.classList.contains('sidebar-hidden') ? '▶' : '◀';
+  calculateSize();
+  renderAllCells();
+}
+
 function toggleMute() {
   soundEnabled = !soundEnabled;
   document.getElementById('btn-mute').textContent = soundEnabled ? '🔊' : '🔇';
@@ -3370,7 +3420,8 @@ function closeSaveModalOutside(e) {
 // SIZING
 // ============================================================
 function calculateSize() {
-  const sidebarW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-w'));
+  const sidebarHidden = document.getElementById('app').classList.contains('sidebar-hidden');
+  const sidebarW = sidebarHidden ? 0 : parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-w'));
   const availW = window.innerWidth - sidebarW - 40;
   const availH = window.innerHeight - 120;
   cellSize = Math.floor(Math.min(availW / COLS, availH / ROWS));
