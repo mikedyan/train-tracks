@@ -1,0 +1,100 @@
+{
+  "day": 7,
+  "title": "Crash/Derail Feedback",
+  "description": "Transform dead-end collisions from abrupt stops into fun, comical animations. When the train hits an open track end, show a star burst, dust cloud, bouncy sound, and a friendly toast. At high speeds, add a wobble effect. Cars pile up behind the locomotive comedically.",
+  "bugs_to_fix": [],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Add CSS for crash animations (star burst, dust cloud, wobble)",
+      "details": "Add @keyframes and particle classes: crash-star (10-15 yellow stars scattering outward and fading), crash-dust (5-8 tan/brown dust puffs expanding and fading), crash-wobble (rapid left-right oscillation on the train element at high speed). Stars use ⭐ character or CSS shapes. Dust uses small circles like smoke particles.",
+      "file": "index.html",
+      "section": "CSS, after confetti-particle styles",
+      "acceptance": [
+        "crash-star keyframes defined with burst-outward + fade",
+        "crash-dust keyframes defined with expand + fade",
+        "crash-wobble keyframes defined with rapid oscillation",
+        ".crash-star and .crash-dust particle classes exist"
+      ]
+    },
+    {
+      "id": "T2",
+      "title": "Add SFX.boing() — comical bouncy crash sound",
+      "details": "Replace the harsh SFX.crash() with a fun, comical 'boing!' sound using a quick frequency sweep (high→low→high bounce) with sine wave. Sound intensity and pitch vary with current speed: louder and more dramatic at higher speeds. Keep existing SFX.crash for reference but rename it if needed. The sound should make a toddler laugh, not cry.",
+      "file": "index.html",
+      "section": "SFX object",
+      "acceptance": [
+        "SFX.boing(speed) produces a comical bouncy sound",
+        "At speed 0.3x: quiet, gentle boing",
+        "At speed 4x: loud, dramatic boing with extra harmonics",
+        "Sound is fun/comical, not jarring"
+      ]
+    },
+    {
+      "id": "T3",
+      "title": "Implement triggerCrashSequence() — orchestrates the full crash",
+      "details": "New function called instead of direct SFX.crash() + stopPlay(). Sequence: (1) If speed > 1.5x, add wobble class to trainEl for 0.4s first. (2) Play SFX.boing(speed). (3) Spawn 10-15 crash stars at train position. (4) Spawn 5-8 dust cloud particles at train position. (5) Animate train bouncing backward slightly (~15px in reverse direction, using CSS transform). (6) After 1.5s total, call stopPlay(). (7) Show friendly toast: '💥 Oops! Connect more tracks!' The function must get the train position from animState.",
+      "file": "index.html",
+      "section": "New function, after loop celebration section",
+      "acceptance": [
+        "Crash sequence triggers on all dead-end scenarios",
+        "Stars burst outward from crash point",
+        "Dust cloud puffs appear at crash point",
+        "Train visibly bounces backward before stopping",
+        "Wobble visible at speeds > 1.5x",
+        "Friendly toast appears",
+        "All particles auto-clean after 2s"
+      ]
+    },
+    {
+      "id": "T4",
+      "title": "Update animateFrame() crash handling to use triggerCrashSequence()",
+      "details": "Replace all 4 crash exit points in animateFrame() (grid boundary, no piece, not connected, no exit) with calls to triggerCrashSequence(). Remove direct calls to SFX.crash() and stopPlay() from these paths. Instead set a 'crashing' flag on animState to prevent further animation frames while crash sequence plays out. The train should freeze at its current position during the crash animation.",
+      "file": "index.html",
+      "section": "animateFrame function",
+      "acceptance": [
+        "All 4 crash paths in animateFrame use triggerCrashSequence",
+        "Train freezes at crash point (no further movement)",
+        "No duplicate crash triggers",
+        "State properly cleaned up after crash sequence completes"
+      ]
+    },
+    {
+      "id": "T5",
+      "title": "Car pile-up animation on crash",
+      "details": "When crash triggers and train has cars, animate the cars bunching up behind the locomotive with decreasing spacing over 0.5s. Each car moves slightly closer to the one in front, creating a comedic accordion/pile-up effect. Use CSS transitions on the car elements' positions. After pile-up completes, the stopPlay() cleanup removes everything normally.",
+      "file": "index.html",
+      "section": "triggerCrashSequence function",
+      "acceptance": [
+        "Cars visibly compress toward locomotive on crash",
+        "Effect is comedic, not jarring",
+        "Works with 1-5 cars",
+        "Cars are cleaned up properly by stopPlay()"
+      ]
+    },
+    {
+      "id": "T6",
+      "title": "Update crash toast messages to be friendly",
+      "details": "All crash toasts should be encouraging and helpful, not punishing. Rotate through a few friendly messages: '💥 Oops! Connect more tracks!', '💥 Almost! Try adding a curve!', '💥 Whoopsie! The track ends here!'. Random selection from array.",
+      "file": "index.html",
+      "section": "triggerCrashSequence and animateFrame",
+      "acceptance": [
+        "Toast messages are friendly and helpful",
+        "Multiple message variants for variety",
+        "No punishing language"
+      ]
+    }
+  ],
+  "testing_focus": [
+    "Crash animation at open track ends (all 4 scenarios)",
+    "Sound varies with speed slider position",
+    "Wobble only appears at speed > 1.5x",
+    "Star burst and dust cloud visible and auto-clean",
+    "Train bounce-back visible before stop",
+    "Car pile-up works with 0, 1, 3, and 5 cars",
+    "Night mode: particles visible against dark background",
+    "No JS errors during crash sequence",
+    "Crash doesn't interfere with subsequent play",
+    "Multiple rapid crashes (Random → Play → crash → Random → Play → crash)"
+  ]
+}

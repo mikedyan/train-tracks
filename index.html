@@ -619,6 +619,49 @@ body.night-mode #grid-container {
   animation: confetti-burst 1.2s ease-out forwards;
 }
 
+/* CRASH ANIMATIONS */
+@keyframes crash-star-burst {
+  0% { opacity: 1; transform: translate(0, 0) scale(1) rotate(0deg); }
+  50% { opacity: 0.9; }
+  100% { opacity: 0; transform: translate(var(--star-dx, 40px), var(--star-dy, -40px)) scale(0.3) rotate(180deg); }
+}
+.crash-star {
+  position: absolute;
+  pointer-events: none;
+  z-index: 65;
+  font-size: 14px;
+  animation: crash-star-burst 1s ease-out forwards;
+}
+
+@keyframes crash-dust-puff {
+  0% { opacity: 0.7; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--dust-dx, 10px), var(--dust-dy, 10px)) scale(2.5); }
+}
+.crash-dust {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 62;
+  animation: crash-dust-puff 0.8s ease-out forwards;
+}
+
+@keyframes crash-wobble {
+  0% { transform: translate(-50%, -50%) rotate(var(--train-angle)) translateX(0); }
+  15% { transform: translate(-50%, -50%) rotate(var(--train-angle)) translateX(-6px); }
+  30% { transform: translate(-50%, -50%) rotate(var(--train-angle)) translateX(5px); }
+  45% { transform: translate(-50%, -50%) rotate(var(--train-angle)) translateX(-4px); }
+  60% { transform: translate(-50%, -50%) rotate(var(--train-angle)) translateX(3px); }
+  75% { transform: translate(-50%, -50%) rotate(var(--train-angle)) translateX(-2px); }
+  100% { transform: translate(-50%, -50%) rotate(var(--train-angle)) translateX(0); }
+}
+
+@keyframes crash-bounce-back {
+  0% { transform: translate(-50%, -50%) rotate(var(--train-angle)) translateY(0); }
+  40% { transform: translate(-50%, -50%) rotate(var(--train-angle)) translateY(12px); }
+  70% { transform: translate(-50%, -50%) rotate(var(--train-angle)) translateY(-4px); }
+  100% { transform: translate(-50%, -50%) rotate(var(--train-angle)) translateY(0); }
+}
+
 /* CAR RENDERING */
 .cell .car-svg {
   position: absolute;
@@ -890,6 +933,46 @@ const SFX = {
     playNote(200, 0.15, 'triangle', 0.12);
     playNote(350, 0.08, 'square', 0.06, 0.02);
     playNoise(0.08, 0.05);
+  },
+  boing(speed = 1) {
+    // Comical bouncy crash — spring-like frequency sweep
+    // Intensity scales with speed
+    const vol = Math.min(0.08 + speed * 0.04, 0.22);
+    const ctx = getAudioCtx();
+    if (!ctx || !soundEnabled) return;
+
+    // Main boing: sine sweep high→low→mid
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(600 + speed * 100, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.15);
+    osc.frequency.exponentialRampToValueAtTime(400 + speed * 50, ctx.currentTime + 0.25);
+    osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.4);
+    gain.gain.setValueAtTime(vol, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.45);
+
+    // Secondary wobble overtone for comedy
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(800 + speed * 80, ctx.currentTime);
+    osc2.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.3);
+    gain2.gain.setValueAtTime(vol * 0.4, ctx.currentTime);
+    gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(ctx.currentTime);
+    osc2.stop(ctx.currentTime + 0.35);
+
+    // At high speed, add a dramatic noise burst
+    if (speed > 1.5) {
+      playNoise(0.15, vol * 0.3);
+    }
   }
 };
 
@@ -2622,6 +2705,130 @@ function triggerLoopCelebration() {
 }
 
 // ============================================================
+// CRASH/DERAIL SEQUENCE
+// ============================================================
+const CRASH_MESSAGES = [
+  '💥 Oops! Connect more tracks!',
+  '💥 Almost! Try adding a curve!',
+  '💥 Whoopsie! The track ends here!',
+  '💥 Bonk! Need more track!',
+  '💥 Oh no! Build a bigger loop!',
+];
+
+function triggerCrashSequence() {
+  if (!animState || !animState.trainEl) return;
+
+  // Prevent re-entry
+  if (animState.crashing) return;
+  animState.crashing = true;
+
+  const speed = parseFloat(document.getElementById('speed-slider').value) || 1;
+  const trainEl = animState.trainEl;
+  const container = document.getElementById('grid-container');
+  const trainLeft = parseFloat(trainEl.style.left) || 0;
+  const trainTop = parseFloat(trainEl.style.top) || 0;
+
+  // Get current train angle for CSS variable
+  const currentTransform = trainEl.style.transform || '';
+  const angleMatch = currentTransform.match(/rotate\(([-\d.]+)deg\)/);
+  const trainAngle = angleMatch ? angleMatch[1] + 'deg' : '0deg';
+
+  // Stop chug and smoke immediately
+  stopChugLoop();
+  stopSmokeLoop();
+
+  // 1) High-speed wobble (only at speed > 1.5x)
+  const wobbleDuration = speed > 1.5 ? 400 : 0;
+
+  if (speed > 1.5) {
+    trainEl.style.setProperty('--train-angle', trainAngle);
+    trainEl.style.animation = `crash-wobble ${wobbleDuration}ms ease-out`;
+  }
+
+  setTimeout(() => {
+    // Clear wobble animation
+    trainEl.style.animation = '';
+
+    // 2) Play boing sound
+    SFX.boing(speed);
+
+    // 3) Spawn star burst (10-15 yellow/gold stars)
+    const numStars = 10 + Math.floor(Math.random() * 6);
+    const starChars = ['⭐', '✨', '💫', '⭐', '✨'];
+    for (let i = 0; i < numStars; i++) {
+      const star = document.createElement('div');
+      star.className = 'crash-star';
+      star.textContent = starChars[i % starChars.length];
+
+      const angle = (Math.PI * 2 * i) / numStars + (Math.random() - 0.5) * 0.6;
+      const distance = 30 + Math.random() * 50;
+      star.style.setProperty('--star-dx', (Math.cos(angle) * distance) + 'px');
+      star.style.setProperty('--star-dy', (Math.sin(angle) * distance) + 'px');
+      star.style.left = trainLeft + 'px';
+      star.style.top = trainTop + 'px';
+      star.style.fontSize = (10 + Math.random() * 8) + 'px';
+
+      container.appendChild(star);
+      setTimeout(() => { if (star.parentNode) star.remove(); }, 1100);
+    }
+
+    // 4) Spawn dust cloud (5-8 tan/brown puffs)
+    const numDust = 5 + Math.floor(Math.random() * 4);
+    for (let i = 0; i < numDust; i++) {
+      const dust = document.createElement('div');
+      dust.className = 'crash-dust';
+
+      const size = 6 + Math.random() * 8;
+      dust.style.width = size + 'px';
+      dust.style.height = size + 'px';
+
+      const night = isNightMode();
+      const shade = night ? 'rgba(180, 160, 130, 0.6)' : 'rgba(160, 130, 90, 0.7)';
+      dust.style.background = shade;
+
+      const dAngle = (Math.PI * 2 * i) / numDust + (Math.random() - 0.5) * 1;
+      const dDist = 10 + Math.random() * 25;
+      dust.style.setProperty('--dust-dx', (Math.cos(dAngle) * dDist) + 'px');
+      dust.style.setProperty('--dust-dy', (Math.sin(dAngle) * dDist) + 'px');
+      dust.style.left = trainLeft + 'px';
+      dust.style.top = trainTop + 'px';
+
+      container.appendChild(dust);
+      setTimeout(() => { if (dust.parentNode) dust.remove(); }, 900);
+    }
+
+    // 5) Bounce train backward
+    trainEl.style.setProperty('--train-angle', trainAngle);
+    trainEl.style.animation = 'crash-bounce-back 0.5s ease-out';
+
+    // 6) Car pile-up: compress cars toward locomotive
+    if (animState.carEls && animState.carEls.length > 0) {
+      const carSpacing = cellSize * 0.85;
+      animState.carEls.forEach((carEl, i) => {
+        carEl.style.transition = 'left 0.4s ease-out, top 0.4s ease-out';
+        // Move each car ~40% closer to the one in front
+        const currentLeft = parseFloat(carEl.style.left) || 0;
+        const currentTop = parseFloat(carEl.style.top) || 0;
+        const targetX = trainLeft;
+        const targetY = trainTop;
+        const pileUpFactor = 0.35 * (i + 1) / animState.carEls.length;
+        carEl.style.left = (currentLeft + (targetX - currentLeft) * pileUpFactor) + 'px';
+        carEl.style.top = (currentTop + (targetY - currentTop) * pileUpFactor) + 'px';
+      });
+    }
+
+    // 7) Friendly toast
+    const msg = CRASH_MESSAGES[Math.floor(Math.random() * CRASH_MESSAGES.length)];
+    showToast(msg);
+
+    // 8) Stop after animation completes
+    setTimeout(() => {
+      stopPlay();
+    }, 1000);
+  }, wobbleDuration);
+}
+
+// ============================================================
 // CAR ANIMATION HELPERS
 // ============================================================
 function findHistoryEntry(history, targetDist) {
@@ -2743,6 +2950,7 @@ function startPlay() {
     cumulativeDistance: 0,
     lastRenderPos: null,
     carEls: [],
+    crashing: false,
   };
 
   // Compute path
@@ -2807,6 +3015,7 @@ function startPlay() {
 
 function animateFrame(timestamp) {
   if (!state.playing || !animState) return;
+  if (animState.crashing) return; // Freeze during crash sequence
 
   const dt = (timestamp - animState.lastTime) / 1000;
   animState.lastTime = timestamp;
@@ -2823,12 +3032,10 @@ function animateFrame(timestamp) {
     // Move to next cell
     const nextPos = getNeighbor(animState.row, animState.col, animState.exitEdge);
     if (!nextPos) {
-      // Hit grid boundary — stop
+      // Hit grid boundary
       animState.progress = 1;
       renderTrainAtProgress();
-      SFX.crash();
-      stopPlay();
-      showToast('End of the line! 🛑');
+      triggerCrashSequence();
       return;
     }
 
@@ -2837,9 +3044,7 @@ function animateFrame(timestamp) {
       // Dead end
       animState.progress = 1;
       renderTrainAtProgress();
-      SFX.crash();
-      stopPlay();
-      showToast('Dead end! 🛑');
+      triggerCrashSequence();
       return;
     }
 
@@ -2849,17 +3054,15 @@ function animateFrame(timestamp) {
       // Not connected
       animState.progress = 1;
       renderTrainAtProgress();
-      SFX.crash();
-      stopPlay();
-      showToast('Track not connected! 🔧');
+      triggerCrashSequence();
       return;
     }
 
     const newExit = getExitDir(nextPiece.type, nextPiece.rotation, newEntry);
     if (!newExit) {
-      SFX.crash();
-      stopPlay();
-      showToast('Dead end! 🛑');
+      animState.progress = 1;
+      renderTrainAtProgress();
+      triggerCrashSequence();
       return;
     }
 
@@ -2981,6 +3184,8 @@ function stopPlay() {
   stopChugLoop();
   stopSmokeLoop();
   cleanupSmokeParticles();
+  // Clean up crash particles
+  document.querySelectorAll('.crash-star, .crash-dust').forEach(el => el.remove());
   state.playing = false;
   document.getElementById('app').classList.remove('playing');
   document.getElementById('btn-play').innerHTML = '▶️ Play';
