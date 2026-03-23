@@ -1,0 +1,91 @@
+{
+  "day": 8,
+  "feature": "Clickable Switches (Interactive T-Splits)",
+  "description": "T-junction pieces get interactive switch levers that toggle which path the train takes. Click during play or while paused to pre-set routes. Default direction is straight-through.",
+  "bugs_to_fix": [],
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Add switch state tracking to game state",
+      "description": "Add `switchStates` object to state (maps 'row,col' keys to boolean true=branch, absent=straight). Include in undo stack, serialization (auto-save + save slots), clearAll, placePiece cleanup (delete on non-tjunction placement), and removePiece cleanup.",
+      "file": "index.html",
+      "changes": [
+        "Add `switchStates: {}` to state object",
+        "Include switchStates in saveUndo() snapshot",
+        "Restore switchStates in undo()",
+        "Include switchStates in serializeState()/deserializeState()",
+        "Include switchStates in saveToSlot()/loadFromSlot()",
+        "Reset switchStates in clearAll()",
+        "Delete switch state entry in removePiece()",
+        "Delete switch state entry in placePiece() when type !== 'tjunction'"
+      ],
+      "acceptance": "Switch states persist across auto-save, save slots, undo, and are cleaned up on removal/replacement"
+    },
+    {
+      "id": 2,
+      "title": "Modify getExitDir to use switch state for T-junctions",
+      "description": "Add optional row/col parameters to getExitDir. For T-junctions, read switchStates[row,col]: if branch mode, prefer the non-opposite exit (the branch direction); if straight mode (default), prefer the opposite exit (straight-through). Update ALL call sites to pass row/col.",
+      "file": "index.html",
+      "changes": [
+        "Change function signature: getExitDir(type, rotation, entryEdge, row, col)",
+        "Replace T-junction logic to check state.switchStates[row+','+col]",
+        "Update call in startPlay() to pass state.train.row, state.train.col",
+        "Update call in animateFrame() to pass nextPos.row, nextPos.col",
+        "Update call in getCarCellPositions() to pass next.row, next.col"
+      ],
+      "acceptance": "Train follows switch-determined path: straight-through when default, branch when toggled"
+    },
+    {
+      "id": 3,
+      "title": "Add CSS for switch lever and play-mode interaction",
+      "description": "Style .switch-lever (positioned center of cell, orange circle, z-index 7, pointer-events auto), .lever-arm (rotating arm via --lever-angle CSS custom property with 0.3s transition), .has-switch class for T-junction cells, and play-mode cursor override for clickable switches. Also add branch-mode color variant (green).",
+      "file": "index.html",
+      "acceptance": "Lever visible in both day/night modes, clickable both during play and paused, smooth rotation transition on toggle"
+    },
+    {
+      "id": 4,
+      "title": "Add visual switch lever indicator in renderCell",
+      "description": "When rendering a T-junction, add a .switch-lever div with .lever-arm child. Compute arm angle from piece rotation and switch state: straight angle = piece.rotation, branch angle = piece.rotation + 90. Lever gets pointerdown handler with stopPropagation to toggle switch without triggering rotation. Add 'has-switch' class to cell. Also update renderCell cleanup to remove .switch-lever and .has-switch.",
+      "file": "index.html",
+      "acceptance": "Lever visually indicates current switch direction, arm rotates smoothly on toggle, clicking lever doesn't trigger piece rotation"
+    },
+    {
+      "id": 5,
+      "title": "Add toggleSwitch and updateSwitchLever functions",
+      "description": "toggleSwitch(row, col): flips switch state between straight/branch, plays SFX.switchToggle, updates lever visual via updateSwitchLever, calls autoSave. updateSwitchLever(row, col): finds lever element, updates --lever-angle and branch CSS class based on current state.",
+      "file": "index.html",
+      "acceptance": "Toggle changes state, updates visual, plays sound, and saves"
+    },
+    {
+      "id": 6,
+      "title": "Add click handler for T-junction toggling during play",
+      "description": "Modify onGridDown: when state.playing is true, instead of returning early, check if clicked cell is a T-junction and call toggleSwitch. This allows clicking anywhere on the cell (not just the lever) during play to toggle.",
+      "file": "index.html",
+      "acceptance": "Clicking T-junction during play toggles direction; clicking non-T-junction cells during play does nothing"
+    },
+    {
+      "id": 7,
+      "title": "Add SFX.switchToggle mechanical clunk sound",
+      "description": "Add switchToggle() to SFX object: low triangle wave (180Hz, 0.1s) + square wave (120Hz, 0.1s) + noise burst for mechanical clunk effect.",
+      "file": "index.html",
+      "acceptance": "Satisfying mechanical clunk plays on every toggle"
+    }
+  ],
+  "testing_focus": [
+    "T-junction switch toggling during play — train takes switched path",
+    "T-junction switch toggling while paused — pre-set routes work when play starts",
+    "Multiple T-junctions with independent switch states",
+    "Lever visual updates smoothly with CSS transition",
+    "Click lever during pause toggles switch (does NOT rotate piece)",
+    "Click cell body during pause rotates piece (existing behavior preserved)",
+    "Click anywhere on T-junction during play toggles switch",
+    "Switch state persists across auto-save, save slots, undo",
+    "Switch state cleaned up on piece removal/replacement",
+    "Default switch state is straight-through",
+    "Train with cars follows switched path correctly",
+    "Night mode: lever visible and functional",
+    "Crash sequence at T-junction dead ends still works",
+    "Random generator still produces valid loops",
+    "Existing rotation/placement behavior unchanged for all other piece types"
+  ]
+}

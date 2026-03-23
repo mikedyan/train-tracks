@@ -346,6 +346,57 @@ body.night-mode #grid-container {
 .cell .connection-dot.e { right: -3px; top: 50%; transform: translateY(-50%); }
 .cell .connection-dot.w { left: -3px; top: 50%; transform: translateY(-50%); }
 
+/* Switch lever for T-junctions */
+.switch-lever {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: #FFAB40;
+  border: 2px solid #FF8F00;
+  cursor: pointer;
+  z-index: 7;
+  pointer-events: auto;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.switch-lever:hover {
+  background: #FFD54F;
+  transform: translate(-50%, -50%) scale(1.15);
+}
+
+.switch-lever.branch {
+  background: #66BB6A;
+  border-color: #43A047;
+}
+
+.switch-lever.branch:hover {
+  background: #81C784;
+  transform: translate(-50%, -50%) scale(1.15);
+}
+
+.lever-arm {
+  position: absolute;
+  width: 4px;
+  height: 14px;
+  bottom: 50%;
+  left: 50%;
+  transform: translateX(-50%) rotate(var(--lever-angle, 0deg));
+  transform-origin: center bottom;
+  background: #E65100;
+  border-radius: 2px;
+  pointer-events: none;
+  transition: transform 0.3s ease, background 0.2s;
+}
+
+.switch-lever.branch .lever-arm {
+  background: #2E7D32;
+}
+
 /* CONTROLS */
 #controls {
   display: flex;
@@ -722,6 +773,8 @@ body.night-mode .btn-night {
 /* PLAYING STATE */
 #app.playing .cell { cursor: default; }
 #app.playing .cell:hover { background: var(--grass); }
+#app.playing .cell.has-switch { cursor: pointer; }
+#app.playing .cell.has-switch:hover { background: var(--grass-hover); }
 #app.playing #sidebar { opacity: 0.5; pointer-events: none; }
 
 /* RESPONSIVE */
@@ -934,6 +987,12 @@ const SFX = {
     playNote(350, 0.08, 'square', 0.06, 0.02);
     playNoise(0.08, 0.05);
   },
+  switchToggle() {
+    // Mechanical clunk — railway switch lever
+    playNote(180, 0.1, 'triangle', 0.14);
+    playNote(120, 0.1, 'square', 0.06, 0.03);
+    playNoise(0.06, 0.06);
+  },
   boing(speed = 1) {
     // Comical bouncy crash — spring-like frequency sweep
     // Intensity scales with speed
@@ -1086,6 +1145,7 @@ const state = {
   playing: false,
   speed: 1.2,
   undoStack: [],
+  switchStates: {}, // "row,col" -> true (branch) | absent (straight/default)
 };
 
 let cellSize = 60;
@@ -1107,7 +1167,7 @@ function getConnections(type, rotation) {
   return base.map(d => rotateDir(d, steps));
 }
 
-function getExitDir(type, rotation, entryEdge) {
+function getExitDir(type, rotation, entryEdge, row, col) {
   const conns = getConnections(type, rotation);
   if (!conns.includes(entryEdge)) return null;
 
@@ -1123,11 +1183,21 @@ function getExitDir(type, rotation, entryEdge) {
     return null;
   }
 
-  // T-junction: prefer straight-through, else turn
+  // T-junction: use switch state to determine exit
   if (type === 'tjunction') {
+    const isBranch = (row !== undefined && col !== undefined) ? (state.switchStates[row + ',' + col] || false) : false;
     const opposite = OPPOSITE[entryEdge];
-    if (conns.includes(opposite)) return opposite;
-    return conns.find(d => d !== entryEdge) || null;
+    const otherExits = conns.filter(d => d !== entryEdge);
+
+    if (isBranch) {
+      // Branch mode: prefer the non-straight (branch) direction
+      const branch = otherExits.find(d => d !== opposite);
+      return branch || otherExits[0] || null;
+    } else {
+      // Straight mode (default): prefer straight-through
+      if (otherExits.includes(opposite)) return opposite;
+      return otherExits[0] || null;
+    }
   }
 
   // Simple pieces (straight, curve, station): one exit
@@ -1499,8 +1569,8 @@ function renderCell(row, col) {
   if (!cell) return;
 
   // Clear existing content except connection dots
-  cell.querySelectorAll('svg, .train-emoji, .train-svg, .scenery-emoji, .car-svg, .car-count-badge').forEach(el => el.remove());
-  cell.classList.remove('occupied', 'has-train');
+  cell.querySelectorAll('svg, .train-emoji, .train-svg, .scenery-emoji, .car-svg, .car-count-badge, .switch-lever').forEach(el => el.remove());
+  cell.classList.remove('occupied', 'has-train', 'has-switch');
 
   const piece = state.grid[row][col];
   if (piece) {
@@ -1519,6 +1589,30 @@ function renderCell(row, col) {
       svg.style.transform = `rotate(${piece.rotation}deg)`;
       cell.appendChild(svg);
       cell.classList.add('occupied');
+
+      // Switch lever for T-junctions
+      if (piece.type === 'tjunction') {
+        const lever = document.createElement('div');
+        lever.className = 'switch-lever';
+        const isBranch = state.switchStates[row + ',' + col] || false;
+        if (isBranch) lever.classList.add('branch');
+
+        const arm = document.createElement('div');
+        arm.className = 'lever-arm';
+        const straightAngle = piece.rotation;
+        const branchAngle = (piece.rotation + 90) % 360;
+        arm.style.setProperty('--lever-angle', (isBranch ? branchAngle : straightAngle) + 'deg');
+        lever.appendChild(arm);
+
+        lever.addEventListener('pointerdown', (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          toggleSwitch(row, col);
+        });
+
+        cell.appendChild(lever);
+        cell.classList.add('has-switch');
+      }
     }
   }
 
@@ -1628,7 +1722,7 @@ function getCarCellPositions() {
     });
 
     // Continue backward through this cell
-    const nextExit = getExitDir(nextPiece.type, nextPiece.rotation, entryEdge);
+    const nextExit = getExitDir(nextPiece.type, nextPiece.rotation, entryEdge, next.row, next.col);
     if (!nextExit) break;
 
     currentRow = next.row;
@@ -1684,6 +1778,7 @@ function saveUndo() {
     train: state.train ? { ...state.train } : null,
     trainDir: state.trainDir,
     cars: state.cars.map(c => ({ ...c })),
+    switchStates: { ...state.switchStates },
   });
   if (state.undoStack.length > 50) state.undoStack.shift();
 }
@@ -1695,7 +1790,47 @@ function undo() {
   state.train = prev.train;
   state.trainDir = prev.trainDir;
   state.cars = prev.cars || [];
+  state.switchStates = prev.switchStates || {};
   renderAllCells();
+}
+
+// ============================================================
+// T-JUNCTION SWITCHES
+// ============================================================
+function toggleSwitch(row, col) {
+  const key = row + ',' + col;
+  const piece = state.grid[row][col];
+  if (!piece || piece.type !== 'tjunction') return;
+
+  const wasBranch = state.switchStates[key] || false;
+  if (wasBranch) {
+    delete state.switchStates[key]; // straight = default = no entry
+  } else {
+    state.switchStates[key] = true; // branch mode
+  }
+
+  SFX.switchToggle();
+  updateSwitchLever(row, col);
+  autoSave();
+}
+
+function updateSwitchLever(row, col) {
+  const cell = getCellEl(row, col);
+  if (!cell) return;
+  const piece = state.grid[row][col];
+  if (!piece || piece.type !== 'tjunction') return;
+
+  const lever = cell.querySelector('.switch-lever');
+  if (!lever) return;
+
+  const isBranch = state.switchStates[row + ',' + col] || false;
+  const straightAngle = piece.rotation;
+  const branchAngle = (piece.rotation + 90) % 360;
+  const arm = lever.querySelector('.lever-arm');
+  if (arm) {
+    arm.style.setProperty('--lever-angle', (isBranch ? branchAngle : straightAngle) + 'deg');
+  }
+  lever.classList.toggle('branch', isBranch);
 }
 
 // ============================================================
@@ -1730,6 +1865,7 @@ function showAutoConnectPulse(row, col) {
 
 function placePiece(row, col, type, rotation = 0) {
   saveUndo();
+  if (type !== 'tjunction') delete state.switchStates[row + ',' + col];
   state.grid[row][col] = { type, rotation };
   if (SCENERY_TYPES.includes(type)) {
     SFX.placeScenery();
@@ -1749,6 +1885,7 @@ function placePiece(row, col, type, rotation = 0) {
 function removePiece(row, col) {
   saveUndo();
   SFX.remove();
+  delete state.switchStates[row + ',' + col];
   // If train is here, remove train too
   if (state.train && state.train.row === row && state.train.col === col) {
     state.train = null;
@@ -1801,6 +1938,7 @@ function clearAll() {
   state.grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
   state.train = null;
   state.cars = [];
+  state.switchStates = {};
   renderAllCells();
   clearAutoSave();
   showToast('Board cleared!');
@@ -1971,7 +2109,18 @@ function onPaletteDown(e) {
 }
 
 function onGridDown(e) {
-  if (state.playing) return;
+  if (state.playing) {
+    // During play, only allow T-junction switch toggling
+    const cell = e.target.closest('.cell');
+    if (!cell) return;
+    const row = +cell.dataset.row, col = +cell.dataset.col;
+    const piece = state.grid[row][col];
+    if (piece && piece.type === 'tjunction') {
+      e.preventDefault();
+      toggleSwitch(row, col);
+    }
+    return;
+  }
   const cell = e.target.closest('.cell');
   if (!cell) return;
   const row = +cell.dataset.row, col = +cell.dataset.col;
@@ -2931,7 +3080,7 @@ function startPlay() {
   `;
   document.getElementById('grid-container').appendChild(trainEl);
 
-  const exitDir = getExitDir(piece.type, piece.rotation, entryEdge);
+  const exitDir = getExitDir(piece.type, piece.rotation, entryEdge, state.train.row, state.train.col);
 
   animState = {
     row: state.train.row,
@@ -3058,7 +3207,7 @@ function animateFrame(timestamp) {
       return;
     }
 
-    const newExit = getExitDir(nextPiece.type, nextPiece.rotation, newEntry);
+    const newExit = getExitDir(nextPiece.type, nextPiece.rotation, newEntry, nextPos.row, nextPos.col);
     if (!newExit) {
       animState.progress = 1;
       renderTrainAtProgress();
@@ -3556,6 +3705,7 @@ function serializeState() {
     train: state.train,
     trainDir: state.trainDir,
     cars: state.cars,
+    switchStates: state.switchStates,
   });
 }
 
@@ -3567,6 +3717,7 @@ function deserializeState(json) {
       state.train = data.train || null;
       state.trainDir = data.trainDir || 'E';
       state.cars = Array.isArray(data.cars) ? data.cars : [];
+      state.switchStates = data.switchStates || {};
       state.undoStack = [];
       return true;
     }
@@ -3680,6 +3831,7 @@ function saveToSlot(slotNum) {
     train: state.train,
     trainDir: state.trainDir,
     cars: state.cars,
+    switchStates: state.switchStates,
   };
   try {
     localStorage.setItem(SLOT_KEY_PREFIX + slotNum, JSON.stringify(data));
@@ -3699,6 +3851,7 @@ function loadFromSlot(slotNum) {
   state.train = data.train || null;
   state.trainDir = data.trainDir || 'E';
   state.cars = Array.isArray(data.cars) ? data.cars : [];
+  state.switchStates = data.switchStates || {};
   renderAllCells();
   autoSave();
   SFX.generate();
