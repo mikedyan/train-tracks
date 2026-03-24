@@ -254,6 +254,61 @@ Mark each test with the result after running.
 | Toggle during play updates headlight | Start play in day, toggle to night | Headlight appears | ✅ PASS (Mar 20) — updateHeadlightVisibility called in toggle |
 | Toggle during play hides headlight | Start play in night, toggle to day | Headlight disappears | ✅ PASS (Mar 20) — updateHeadlightVisibility removes active |
 
+## Feature: Crash/Derail Feedback (Day 7)
+| Test | Steps | Expected | Status |
+|------|-------|----------|--------|
+| Star burst on crash | Play train into dead end | 10-15 star emojis scatter from crash point | ✅ PASS (Mar 21) — maxStars=14 |
+| Dust cloud on crash | Play train into dead end | 5-8 tan dust puffs expand and fade | ✅ PASS (Mar 21) — maxDust=8 |
+| Boing sound on crash | Play train into dead end | Comical spring-like boing plays | ✅ PASS (Mar 21) — SFX.boing verified |
+| Boing scales with speed | Crash at 1x vs 4x speed | Higher speed = louder/more dramatic | ✅ PASS (Mar 21) — volume scales with speed param |
+| Wobble at high speed | Crash at speed > 1.5x | Train wobbles before crashing | ✅ PASS (Mar 21) — crash-wobble at speed=4 |
+| No wobble at low speed | Crash at speed ≤ 1.5x | No wobble, straight to crash | ✅ PASS (Mar 21) — wobbleDetected=false at speed=1.0 |
+| Bounce backward | Observe on crash | Train bounces back slightly | ✅ PASS (Mar 21) — crash-bounce-back |
+| Friendly toast message | Observe on crash | "💥 Oops! Connect more tracks!" or similar | ✅ PASS (Mar 21) — 5 messages rotate |
+| Car pile-up on crash | Add cars, crash | Cars compress toward locomotive | ✅ PASS (Mar 21) — carPileUpDetected=true |
+| Crash particles cleanup | Wait 2s after crash | All stars and dust removed from DOM | ✅ PASS (Mar 21) — 0 remaining |
+| No duplicate crash trigger | Rapid crash attempts | crashing flag prevents re-entry | ✅ PASS (Mar 21) |
+| Crash stops play | Observe after crash | state.playing becomes false | ✅ PASS (Mar 21) |
+| 3 rapid crash cycles | Crash → restart → crash 3x | All complete cleanly | ✅ PASS (Mar 21) |
+| Night mode crash | Crash in night mode | Stars and dust visible | ✅ PASS (Mar 21) |
+| Crash animation blocks gameplay | During crash | Auto-clears in ~2s | ✅ PASS (Mar 21) |
+| animState.crashing guard | Check animateFrame | if (crashing) return prevents further movement | ✅ PASS (Mar 21) |
+| 4 crash trigger paths | Check animateFrame code | Grid boundary, no piece, scenery, not connected — all use triggerCrashSequence | ✅ PASS (Mar 21) |
+| Crash with 0 cars | Crash without cars | Works normally, no car pile-up | ✅ PASS (Mar 21) |
+
+## Feature: Clickable Switches (Day 8)
+| Test | Steps | Expected | Status |
+|------|-------|----------|--------|
+| Lever on T-junction | Place T-junction, check cell | Orange circle with arm indicator appears | ✅ PASS (Mar 24) |
+| Lever arm visible | Check T-junction cell | Arm div inside lever | ✅ PASS (Mar 24) |
+| has-switch class | Place T-junction | Cell gets .has-switch class | ✅ PASS (Mar 24) |
+| Default is straight | Place T-junction, check switchStates | No entry (straight-through) | ✅ PASS (Mar 24) |
+| Toggle to branch | Click lever | switchStates set to true, lever turns green | ✅ PASS (Mar 24) |
+| Toggle back to straight | Click lever again | switchStates entry deleted, lever back to orange | ✅ PASS (Mar 24) |
+| Arm angle: straight | Default state | --lever-angle = piece rotation (0deg) | ✅ PASS (Mar 24) |
+| Arm angle: branch | Branch state | --lever-angle = rotation+90 (90deg) | ✅ PASS (Mar 24) |
+| Multiple T-junctions independent | Place 2 T-junctions, toggle separately | Each has own state | ✅ PASS (Mar 24) |
+| Lever at all 4 rotations | Place T-junction at 0°, 90°, 180°, 270° | Lever appears at all | ✅ PASS (Mar 24) |
+| Lever click doesn't rotate piece | Click lever on T-junction | Rotation unchanged, switch toggled | ✅ PASS (Mar 24) |
+| Train straight-through default | Build loop with T, play | Train goes straight through | ✅ PASS (Mar 24) — figure-8 layout verified |
+| Train takes branch path | Toggle to branch, play | Train takes branch direction | ✅ PASS (Mar 24) — middle row path verified |
+| Toggle during play | Play, click T-junction | Switch changes, train takes new path on next pass | ✅ PASS (Mar 24) — toggled at (2,7), train took branch |
+| getExitDir: straight from bar | Entry W, rotation 90, straight | Exits E | ✅ PASS (Mar 24) |
+| getExitDir: branch from bar | Entry W, rotation 90, branch | Exits S | ✅ PASS (Mar 24) |
+| Cars follow switch path | Add 2 cars, play with branch switch | Both cars animate on branch path | ✅ PASS (Mar 24) |
+| Switch state in auto-save | Toggle switch, check localStorage | switchStates serialized | ✅ PASS (Mar 24) |
+| Switch state in save/load slots | Save, clear, load | Switch states preserved | ✅ PASS (Mar 24) |
+| Undo restores switch state | Save undo, toggle, undo | Switch state restored | ✅ PASS (Mar 24) |
+| Clear resets switches | Toggle, then Clear | switchStates = {} | ✅ PASS (Mar 24) |
+| Remove piece cleans switch | Remove T-junction | Switch entry deleted | ✅ PASS (Mar 24) |
+| Replace with non-T cleans switch | Place straight on T-junction cell | Switch entry deleted | ✅ PASS (Mar 24) |
+| Night mode: lever visible | Toggle night mode | Lever visible and functional | ✅ PASS (Mar 24) |
+| Play-mode cursor on T-junction | Start play, hover T-junction | Cursor: pointer | ✅ PASS (Mar 24) |
+| Play-mode click toggles | Start play, click T-junction cell | Switch toggles | ✅ PASS (Mar 24) |
+| Non-T-junction during play | Start play, click straight | No action | ✅ PASS (Mar 24) |
+| SFX.switchToggle sound | Toggle switch | Mechanical clunk plays | ✅ PASS (Mar 24) |
+| Random generator unaffected | Click Random 5x | All generate valid loops | ✅ PASS (Mar 24) |
+
 ---
 
 ## Daily QA Notes
@@ -438,3 +493,52 @@ Mark each test with the result after running.
   - Toggling during play correctly adds/removes headlight via updateHeadlightVisibility()
 - **Regression checks:** All existing features (drag/drop, rotation, auto-connect, smoke, confetti, cars, save/load, random, undo, clear) unaffected by night mode changes.
 - Zero regressions across all 127 existing tests.
+
+### Day 7 Feature QA — Fri Mar 21
+**Feature tested:** Crash/Derail Feedback (Day 7 roadmap feature)
+**New tests added:** 18 (Crash/Derail section)
+**Results:** 155/155 existing + 18/18 new = 173/173 passed
+**Bugs found:** 0
+**Bugs fixed:** 0
+- JavaScript syntax validated via Node.js parse — zero errors.
+- HTML DIVs balanced (48/48).
+- 31 core functions present. 16 SFX methods (added SFX.boing).
+- **Crash sequence components:**
+  - CSS: 4 new @keyframes (crash-star-burst, crash-dust-puff, crash-wobble, crash-bounce-back)
+  - SFX.boing: frequency sweep with speed scaling + noise burst at high speed
+  - Star burst: 10-15 star/sparkle emojis scatter from crash point
+  - Dust cloud: 5-8 brown/tan puffs expand and fade
+  - Bounce-back: train bounces away from dead end
+  - Wobble: only at speed > 1.5x (high-speed drama)
+  - Car pile-up: cars compress toward locomotive on crash
+  - Friendly toast: 5 rotating "💥 Oops!" messages
+- 4 crash trigger paths in animateFrame: grid boundary, no piece, scenery cell, not connected
+- animState.crashing flag prevents duplicate triggers
+- 3 rapid crash cycles completed cleanly with full cleanup
+- Night mode crash: particles visible in dark theme
+- Zero regressions.
+
+### Day 8 Feature QA — Tue Mar 24
+**Feature tested:** Clickable Switches / Interactive T-Splits (Day 8 roadmap feature)
+**New tests added:** 29 (Clickable Switches section)
+**Results:** 173/173 existing + 29/29 new = 202/202 passed (6 crash tests updated)
+**Bugs found:** 0
+**Bugs fixed:** 0
+- JavaScript syntax validated: zero errors. HTML balanced (48/48 DIVs).
+- 49 core functions present. 17 SFX methods (added SFX.switchToggle).
+- **Switch infrastructure:**
+  - state.switchStates object: maps "row,col" → true (branch), absent = straight (default)
+  - Fully integrated: saveUndo, undo, serializeState, deserializeState, clearAll, placePiece, removePiece
+  - Lever visual: orange circle (straight) / green circle (branch) with rotating arm indicator
+  - CSS transition: 0.3s ease on --lever-angle custom property
+  - .has-switch class enables pointer cursor during play
+- **Live browser testing:**
+  - Figure-8 layout with 2 T-junctions: verified straight-through traverses both loops, branch mode uses middle row
+  - Real-time toggle during play: toggled switch while train approaching, train took new path ✅
+  - getExitDir logic: 6 entry/mode combinations tested, all correct
+  - Train + 2 cars follow switch path correctly
+  - Lever at all 4 rotations (0°, 90°, 180°, 270°): all functional
+  - Multiple independent T-junctions: separate state tracking confirmed
+  - Night mode: lever visible and functional
+  - Random generator: 5 runs, 0 errors, no regressions
+- Zero regressions across all 173 existing tests.

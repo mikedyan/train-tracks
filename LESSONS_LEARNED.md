@@ -61,6 +61,13 @@
 - LESSON-050: Smoke particles get their color at spawn time (inline style), so particles spawned before a mode toggle keep their original color — acceptable since they last <1s.
 - LESSON-051: CSS transitions on custom property changes work through the cascade — setting transition on the element that reads var(--prop) is sufficient.
 
+## Switch/T-Junction Patterns (Day 8)
+- LESSON-052: Switch state uses "row,col" string keys in a flat object — simple and fast lookup during animation.
+- LESSON-053: Lever pointerdown handler must call stopPropagation() to prevent cell rotation from firing.
+- LESSON-054: During play, onGridDown should check for T-junction cells and allow toggling — requires .has-switch class and CSS cursor override.
+- LESSON-055: getExitDir for T-junctions: "straight" prefers opposite exit (bar through), "branch" prefers non-opposite (stem). When entering from the stem, both modes pick the same exit — acceptable for gameplay.
+- LESSON-056: CSS custom property (--lever-angle) with transition gives smooth lever animation without JavaScript per-frame updates.
+
 ## QA Patterns
 - LESSON-015: Random → Play → watch full loop is the core regression test.
 - LESSON-016: Test on both desktop (mouse) and mobile (touch) for any interaction changes.

@@ -1,13 +1,7 @@
 {
-  "project": "train-tracks",
-  "currentPhase": 2,
-  "phaseLabel": "Council Roadmap",
-  "lastCompletedDay": 7,
-  "nextDay": 8,
-  "nextItemStart": 8,
-  "lastRunDate": "2026-03-21",
-  "repo": "/Users/openclaw/.openclaw/workspace/factory/projects/train-tracks",
-  "githubPages": "https://mikedyan.github.io/train-tracks/",
-  "githubRepo": "mikedyan/train-tracks",
-  "notes": "Day 6 shipped: Day/Night Mode (toggle, stars, headlight, house glow, dark theme). 0 bugs found. 155/155 tests pass."
+  "lastCompletedDay": 8,
+  "nextDay": 9,
+  "lastRunDate": "2026-03-24",
+  "consecutiveFailures": 0,
+  "notes": "Day 8 shipped: Clickable Switches / Interactive T-Splits (lever indicator, toggle during play, branch/straight routing, persistence). 0 bugs found. 202/202 tests pass."
 }
