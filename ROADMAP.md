@@ -198,7 +198,7 @@ The most-requested gameplay feature. Click T-junctions to toggle direction while
 
 ---
 
-#### Day 9 — Multiple Trains
+#### Day 9 — Multiple Trains ✅ *(completed: 2026-03-25)*
 **Council consensus: 3/4 models (ChatGPT, Gemini, Grok)**
 
 Multiple trains = chaos for toddler, strategy for dad.

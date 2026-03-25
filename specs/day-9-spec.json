@@ -1,0 +1,111 @@
+{
+  "day": 9,
+  "feature": "Multiple Trains",
+  "summary": "Allow placing up to 3 independently-colored trains (red, blue, green) that animate simultaneously on connected track segments, with per-train car attachments and collision detection.",
+  "bugs_to_fix": [],
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Refactor state from single train to trains array",
+      "description": "Replace state.train (single object) and state.cars (single array) with state.trains: [{row, col, color, cars}]. Add helper functions getTrainAt(row,col), getTrainIndex(row,col), getTrainByColor(color). Add constants MAX_TRAINS=3, TRAIN_COLORS map, TRAIN_COLOR_ORDER.",
+      "acceptance": [
+        "state.trains is an array supporting 0-3 train objects",
+        "Each train has {row, col, color, cars} properties",
+        "Helper functions correctly find trains by position or color"
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Add 3 colored train palette items",
+      "description": "Replace single 'Loco' palette item with 3 colored trains: Red, Blue, Green. Each has data-type='train-red', 'train-blue', 'train-green' and distinct CSS border/background colors.",
+      "acceptance": [
+        "3 distinctly colored train items visible in sidebar palette",
+        "Each has appropriate color-coded border and background",
+        "Labels show 'Red', 'Blue', 'Green'"
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Parameterize createTrainSVG by color",
+      "description": "Add color parameter to createTrainSVG(). Use TRAIN_COLORS map to set body, hood, cab, cowcatcher, running board, detail colors. Red preserves current look.",
+      "acceptance": [
+        "Red train looks identical to current train",
+        "Blue and green trains are visually distinct with matching color schemes",
+        "Neutral elements (wheels, headlight, smokestack, windows) unchanged across colors"
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Update all core functions for multi-train",
+      "description": "Update renderCell, placeTrain, removePiece, clearAll, handleRemoveCell, saveUndo, undo, getCarCellPositions(train), sortCarsWithCabooseEnd(train), renderStaticCars to work with trains array.",
+      "acceptance": [
+        "Can place up to 3 trains on different track cells",
+        "Removing a cell with a train removes that specific train",
+        "Cars attach to specific train via drag-to-locomotive",
+        "Undo/redo preserves all trains state",
+        "Static car display works for all trains simultaneously"
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Update drag & drop for multi-train",
+      "description": "Train dragging identifies specific train by color. Palette train-* items place the corresponding color. Cars drop onto any locomotive. Ghost preview uses correct train color.",
+      "acceptance": [
+        "Dragging a placed train moves that specific train (preserves color)",
+        "Palette train items place the correct color",
+        "Relocating an existing color shows flash animation on old cell",
+        "Car drop targets any locomotive, attaches to that train",
+        "Ghost preview shows correct train color"
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Multi-train animation system",
+      "description": "Replace single animState with animStates array. Each train gets independent animation state with trainEl, headlightEl, carEls, path, progress. animateFrame iterates all active trains. Smoke spawns for each train. Chug rhythm shared.",
+      "acceptance": [
+        "All placed trains animate simultaneously when Play pressed",
+        "Each train follows its own connected track segment independently",
+        "Smoke particles spawn from each train",
+        "Speed slider affects all trains equally",
+        "Per-train headlights in night mode"
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Collision detection",
+      "description": "After each frame, check if any two active (non-crashed) trains occupy the same cell. If so, trigger crash animation for both with collision SFX and fun toast.",
+      "acceptance": [
+        "Two trains meeting on same cell triggers crash animation",
+        "Both trains show crash effects",
+        "Fun collision toast message displayed",
+        "All trains stop after any collision"
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Update persistence for multi-train",
+      "description": "serializeState saves trains array. deserializeState handles both old format (train + cars) and new format (trains array). Save slots and auto-save updated. renderThumbnail shows multiple colored train dots.",
+      "acceptance": [
+        "New saves use trains array format",
+        "Old saves (single train) load correctly, migrated to trains array",
+        "Save slot thumbnails show colored dots for each train",
+        "Auto-save/auto-load preserves all trains"
+      ]
+    }
+  ],
+  "testing_focus": [
+    "Place 3 trains on different track segments, all animate simultaneously",
+    "Each train can have independent car attachments (up to 5 each)",
+    "Collision between two trains triggers crash animation for both",
+    "Old saves (single train format) load correctly and migrate",
+    "Random generator places one red train",
+    "Remove individual trains via right-click or drag-to-trash",
+    "Speed slider affects all trains equally",
+    "Night mode headlight works for all active trains",
+    "Smoke particles spawn for all active trains during play",
+    "Loop celebration triggers per-train when a train completes a loop",
+    "Crash at dead-end works per-train (other trains continue)",
+    "Cars render behind correct locomotive in static view",
+    "Undo/redo preserves full multi-train state"
+  ]
+}
