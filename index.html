@@ -2472,14 +2472,9 @@ function onPointerUp(e) {
     // Block track/train/car placement on water (scenery-on-scenery is allowed)
     if (existing && existing.type === 'water' && !SCENERY_TYPES.includes(dragInfo.type)) {
       showToast('🌊 Tracks can\'t go on water!');
-      if (dragInfo.source === 'grid') {
-        // Return piece to original position
-        if (isTrainType(dragInfo.type)) {
-          placeTrain(dragInfo.sourceRow, dragInfo.sourceCol, dragInfo.trainColor || getTrainColor(dragInfo.type));
-        } else {
-          placePiece(dragInfo.sourceRow, dragInfo.sourceCol, dragInfo.type, dragInfo.rotation || 0);
-        }
-      } else if (dragInfo.source === 'train-only') {
+      // Source piece was never removed from grid during drag, so just cancel.
+      // For train-only drags, snap back to show the train again.
+      if (dragInfo.source === 'train-only') {
         animateSnapBack(dragInfo.sourceRow, dragInfo.sourceCol);
       }
       hideGhost();
