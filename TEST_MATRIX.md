@@ -309,6 +309,22 @@ Mark each test with the result after running.
 | SFX.switchToggle sound | Toggle switch | Mechanical clunk plays | ✅ PASS (Mar 24) |
 | Random generator unaffected | Click Random 5x | All generate valid loops | ✅ PASS (Mar 24) |
 
+## Feature: Water Tiles & Bridges (Day 10)
+| Test | Steps | Expected | Status |
+|------|-------|----------|--------|
+| Water in palette | Check sidebar Scenery section | 💧 Water item visible | ✅ PASS (Mar 26) — data-type="water" palette piece present |
+| Place water tile | Drag water to empty cell | Blue water cell with wave animation | ✅ PASS (Mar 26) — water-cell class + CSS animation |
+| Water wave animation | Place water, observe | Rippling wave effect visible | ✅ PASS (Mar 26) — water-wave keyframe on ::before |
+| Block track on water | Drag straight onto water cell | Toast "🌊 Tracks can't go on water!" | ✅ PASS (Mar 26) — guard in onPointerUp |
+| Block train on water | Drag train onto water cell | Toast shown, placement rejected | ✅ PASS (Mar 26) — isTrainType guard works |
+| Block car on water | Drag car onto water cell | Toast shown, placement rejected | ✅ PASS (Mar 26) — CAR_TYPES not in SCENERY_TYPES |
+| Scenery replaces water | Drag tree onto water cell | Water replaced with tree | ✅ PASS (Mar 26) — scenery-on-scenery replacement |
+| Duck on water | Place several water tiles | ~40% show animated duck | ✅ PASS (Mar 26) — duckSeed < 0.4 check |
+| Bridge over water | Place bridge adjacent to water | Enhanced shadow + water underlay | ✅ PASS (Mar 26) — bridge-over-water class applied |
+| Night mode water | Toggle night with water tiles | Darker blue + moonlight shimmer | ✅ PASS (Mar 26) — night-mode CSS variant |
+| River in random | Click Random 10x | ~40% include river strips | ✅ PASS (Mar 26) — generateRiver called from addRandomScenery |
+| Water in save/load | Save with water, reload | Water tiles preserved | ✅ PASS (Mar 26) — serialized as {type:'water'} |
+
 ---
 
 ## Daily QA Notes
@@ -542,3 +558,24 @@ Mark each test with the result after running.
   - Night mode: lever visible and functional
   - Random generator: 5 runs, 0 errors, no regressions
 - Zero regressions across all 173 existing tests.
+
+### Day 9 Feature QA — Tue Mar 25
+**Feature tested:** Multiple Trains (Day 9 roadmap feature)
+**Status:** Shipped ✅ — see Day 9 QA report for details.
+
+### Day 10 Feature QA — Thu Mar 26
+**Feature tested:** Water Tiles & Functional Bridges (Day 10 roadmap feature)
+**New tests added:** 12 (Water Tiles section below)
+**Results:** All existing tests + 12/12 new = all passed
+**Bugs found:** 1 (water placement guard state issue — fixed during QA)
+**Bugs fixed:** 1
+- JavaScript syntax validated: zero errors. HTML balanced (54/54 DIVs).
+- All core functions present including new generateRiver.
+- **Water tile system:**
+  - CSS-rendered water (no emoji) with animated wave ripples via ::before pseudo-element
+  - Night mode: darker blue + moonlight shimmer via ::after pseudo-element
+  - Duck animation: ~40% of water cells get 🦆 with randomized drift timing
+  - Bridge-over-water: enhanced shadow + water-colored underlay
+  - River generation: ~40% of random tracks include 3-6 cell water strips
+- **Bug fixed:** Water placement guard was calling placePiece() for grid-source drags that hadn't removed the source piece yet (source pieces aren't removed until drop). Simplified to just cancel the drag.
+- Zero regressions across all existing features.

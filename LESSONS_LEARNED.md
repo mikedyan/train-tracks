@@ -68,6 +68,15 @@
 - LESSON-055: getExitDir for T-junctions: "straight" prefers opposite exit (bar through), "branch" prefers non-opposite (stem). When entering from the stem, both modes pick the same exit — acceptable for gameplay.
 - LESSON-056: CSS custom property (--lever-angle) with transition gives smooth lever animation without JavaScript per-frame updates.
 
+## Water & Terrain Patterns (Day 10)
+- LESSON-057: Water tiles use CSS rendering (class-based .water-cell) instead of emoji for richer visual effects — wave animations via ::before pseudo-element.
+- LESSON-058: Duck presence is seeded per cell via dataset.duckSeed to maintain consistency across re-renders of the same cell.
+- LESSON-059: When blocking placement on occupied cells, check whether the drag source piece was already removed from grid. Grid-source drags don't remove the piece until drop — so "cancel" is just hiding the ghost, no restoration needed.
+- LESSON-060: Bridge-over-water detection must trigger re-renders of neighboring bridges when water is placed/removed, and vice versa.
+- LESSON-061: Scenery-on-scenery replacement should be allowed (water→tree, tree→water) — don't restrict scenery to empty-cells-only.
+- LESSON-062: River generation in random tracks must run BEFORE random scenery scatter to avoid placing scenery on water cells.
+- LESSON-063: Night mode water uses separate ::after pseudo-element for moonlight shimmer — keeps wave animation on ::before independent.
+
 ## QA Patterns
 - LESSON-015: Random → Play → watch full loop is the core regression test.
 - LESSON-016: Test on both desktop (mouse) and mobile (touch) for any interaction changes.
