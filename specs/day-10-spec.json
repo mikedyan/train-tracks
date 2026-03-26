@@ -1,0 +1,104 @@
+{
+  "day": 10,
+  "title": "Water Tiles & Functional Bridges",
+  "date": "2026-03-26",
+  "bugs_to_fix": [],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Add Water to palette and state system",
+      "description": "Add 'water' to SCENERY_TYPES and SCENERY_EMOJI. Add a new palette entry in the sidebar under Scenery with a 💧 Water item. Water tiles should be treated as scenery for placement purposes.",
+      "changes": [
+        "Add 'water' to SCENERY_TYPES array",
+        "Add water: '💧' to SCENERY_EMOJI (or use 🌊)",
+        "Add palette-piece div for water in sidebar HTML under Scenery section"
+      ]
+    },
+    {
+      "id": "T2",
+      "title": "Water tile CSS animation (wave ripples)",
+      "description": "Create a CSS keyframe animation for water tiles. Use a blue-gradient background on water cells with animated wave ripple effect. Water cells should look visually distinct from grass. In night mode, water should be darker blue with subtle moonlight reflection.",
+      "changes": [
+        "Add .cell.water-cell CSS class with blue gradient background",
+        "Add @keyframes water-wave CSS animation for subtle ripple motion",
+        "Add night mode variant: body.night-mode .cell.water-cell with darker water + moonlight shimmer",
+        "Modify renderCell() to apply 'water-cell' class when cell contains water type",
+        "Water emoji should be replaced with a proper CSS-rendered water effect (not just emoji)"
+      ]
+    },
+    {
+      "id": "T3",
+      "title": "Prevent track placement on water",
+      "description": "Track pieces (including trains and cars) cannot be placed on water tiles. Show a toast message when user tries. Scenery can replace water.",
+      "changes": [
+        "In onPointerUp (drag drop handler), check if target cell has water before placing track/train",
+        "Show toast '🌊 Tracks can't go on water!' when user tries to place track on water",
+        "Allow scenery to replace water (one scenery replaces another)",
+        "Allow water to replace other scenery"
+      ]
+    },
+    {
+      "id": "T4",
+      "title": "Bridge visual enhancement near water",
+      "description": "When a bridge track piece is adjacent to water tiles, add a visual indicator that it spans over water. Use z-index and subtle shadow/highlight to make bridge look like it goes over the water. This is purely cosmetic enhancement.",
+      "changes": [
+        "In renderCell() for bridge type, check adjacent cells for water",
+        "If water is adjacent, add a CSS class 'bridge-over-water' with enhanced visuals",
+        "Bridge-over-water gets subtle shadow underneath and slightly elevated appearance"
+      ]
+    },
+    {
+      "id": "T5",
+      "title": "Animated duck on water tiles",
+      "description": "Water tiles display a small decorative duck that slowly drifts/bobs on the surface. Each water tile has a chance (~40%) of showing a duck. Ducks animate with a gentle CSS drift animation.",
+      "changes": [
+        "Add @keyframes duck-drift CSS animation (gentle side-to-side + bob)",
+        "In renderCell() for water type, randomly add a small duck element (🦆) with animation",
+        "Ducks should have randomized animation delay so they don't all move in sync",
+        "Duck size should be small (~35% of cell size) so it doesn't overwhelm"
+      ]
+    },
+    {
+      "id": "T6",
+      "title": "Random generator river feature",
+      "description": "The random track generator should sometimes (~40% chance) include a 'river' - a strip of water tiles that cuts through the layout. The river should avoid overlapping with track pieces.",
+      "changes": [
+        "Add generateRiver() function that creates a vertical or horizontal water strip",
+        "Call generateRiver() from addRandomScenery() with ~40% probability",
+        "River should be 1 cell wide, spanning 3-6 cells in length",
+        "River avoids cells already occupied by track pieces",
+        "Add water tiles to the grid state"
+      ]
+    },
+    {
+      "id": "T7",
+      "title": "Night mode water styling",
+      "description": "In night mode, water tiles should show darker blue with a subtle moonlight reflection shimmer effect.",
+      "changes": [
+        "Add body.night-mode .cell.water-cell CSS with darker blue gradient",
+        "Add subtle shimmer/reflection keyframe that activates only in night mode",
+        "Ducks should still be visible in night mode (slightly adjusted opacity)"
+      ]
+    }
+  ],
+  "acceptance_criteria": [
+    "AC1: Water tile appears in palette under Scenery section",
+    "AC2: Water tiles show animated wave ripples when placed on grid",
+    "AC3: Cannot place track/train/car directly on water cells — toast message shown",
+    "AC4: Bridge pieces adjacent to water get visual enhancement",
+    "AC5: Some water tiles display animated drifting ducks",
+    "AC6: Random generator occasionally creates river strips of water",
+    "AC7: Water tiles look correct in both day and night modes",
+    "AC8: All existing features still work (trains, cars, switches, save/load, etc.)",
+    "AC9: Water tiles can be removed (right-click/long-press) like other scenery",
+    "AC10: Save/load correctly preserves water tiles"
+  ],
+  "testing_focus": [
+    "Place water then try to place track on it — verify rejection toast",
+    "Place bridge adjacent to water — verify visual enhancement",
+    "Generate random track multiple times — verify rivers appear sometimes",
+    "Toggle night mode with water tiles present",
+    "Save layout with water tiles, reload — verify persistence",
+    "Verify no regressions: trains animate, switches work, cars attach, crash effects fire"
+  ]
+}

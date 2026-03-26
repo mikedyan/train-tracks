@@ -773,6 +773,110 @@ body.night-mode .btn-night {
   box-shadow: 0 3px 10px rgba(0,0,0,0.4);
 }
 
+/* WATER TILES */
+.cell.water-cell {
+  background: linear-gradient(135deg, #29B6F6, #0288D1, #0277BD);
+  overflow: hidden;
+  position: relative;
+}
+
+.cell.water-cell::before {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background:
+    radial-gradient(ellipse 18px 6px at 30% 40%, rgba(255,255,255,0.25) 0%, transparent 100%),
+    radial-gradient(ellipse 14px 5px at 65% 55%, rgba(255,255,255,0.2) 0%, transparent 100%),
+    radial-gradient(ellipse 16px 5px at 50% 75%, rgba(255,255,255,0.18) 0%, transparent 100%);
+  animation: water-wave 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes water-wave {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(3px, 2px) rotate(0.5deg); }
+  50% { transform: translate(-2px, 4px) rotate(-0.3deg); }
+  75% { transform: translate(1px, -1px) rotate(0.2deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+.cell.water-cell:hover {
+  background: linear-gradient(135deg, #4FC3F7, #039BE5, #0288D1);
+}
+
+/* Night mode water */
+body.night-mode .cell.water-cell {
+  background: linear-gradient(135deg, #0D47A1, #1A237E, #0D47A1);
+}
+
+body.night-mode .cell.water-cell::before {
+  background:
+    radial-gradient(ellipse 18px 6px at 30% 40%, rgba(200,220,255,0.15) 0%, transparent 100%),
+    radial-gradient(ellipse 14px 5px at 65% 55%, rgba(200,220,255,0.1) 0%, transparent 100%),
+    radial-gradient(ellipse 20px 7px at 45% 65%, rgba(180,200,240,0.08) 0%, transparent 100%);
+}
+
+body.night-mode .cell.water-cell::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: radial-gradient(ellipse 60% 30% at 55% 35%, rgba(255,255,220,0.08) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 2;
+  animation: moonlight-shimmer 4s ease-in-out infinite;
+}
+
+@keyframes moonlight-shimmer {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+body.night-mode .cell.water-cell:hover {
+  background: linear-gradient(135deg, #1565C0, #283593, #1565C0);
+}
+
+/* Duck on water */
+.water-duck {
+  position: absolute;
+  font-size: calc(var(--cell-size) * 0.32);
+  z-index: 3;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+  animation: duck-drift var(--duck-duration, 4s) ease-in-out infinite;
+  animation-delay: var(--duck-delay, 0s);
+}
+
+@keyframes duck-drift {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  20% { transform: translate(5px, -3px) rotate(5deg); }
+  50% { transform: translate(-3px, 2px) rotate(-3deg); }
+  80% { transform: translate(4px, -1px) rotate(4deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+/* Bridge over water enhancement */
+.cell.bridge-over-water svg {
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.4));
+}
+
+.cell.bridge-over-water::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: linear-gradient(135deg, rgba(41,182,246,0.3), rgba(2,136,209,0.2));
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 0;
+}
+
+body.night-mode .cell.bridge-over-water::after {
+  background: linear-gradient(135deg, rgba(13,71,161,0.4), rgba(26,35,126,0.3));
+}
+
 /* PLAYING STATE */
 #app.playing .cell { cursor: default; }
 #app.playing .cell:hover { background: var(--grass); }
@@ -816,6 +920,7 @@ body.night-mode .btn-night {
     <div class="palette-piece" data-type="tree"><div class="label">Tree</div></div>
     <div class="palette-piece" data-type="house"><div class="label">House</div></div>
     <div class="palette-piece" data-type="cow"><div class="label">Cow</div></div>
+    <div class="palette-piece" data-type="water"><div class="label">Water</div></div>
   </div>
   <div id="main">
     <div id="header">
@@ -1120,8 +1225,8 @@ const DELTA = { N: { r: -1, c: 0 }, S: { r: 1, c: 0 }, E: { r: 0, c: 1 }, W: { r
 const ROTATE_MAP = { N: 'E', E: 'S', S: 'W', W: 'N' };
 
 const TRACK_TYPES = ['straight', 'curve', 'tjunction', 'crossover', 'bridge', 'station'];
-const SCENERY_TYPES = ['tree', 'house', 'cow'];
-const SCENERY_EMOJI = { tree: '🌲', house: '🏠', cow: '🐄' };
+const SCENERY_TYPES = ['tree', 'house', 'cow', 'water'];
+const SCENERY_EMOJI = { tree: '🌲', house: '🏠', cow: '🐄', water: '💧' };
 const CAR_TYPES = ['freight', 'passenger', 'caboose'];
 const MAX_CARS = 5;
 const MAX_TRAINS = 3;
@@ -1597,12 +1702,30 @@ function renderCell(row, col) {
   if (!cell) return;
 
   // Clear existing content except connection dots
-  cell.querySelectorAll('svg, .train-emoji, .train-svg, .scenery-emoji, .car-svg, .car-count-badge, .switch-lever').forEach(el => el.remove());
-  cell.classList.remove('occupied', 'has-train', 'has-switch');
+  cell.querySelectorAll('svg, .train-emoji, .train-svg, .scenery-emoji, .car-svg, .car-count-badge, .switch-lever, .water-duck').forEach(el => el.remove());
+  cell.classList.remove('occupied', 'has-train', 'has-switch', 'water-cell', 'bridge-over-water');
 
   const piece = state.grid[row][col];
   if (piece) {
-    if (SCENERY_TYPES.includes(piece.type)) {
+    if (piece.type === 'water') {
+      // Water tile: CSS-rendered, no emoji
+      cell.classList.add('water-cell', 'occupied');
+      // Random chance of a duck
+      if (!cell.dataset.duckSeed) cell.dataset.duckSeed = Math.random().toFixed(3);
+      if (parseFloat(cell.dataset.duckSeed) < 0.4) {
+        const duck = document.createElement('div');
+        duck.className = 'water-duck';
+        duck.textContent = '🦆';
+        // Random position within cell
+        const duckX = 15 + Math.random() * 40;
+        const duckY = 15 + Math.random() * 40;
+        duck.style.left = duckX + '%';
+        duck.style.top = duckY + '%';
+        duck.style.setProperty('--duck-duration', (3.5 + Math.random() * 2) + 's');
+        duck.style.setProperty('--duck-delay', (Math.random() * 3) + 's');
+        cell.appendChild(duck);
+      }
+    } else if (SCENERY_TYPES.includes(piece.type)) {
       const emoji = document.createElement('div');
       emoji.className = 'scenery-emoji';
       emoji.textContent = SCENERY_EMOJI[piece.type];
@@ -1617,6 +1740,17 @@ function renderCell(row, col) {
       svg.style.transform = `rotate(${piece.rotation}deg)`;
       cell.appendChild(svg);
       cell.classList.add('occupied');
+
+      // Bridge over water visual enhancement
+      if (piece.type === 'bridge') {
+        const hasAdjacentWater = ['N','S','E','W'].some(dir => {
+          const nb = getNeighbor(row, col, dir);
+          if (!nb) return false;
+          const nbPiece = state.grid[nb.row][nb.col];
+          return nbPiece && nbPiece.type === 'water';
+        });
+        if (hasAdjacentWater) cell.classList.add('bridge-over-water');
+      }
 
       // Switch lever for T-junctions
       if (piece.type === 'tjunction') {
@@ -1905,10 +2039,17 @@ function placePiece(row, col, type, rotation = 0) {
     SFX.place();
   }
   renderCell(row, col);
-  // Update neighbors' dots too
+  // Update neighbors' dots + bridge-over-water class
   ['N','S','E','W'].forEach(dir => {
     const nb = getNeighbor(row, col, dir);
-    if (nb) updateConnectionDots(nb.row, nb.col);
+    if (nb) {
+      updateConnectionDots(nb.row, nb.col);
+      // Re-render neighbor bridge if water placed nearby (or vice versa)
+      const nbPiece = state.grid[nb.row][nb.col];
+      if (nbPiece && (nbPiece.type === 'bridge' || type === 'bridge')) {
+        renderCell(nb.row, nb.col);
+      }
+    }
   });
   renderStaticCars();
   autoSave();
@@ -2328,6 +2469,24 @@ function onPointerUp(e) {
     const { row, col } = target;
     const existing = state.grid[row][col];
 
+    // Block track/train/car placement on water (scenery-on-scenery is allowed)
+    if (existing && existing.type === 'water' && !SCENERY_TYPES.includes(dragInfo.type)) {
+      showToast('🌊 Tracks can\'t go on water!');
+      if (dragInfo.source === 'grid') {
+        // Return piece to original position
+        if (isTrainType(dragInfo.type)) {
+          placeTrain(dragInfo.sourceRow, dragInfo.sourceCol, dragInfo.trainColor || getTrainColor(dragInfo.type));
+        } else {
+          placePiece(dragInfo.sourceRow, dragInfo.sourceCol, dragInfo.type, dragInfo.rotation || 0);
+        }
+      } else if (dragInfo.source === 'train-only') {
+        animateSnapBack(dragInfo.sourceRow, dragInfo.sourceCol);
+      }
+      hideGhost();
+      dragInfo = null;
+      return;
+    }
+
     if (isTrainType(dragInfo.type)) {
       const piece = state.grid[row][col];
       const isValidDrop = piece && !SCENERY_TYPES.includes(piece.type);
@@ -2387,17 +2546,17 @@ function onPointerUp(e) {
         }
       }
     } else if (SCENERY_TYPES.includes(dragInfo.type)) {
-      // Scenery: place on empty cells only
-      if (!existing) {
+      // Scenery: place on empty cells or replace other scenery
+      if (!existing || SCENERY_TYPES.includes(existing.type)) {
+        if (dragInfo.source === 'grid' && (row !== dragInfo.sourceRow || col !== dragInfo.sourceCol)) {
+          removePiece(dragInfo.sourceRow, dragInfo.sourceCol);
+        }
         placePiece(row, col, dragInfo.type);
-      } else if (dragInfo.source === 'grid' && (row !== dragInfo.sourceRow || col !== dragInfo.sourceCol)) {
-        // Swap or reject
+      } else if (dragInfo.source === 'grid') {
+        // Can't place scenery on track — return to source
         showToast('Cell occupied!');
-      }
-      // Remove from source if grid
-      if (dragInfo.source === 'grid' && (row !== dragInfo.sourceRow || col !== dragInfo.sourceCol)) {
-        removePiece(dragInfo.sourceRow, dragInfo.sourceCol);
-        if (!state.grid[row][col]) placePiece(row, col, dragInfo.type);
+      } else {
+        showToast('Cell occupied!');
       }
     } else if (CAR_TYPES.includes(dragInfo.type)) {
       // Car: must be dropped on a locomotive to attach
@@ -3736,7 +3895,36 @@ function getTrackRotation(fromDir, toDir) {
   return curveMap[entryEdge + exitEdge] || 0;
 }
 
+function generateRiver() {
+  // Create a strip of water tiles through the layout
+  const isVertical = Math.random() < 0.5;
+  const length = 3 + Math.floor(Math.random() * 4); // 3-6 cells
+
+  if (isVertical) {
+    const col = 1 + Math.floor(Math.random() * (COLS - 2));
+    const startRow = Math.floor(Math.random() * Math.max(1, ROWS - length));
+    for (let r = startRow; r < startRow + length && r < ROWS; r++) {
+      if (!state.grid[r][col]) {
+        state.grid[r][col] = { type: 'water', rotation: 0 };
+      }
+    }
+  } else {
+    const row = 1 + Math.floor(Math.random() * (ROWS - 2));
+    const startCol = Math.floor(Math.random() * Math.max(1, COLS - length));
+    for (let c = startCol; c < startCol + length && c < COLS; c++) {
+      if (!state.grid[row][c]) {
+        state.grid[row][c] = { type: 'water', rotation: 0 };
+      }
+    }
+  }
+}
+
 function addRandomScenery() {
+  // ~40% chance of a river
+  if (Math.random() < 0.4) {
+    generateRiver();
+  }
+
   const emptyCells = [];
   
   for (let r = 0; r < ROWS; r++) {
@@ -3757,11 +3945,7 @@ function addRandomScenery() {
     const { row, col } = emptyCells[idx];
     emptyCells.splice(idx, 1);
     
-    // Random scenery type
-    const types = ['tree', 'house', 'cow'];
-    const type = types[Math.floor(Math.random() * types.length)];
-    
-    // Weight towards more trees
+    // Random scenery type (water excluded from random scatter — only via river)
     const weighted = Math.random();
     const finalType = weighted < 0.6 ? 'tree' : (weighted < 0.8 ? 'house' : 'cow');
     
