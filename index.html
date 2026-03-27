@@ -3686,8 +3686,8 @@ function renderTrainAtProgress(anim) {
   anim.trainEl.style.opacity = locoOpacity;
   anim.trainEl.style.transform = `translate(-50%, -50%) rotate(${angleDeg + 90}deg) scale(${locoScale})`;
 
-  // Update per-train headlight position (night mode)
-  if (anim.headlightEl && isNightMode()) {
+  // Update per-train headlight position (night mode) — hide inside tunnel
+  if (anim.headlightEl && isNightMode() && !isInTunnel) {
     const hlRadius = cellSize * 2;
     anim.headlightEl.style.width = hlRadius * 2 + 'px';
     anim.headlightEl.style.height = hlRadius * 2 + 'px';
@@ -3742,30 +3742,28 @@ function renderTrainAtProgress(anim) {
         if (carRow >= 0 && carRow < ROWS && carCol >= 0 && carCol < COLS) {
           const carCellPiece = state.grid[carRow]?.[carCol];
           if (carCellPiece && carCellPiece.type === 'tunnel') {
-            // Calculate progress within the tunnel cell
-            const cellOriginX = carCol * (cellSize + 1) + gridOffX;
-            const cellOriginY = carRow * (cellSize + 1) + gridOffY;
+            // Direction-agnostic tunnel fade: use distance from cell center
+            // Center = hidden, edges = visible (works regardless of travel direction)
+            const cellCenterX = carCol * (cellSize + 1) + cellSize / 2 + gridOffX;
+            const cellCenterY = carRow * (cellSize + 1) + cellSize / 2 + gridOffY;
             const conns = getConnections('tunnel', carCellPiece.rotation);
-            // Use primary axis to calculate progress
-            let cellProgress;
+            let distFromCenter;
             if (conns.includes('N') && conns.includes('S')) {
-              cellProgress = (entry.y - cellOriginY) / cellSize;
+              distFromCenter = Math.abs(entry.y - cellCenterY) / (cellSize / 2);
             } else {
-              cellProgress = (entry.x - cellOriginX) / cellSize;
+              distFromCenter = Math.abs(entry.x - cellCenterX) / (cellSize / 2);
             }
-            cellProgress = Math.max(0, Math.min(1, cellProgress));
+            distFromCenter = Math.min(1, distFromCenter); // 0=center, 1=edge
 
-            if (cellProgress < 0.3) {
-              const t = cellProgress / 0.3;
-              carOpacity = 1 - t;
-              carScale = 1 - t * 0.7;
-            } else if (cellProgress > 0.7) {
-              const t = (cellProgress - 0.7) / 0.3;
-              carOpacity = t;
-              carScale = 0.3 + t * 0.7;
-            } else {
+            if (distFromCenter < 0.4) {
+              // Center zone: fully hidden
               carOpacity = 0;
               carScale = 0.3;
+            } else {
+              // Transition zone: 0.4→1 maps to hidden→visible
+              const t = (distFromCenter - 0.4) / 0.6;
+              carOpacity = t;
+              carScale = 0.3 + t * 0.7;
             }
           }
         }
@@ -4166,9 +4164,9 @@ function addRandomScenery() {
 }
 
 function placeTrainOnLoop(path) {
-  // Find a straight section in the path
+  // Find a straight or tunnel section in the path
   for (const cell of path) {
-    if (cell.type === 'straight') {
+    if (cell.type === 'straight' || cell.type === 'tunnel') {
       state.trains = [{ row: cell.row, col: cell.col, color: 'red', cars: [] }];
       renderCell(cell.row, cell.col);
       return;
