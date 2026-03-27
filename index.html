@@ -877,6 +877,11 @@ body.night-mode .cell.bridge-over-water::after {
   background: linear-gradient(135deg, rgba(13,71,161,0.4), rgba(26,35,126,0.3));
 }
 
+/* TUNNEL NIGHT GLOW */
+body.night-mode .cell.has-tunnel svg {
+  filter: drop-shadow(0 0 6px rgba(255, 200, 80, 0.3));
+}
+
 /* PLAYING STATE */
 #app.playing .cell { cursor: default; }
 #app.playing .cell:hover { background: var(--grass); }
@@ -904,6 +909,7 @@ body.night-mode .cell.bridge-over-water::after {
     <div class="palette-piece" data-type="tjunction"><div class="label">T-Split</div></div>
     <div class="palette-piece" data-type="crossover"><div class="label">Cross</div></div>
     <div class="palette-piece" data-type="bridge"><div class="label">Bridge</div></div>
+    <div class="palette-piece" data-type="tunnel"><div class="label">Tunnel</div></div>
     <div class="palette-piece" data-type="station"><div class="label">Station</div></div>
     <div class="palette-divider"></div>
     <h2>Trains</h2>
@@ -1110,6 +1116,61 @@ const SFX = {
     playNoise(0.4, 0.08);
     playNote(80, 0.3, 'square', 0.08, 0.05);
   },
+  tunnelEnter() {
+    // Breathy whoosh descending into tunnel
+    if (!soundEnabled) return;
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    // Wind whoosh using filtered noise
+    const bufferSize = ctx.sampleRate * 0.4;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1);
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(1200, ctx.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.35);
+    filter.Q.value = 1.5;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    src.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    src.start();
+    src.stop(ctx.currentTime + 0.4);
+    // Subtle low tone for depth
+    playNote(180, 0.3, 'sine', 0.04);
+  },
+  tunnelExit() {
+    // Ascending whoosh emerging from tunnel
+    if (!soundEnabled) return;
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    const bufferSize = ctx.sampleRate * 0.35;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1);
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(400, ctx.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(1400, ctx.currentTime + 0.3);
+    filter.Q.value = 1.2;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.06, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+    src.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    src.start();
+    src.stop(ctx.currentTime + 0.35);
+    // Bright exit tone
+    playNote(440, 0.2, 'sine', 0.04, 0.05);
+  },
   boing(speed = 1) {
     // Comical bouncy crash — spring-like frequency sweep
     // Intensity scales with speed
@@ -1224,7 +1285,7 @@ const OPPOSITE = { N: 'S', S: 'N', E: 'W', W: 'E' };
 const DELTA = { N: { r: -1, c: 0 }, S: { r: 1, c: 0 }, E: { r: 0, c: 1 }, W: { r: 0, c: -1 } };
 const ROTATE_MAP = { N: 'E', E: 'S', S: 'W', W: 'N' };
 
-const TRACK_TYPES = ['straight', 'curve', 'tjunction', 'crossover', 'bridge', 'station'];
+const TRACK_TYPES = ['straight', 'curve', 'tjunction', 'crossover', 'bridge', 'tunnel', 'station'];
 const SCENERY_TYPES = ['tree', 'house', 'cow', 'water'];
 const SCENERY_EMOJI = { tree: '🌲', house: '🏠', cow: '🐄', water: '💧' };
 const CAR_TYPES = ['freight', 'passenger', 'caboose'];
@@ -1244,6 +1305,7 @@ const BASE_CONNECTIONS = {
   tjunction:['N', 'E', 'S'],
   crossover:['N', 'S', 'E', 'W'],
   bridge:   ['N', 'S', 'E', 'W'],
+  tunnel:   ['N', 'S'],
   station:  ['N', 'S'],
 };
 
@@ -1499,6 +1561,63 @@ function createTrackSVG(type) {
       svg.appendChild(line(38,16,38,44,'#8D6E63',2));
       break;
 
+    case 'tunnel':
+      // Track entering/exiting tunnel
+      svg.appendChild(line(30,0,30,14,'#A1887F',12));
+      svg.appendChild(line(30,0,30,14,trackColor,8));
+      svg.appendChild(line(30,46,30,60,'#A1887F',12));
+      svg.appendChild(line(30,46,30,60,trackColor,8));
+      // Mountain/hill shape
+      {
+        const mtn = document.createElementNS(ns,'path');
+        mtn.setAttribute('d', 'M6,52 Q8,20 30,8 Q52,20 54,52 Z');
+        mtn.setAttribute('fill', '#6D8B4E');
+        mtn.setAttribute('stroke', '#5A7A3E');
+        mtn.setAttribute('stroke-width', '1');
+        svg.appendChild(mtn);
+        // Mountain highlight
+        const hl = document.createElementNS(ns,'path');
+        hl.setAttribute('d', 'M18,42 Q20,22 30,12 Q38,18 42,36');
+        hl.setAttribute('fill', 'none');
+        hl.setAttribute('stroke', 'rgba(255,255,255,0.15)');
+        hl.setAttribute('stroke-width', '4');
+        hl.setAttribute('stroke-linecap', 'round');
+        svg.appendChild(hl);
+        // North tunnel opening (top)
+        const tn = document.createElementNS(ns,'ellipse');
+        tn.setAttribute('cx', '30'); tn.setAttribute('cy', '16');
+        tn.setAttribute('rx', '9'); tn.setAttribute('ry', '7');
+        tn.setAttribute('fill', '#1A1A1A');
+        svg.appendChild(tn);
+        // North opening arch highlight
+        const ta = document.createElementNS(ns,'path');
+        ta.setAttribute('d', 'M21,17 A9,7 0 0,1 39,17');
+        ta.setAttribute('fill', 'none');
+        ta.setAttribute('stroke', '#8D6E63');
+        ta.setAttribute('stroke-width', '2');
+        svg.appendChild(ta);
+        // South tunnel opening (bottom)
+        const ts2 = document.createElementNS(ns,'ellipse');
+        ts2.setAttribute('cx', '30'); ts2.setAttribute('cy', '46');
+        ts2.setAttribute('rx', '9'); ts2.setAttribute('ry', '7');
+        ts2.setAttribute('fill', '#1A1A1A');
+        svg.appendChild(ts2);
+        // South opening arch highlight
+        const ta2 = document.createElementNS(ns,'path');
+        ta2.setAttribute('d', 'M21,45 A9,7 0 0,1 39,45');
+        ta2.setAttribute('fill', 'none');
+        ta2.setAttribute('stroke', '#8D6E63');
+        ta2.setAttribute('stroke-width', '2');
+        svg.appendChild(ta2);
+        // Snow/rock cap
+        const cap = document.createElementNS(ns,'path');
+        cap.setAttribute('d', 'M22,16 Q26,7 30,8 Q34,7 38,16');
+        cap.setAttribute('fill', 'rgba(255,255,255,0.2)');
+        cap.setAttribute('stroke', 'none');
+        svg.appendChild(cap);
+      }
+      break;
+
     case 'station':
       // Track
       [10,22,34,46].forEach(y => svg.appendChild(line(20,y,40,y,tieColor,tieWidth,'butt')));
@@ -1703,7 +1822,7 @@ function renderCell(row, col) {
 
   // Clear existing content except connection dots
   cell.querySelectorAll('svg, .train-emoji, .train-svg, .scenery-emoji, .car-svg, .car-count-badge, .switch-lever, .water-duck').forEach(el => el.remove());
-  cell.classList.remove('occupied', 'has-train', 'has-switch', 'water-cell', 'bridge-over-water');
+  cell.classList.remove('occupied', 'has-train', 'has-switch', 'has-tunnel', 'water-cell', 'bridge-over-water');
 
   const piece = state.grid[row][col];
   if (piece) {
@@ -1740,6 +1859,9 @@ function renderCell(row, col) {
       svg.style.transform = `rotate(${piece.rotation}deg)`;
       cell.appendChild(svg);
       cell.classList.add('occupied');
+
+      // Tunnel class for night mode glow
+      if (piece.type === 'tunnel') cell.classList.add('has-tunnel');
 
       // Bridge over water visual enhancement
       if (piece.type === 'bridge') {
@@ -3006,7 +3128,7 @@ function startSmokeLoop() {
   smokeInterval = setInterval(() => {
     if (!state.playing || animStates.length === 0) { stopSmokeLoop(); return; }
     for (const anim of animStates) {
-      if (anim.crashing || anim.finished) continue;
+      if (anim.crashing || anim.finished || anim.inTunnel) continue;
       spawnSmokeParticle(anim);
     }
   }, getSmokeInterval());
@@ -3348,6 +3470,7 @@ function startPlay() {
       carEls: [],
       crashing: false,
       finished: false,
+      inTunnel: false,
       trainObj: train,
     };
 
@@ -3525,7 +3648,43 @@ function renderTrainAtProgress(anim) {
   anim.trainEl.style.top = locoY + 'px';
 
   const angleDeg = (pos.angle || 0) * (180 / Math.PI);
-  anim.trainEl.style.transform = `translate(-50%, -50%) rotate(${angleDeg + 90}deg)`;
+
+  // Tunnel fade/shrink for locomotive
+  const currentPiece = state.grid[anim.row]?.[anim.col];
+  const isInTunnel = currentPiece && currentPiece.type === 'tunnel';
+  let locoOpacity = 1;
+  let locoScale = 1;
+
+  if (isInTunnel) {
+    const p = Math.min(anim.progress, 1);
+    if (p < 0.3) {
+      // Entering: fade out + shrink over first 30%
+      const t = p / 0.3;
+      locoOpacity = 1 - t;
+      locoScale = 1 - t * 0.7;
+    } else if (p > 0.7) {
+      // Exiting: fade in + grow over last 30%
+      const t = (p - 0.7) / 0.3;
+      locoOpacity = t;
+      locoScale = 0.3 + t * 0.7;
+    } else {
+      // Inside: fully hidden
+      locoOpacity = 0;
+      locoScale = 0.3;
+    }
+  }
+
+  // Trigger tunnel enter/exit sounds
+  if (isInTunnel && !anim.inTunnel) {
+    anim.inTunnel = true;
+    SFX.tunnelEnter();
+  } else if (!isInTunnel && anim.inTunnel) {
+    anim.inTunnel = false;
+    SFX.tunnelExit();
+  }
+
+  anim.trainEl.style.opacity = locoOpacity;
+  anim.trainEl.style.transform = `translate(-50%, -50%) rotate(${angleDeg + 90}deg) scale(${locoScale})`;
 
   // Update per-train headlight position (night mode)
   if (anim.headlightEl && isNightMode()) {
@@ -3559,14 +3718,60 @@ function renderTrainAtProgress(anim) {
     }
 
     const carSpacing = cellSize * 0.85;
+    const gridEl2 = document.getElementById('grid');
+    const gRect2 = gridEl2.getBoundingClientRect();
+    const cRect2 = document.getElementById('grid-container').getBoundingClientRect();
+    const gridOffX = gRect2.left - cRect2.left;
+    const gridOffY = gRect2.top - cRect2.top;
+
     for (let i = 0; i < anim.carEls.length; i++) {
       const targetDist = anim.cumulativeDistance - (i + 1) * carSpacing;
       const entry = findHistoryEntry(anim.positionHistory, targetDist);
       if (entry) {
         anim.carEls[i].style.left = entry.x + 'px';
         anim.carEls[i].style.top = entry.y + 'px';
-        anim.carEls[i].style.transform = 'translate(-50%, -50%) rotate(' + entry.angle + 'deg)';
-        anim.carEls[i].style.opacity = '1';
+
+        // Determine which grid cell this car is in for tunnel fade
+        const carGridX = entry.x - gridOffX;
+        const carGridY = entry.y - gridOffY;
+        const carCol = Math.floor(carGridX / (cellSize + 1));
+        const carRow = Math.floor(carGridY / (cellSize + 1));
+        let carOpacity = 1;
+        let carScale = 1;
+
+        if (carRow >= 0 && carRow < ROWS && carCol >= 0 && carCol < COLS) {
+          const carCellPiece = state.grid[carRow]?.[carCol];
+          if (carCellPiece && carCellPiece.type === 'tunnel') {
+            // Calculate progress within the tunnel cell
+            const cellOriginX = carCol * (cellSize + 1) + gridOffX;
+            const cellOriginY = carRow * (cellSize + 1) + gridOffY;
+            const conns = getConnections('tunnel', carCellPiece.rotation);
+            // Use primary axis to calculate progress
+            let cellProgress;
+            if (conns.includes('N') && conns.includes('S')) {
+              cellProgress = (entry.y - cellOriginY) / cellSize;
+            } else {
+              cellProgress = (entry.x - cellOriginX) / cellSize;
+            }
+            cellProgress = Math.max(0, Math.min(1, cellProgress));
+
+            if (cellProgress < 0.3) {
+              const t = cellProgress / 0.3;
+              carOpacity = 1 - t;
+              carScale = 1 - t * 0.7;
+            } else if (cellProgress > 0.7) {
+              const t = (cellProgress - 0.7) / 0.3;
+              carOpacity = t;
+              carScale = 0.3 + t * 0.7;
+            } else {
+              carOpacity = 0;
+              carScale = 0.3;
+            }
+          }
+        }
+
+        anim.carEls[i].style.transform = 'translate(-50%, -50%) rotate(' + entry.angle + 'deg) scale(' + carScale + ')';
+        anim.carEls[i].style.opacity = String(carOpacity);
       }
     }
   }
@@ -3635,6 +3840,13 @@ function generateRandomTrack() {
     return;
   }
   
+  // Randomly convert some straight pieces to tunnels (~20% chance per straight)
+  path.forEach(cell => {
+    if (cell.type === 'straight' && Math.random() < 0.2) {
+      cell.type = 'tunnel';
+    }
+  });
+
   // Animate placing pieces with cascading sound effect
   let delay = 0;
   const delayIncrement = 40; // ms between placements

@@ -1,0 +1,107 @@
+{
+  "day": 11,
+  "feature": "Tunnels",
+  "date": "2026-03-27",
+  "bugs_to_fix": [],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Add tunnel track type to constants and palette",
+      "description": "Add 'tunnel' to TRACK_TYPES array, BASE_CONNECTIONS (N-S like straight), and palette HTML. Tunnel is a track piece, not scenery.",
+      "changes": [
+        "Add 'tunnel' to TRACK_TYPES array",
+        "Add BASE_CONNECTIONS.tunnel = ['N', 'S']",
+        "Add tunnel palette item in sidebar HTML between bridge and station",
+        "Update SCENERY_TYPES check — tunnel should NOT be in scenery"
+      ]
+    },
+    {
+      "id": "T2",
+      "title": "Create tunnel SVG rendering",
+      "description": "Mountain/hill shape with dark oval tunnel opening. Top-down view showing a mound with dark entrance/exit on connected edges.",
+      "changes": [
+        "Add 'tunnel' case in createTrackSVG() function",
+        "SVG: Green/brown mountain mound with dark oval opening at N and S edges",
+        "Track rails visible entering/exiting the tunnel openings",
+        "Night mode: subtle warm glow around tunnel entrances (via CSS)"
+      ]
+    },
+    {
+      "id": "T3",
+      "title": "Train fade/shrink animation inside tunnel",
+      "description": "When train traverses a tunnel cell, it shrinks and fades out over the first 30% of the cell, stays hidden in the middle 40%, then grows and fades back in over the last 30%.",
+      "changes": [
+        "In renderTrainAtProgress(), detect if current cell is a tunnel",
+        "Calculate opacity and scale based on progress through tunnel cell",
+        "First 30%: opacity goes from 1→0, scale from 1→0.3",
+        "Middle 40%: opacity=0, scale=0.3 (fully hidden)",
+        "Last 30%: opacity goes from 0→1, scale from 0.3→1",
+        "Apply transform scale and opacity to trainEl"
+      ]
+    },
+    {
+      "id": "T4",
+      "title": "Car fade animation inside tunnel",
+      "description": "Each car independently fades when entering/exiting tunnel cells, creating a staggered disappearing effect.",
+      "changes": [
+        "In the car rendering section of renderTrainAtProgress(), check if each car's current cell is a tunnel",
+        "Apply same fade/shrink logic per car based on their position within the tunnel cell",
+        "Cars enter after locomotive, creating a sequential hide/reveal effect"
+      ]
+    },
+    {
+      "id": "T5",
+      "title": "Tunnel sound effects",
+      "description": "Whoosh echo on tunnel entry and exit.",
+      "changes": [
+        "Add SFX.tunnelEnter() — breathy whoosh with slight reverb/echo effect",
+        "Add SFX.tunnelExit() — lighter ascending whoosh",
+        "Trigger tunnelEnter when train enters a tunnel cell",
+        "Trigger tunnelExit when train exits a tunnel cell",
+        "Track last tunnel state per anim to avoid repeated triggers"
+      ]
+    },
+    {
+      "id": "T6",
+      "title": "Night mode tunnel glow",
+      "description": "In night mode, tunnel entrances have a subtle warm glow.",
+      "changes": [
+        "Add CSS rule: body.night-mode .cell tunnel SVG gets subtle amber glow via filter or box-shadow",
+        "Or add glow elements in renderCell when piece is tunnel and night mode is active"
+      ]
+    },
+    {
+      "id": "T7",
+      "title": "Integration with existing systems",
+      "description": "Ensure tunnel works with auto-connect, random generator, save/load, undo, connection dots.",
+      "changes": [
+        "Auto-connect (findBestRotation) works naturally since tunnel uses standard connections",
+        "Tunnel should appear in random generator occasionally (replace a straight section)",
+        "Save/load serialization works naturally since it's a grid piece",
+        "Connection dots work naturally since BASE_CONNECTIONS defines N-S"
+      ]
+    }
+  ],
+  "acceptance_criteria": [
+    "AC1: Tunnel appears in palette between Bridge and Station, draggable and placeable on grid",
+    "AC2: Tunnel connects N-S at rotation 0, E-W at rotation 90 — connects with adjacent pieces",
+    "AC3: Click to rotate tunnel works (0→90→180→270)",
+    "AC4: Train disappears (shrink+fade) when entering tunnel, reappears when exiting",
+    "AC5: Whoosh sound plays on tunnel entry/exit",
+    "AC6: Train cars fade independently when entering tunnel (staggered effect)",
+    "AC7: Night mode: tunnel has subtle warm glow at entrances",
+    "AC8: Tunnel works with auto-connect, save/load, undo, connection dots",
+    "AC9: Random generator occasionally includes tunnels",
+    "AC10: Works in both day and night modes"
+  ],
+  "testing_focus": [
+    "Place tunnel, verify connections with straight and curve pieces",
+    "Play train through tunnel — verify fade/shrink/reappear animation",
+    "Test with train + cars through tunnel — staggered effect",
+    "Rotate tunnel — verify E-W orientation works",
+    "Night mode toggle with tunnel on grid",
+    "Random generator — verify tunnels appear occasionally",
+    "Save/Load with tunnels on grid",
+    "Undo after placing tunnel"
+  ]
+}
