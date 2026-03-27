@@ -579,3 +579,61 @@ Mark each test with the result after running.
   - River generation: ~40% of random tracks include 3-6 cell water strips
 - **Bug fixed:** Water placement guard was calling placePiece() for grid-source drags that hadn't removed the source piece yet (source pieces aren't removed until drop). Simplified to just cancel the drag.
 - Zero regressions across all existing features.
+
+## Day 11 — Tunnels (2026-03-27)
+
+### Tunnel Placement
+- [ ] Tunnel appears in palette between Bridge and Station
+- [ ] Drag tunnel from palette to grid — places successfully
+- [ ] Click placed tunnel to rotate (0→90→180→270)
+- [ ] Tunnel at rotation 0 connects N-S
+- [ ] Tunnel at rotation 90 connects E-W
+- [ ] Connection dots show green when connected to adjacent tracks
+- [ ] Auto-connect rotates tunnel to match neighbors on palette drop
+
+### Tunnel Train Animation
+- [ ] Place straight-tunnel-straight sequence, add train, press Play
+- [ ] Train shrinks + fades out entering tunnel (first 30% of cell)
+- [ ] Train fully hidden in middle of tunnel
+- [ ] Train grows + fades in exiting tunnel (last 30% of cell)
+- [ ] Whoosh sound plays on tunnel entry
+- [ ] Lighter whoosh sound plays on tunnel exit
+
+### Tunnel Car Animation
+- [ ] Add cars to train, play through tunnel
+- [ ] Each car independently fades when entering tunnel
+- [ ] Staggered effect: locomotive disappears first, then each car follows
+- [ ] Cars reappear on the other side in correct order
+
+### Tunnel Night Mode
+- [ ] Toggle night mode with tunnel on grid
+- [ ] Tunnel has subtle amber glow in night mode
+- [ ] Headlight disappears when train is inside tunnel (night mode)
+- [ ] Headlight reappears when train exits tunnel
+
+### Tunnel Integration
+- [ ] Random generator sometimes includes tunnels
+- [ ] Save layout with tunnels → Load → tunnels restored correctly
+- [ ] Undo after placing tunnel works
+- [ ] Right-click to remove tunnel works
+- [ ] Smoke particles suppressed inside tunnel
+- [ ] Train can be placed on tunnel cell
+
+### Day 11 QA Results
+- JavaScript syntax validated: zero parse errors
+- All critical functions present
+- **Tunnel system:**
+  - Mountain SVG with dark oval openings and rail tracks
+  - Connects N-S (rotation 0) / E-W (rotation 90) like straight track
+  - Train fade/shrink: progress-based for locomotive, center-distance for cars
+  - Direction-agnostic car fade (center=hidden, edges=visible)
+  - Sound: bandpass-filtered noise whoosh on entry (descending), exit (ascending)
+  - Night mode: amber glow via CSS filter on .has-tunnel
+  - Headlight hidden when train is inside tunnel
+  - Smoke particles suppressed inside tunnel
+  - ~20% straight-to-tunnel conversion in random generator
+- **QA fixes applied:**
+  - Car tunnel fade: direction-agnostic center-distance approach
+  - Headlight hidden inside tunnel in night mode
+  - placeTrainOnLoop accepts tunnel as valid placement cell
+- Zero regressions across all existing features.

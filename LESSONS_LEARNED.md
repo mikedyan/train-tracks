@@ -77,6 +77,15 @@
 - LESSON-062: River generation in random tracks must run BEFORE random scenery scatter to avoid placing scenery on water cells.
 - LESSON-063: Night mode water uses separate ::after pseudo-element for moonlight shimmer — keeps wave animation on ::before independent.
 
+## Tunnel Patterns (Day 11)
+- LESSON-064: Tunnel is a track piece with same connections as straight (N-S at rotation 0). Uses simple piece exit logic in getExitDir (not crossover/bridge through-route logic).
+- LESSON-065: Locomotive tunnel fade uses anim.progress (always 0→1 regardless of direction) — naturally direction-aware.
+- LESSON-066: Car tunnel fade must be direction-agnostic since cars use pixel positions from history buffer. Use distance from cell center (0=hidden, 1=visible at edges) instead of directional progress.
+- LESSON-067: Suppress smoke particles when train is inside tunnel (check anim.inTunnel flag in smoke spawn loop).
+- LESSON-068: Headlight glow must be hidden inside tunnel — check isInTunnel in the headlight update section.
+- LESSON-069: Random generator tunnel conversion should happen BEFORE the animation loop (before delay variable is used), not after.
+- LESSON-070: When new track types share connections with straight but have special visual behavior, add them to placeTrainOnLoop valid types.
+
 ## QA Patterns
 - LESSON-015: Random → Play → watch full loop is the core regression test.
 - LESSON-016: Test on both desktop (mouse) and mobile (touch) for any interaction changes.

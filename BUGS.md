@@ -60,3 +60,24 @@ Only logged here if a bug was found, for tracking purposes.
 - **Root cause:** `generateRandomTrack()` places pieces with staggered `setTimeout()` calls (40ms apart for animation). Each piece calls `updateConnectionDots(row, col)` only for itself, not for its neighbors. When piece A is placed and checks its east neighbor — that neighbor might not exist yet. Later when the east neighbor IS placed, it updates its own dots but never goes back to update piece A's east dot. Result: after animation completes, some connection dots remain "disconnected" (red) even though the connections are actually valid.
 - **Fix applied:** Added a final `setTimeout` after all pieces are placed that refreshes connection dots for every cell in the path. This runs at `delay + 50ms` (after last piece but before scenery/train placement).
 - **Verification:** Ran Random 5 times on live site — 0 red dots in all 5 runs.
+
+### BUG-007 | 🟢 FIXED | Car tunnel fade reversed for reverse-direction travel
+- **Found:** Thu Mar 27 — QA Agent (Day 11)
+- **Fixed:** Thu Mar 27 (Day 11 QA)
+- **Severity:** Low (visual — fade direction wrong for one travel direction)
+- **Root cause:** Car tunnel fade used pixel-based progress along cell axis, which is direction-dependent. Cars traveling N→S would fade correctly but S→N would fade in at entry and out at exit (reversed).
+- **Fix applied:** Changed to direction-agnostic center-distance approach: distance from cell center determines opacity (center=hidden, edges=visible). Works identically regardless of travel direction.
+
+### BUG-008 | 🟢 FIXED | Headlight glow visible inside tunnel in night mode
+- **Found:** Thu Mar 27 — QA Agent (Day 11)
+- **Fixed:** Thu Mar 27 (Day 11 QA)
+- **Severity:** Low (visual — headlight shines through mountain)
+- **Root cause:** Headlight update in renderTrainAtProgress didn't check if train was in a tunnel.
+- **Fix applied:** Added `!isInTunnel` condition to headlight visibility check.
+
+### BUG-009 | 🟢 FIXED | placeTrainOnLoop skips tunnel cells
+- **Found:** Thu Mar 27 — QA Agent (Day 11)
+- **Fixed:** Thu Mar 27 (Day 11 QA)
+- **Severity:** Low (functional — train might not be placed on generated track)
+- **Root cause:** `placeTrainOnLoop` only checked for `cell.type === 'straight'`, but random generator now converts some straights to tunnels. In extreme cases, all straights could be tunnels.
+- **Fix applied:** Added `|| cell.type === 'tunnel'` to the placement condition.
