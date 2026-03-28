@@ -81,3 +81,10 @@ Only logged here if a bug was found, for tracking purposes.
 - **Severity:** Low (functional — train might not be placed on generated track)
 - **Root cause:** `placeTrainOnLoop` only checked for `cell.type === 'straight'`, but random generator now converts some straights to tunnels. In extreme cases, all straights could be tunnels.
 - **Fix applied:** Added `|| cell.type === 'tunnel'` to the placement condition.
+
+### BUG-010 | 🟢 FIXED | cleanupChimneySmoke() defined but never called
+- **Found:** Sat Mar 28 — QA Agent (Day 12)
+- **Fixed:** Sat Mar 28 (Day 12 QA)
+- **Severity:** Low (cosmetic — particles self-clean in ~2s, but clearAll should be immediate)
+- **Root cause:** `cleanupChimneySmoke()` function was defined but never invoked during board clear operations.
+- **Fix applied:** Added `cleanupChimneySmoke()` call in `clearAll()`.

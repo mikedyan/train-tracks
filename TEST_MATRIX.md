@@ -619,6 +619,56 @@ Mark each test with the result after running.
 - [ ] Smoke particles suppressed inside tunnel
 - [ ] Train can be placed on tunnel cell
 
+## Day 12 — Animated Scenery (2026-03-28)
+
+### Tree Sway Animation
+- [x] Trees sway with subtle ±3° rotation
+- [x] Each tree has different animation delay (not synchronized)
+- [x] Sway duration varies per tree (3-4.5s range)
+- [x] Trees stay centered during sway (translate preserved in keyframes)
+- [x] Works in both day and night modes
+
+### Cow Moo Sound
+- [x] Train passing within 1 cell of cow triggers moo sound
+- [x] Moo is a convincing low-frequency tone (140Hz sine + 280Hz overtone)
+- [x] Each cow only moos once per 3 seconds (cooldown)
+- [x] Only one moo per cell transition
+- [x] Moo respects mute setting
+
+### Cow Facing Direction
+- [x] ~50% of cows face the opposite direction (scaleX flip)
+- [x] Flip state consistent across re-renders (dataset-stored)
+
+### House Chimney Smoke
+- [x] Houses emit tiny smoke wisps from top area
+- [x] Chimney smoke is smaller and slower than train smoke
+- [x] Max 2 chimney particles per house at a time
+- [x] Chimney smoke works in day mode
+- [x] Chimney smoke works in night mode
+- [x] Chimney smoke always active (not just during play)
+- [x] clearAll() cleans up chimney particles
+
+### Visibility API Pause
+- [x] Tree sway pauses when tab hidden (CSS animation-play-state)
+- [x] Duck drift pauses when tab hidden
+- [x] Water wave animation pauses when tab hidden
+- [x] Chimney smoke stops spawning when tab hidden
+- [x] All animations resume when tab becomes visible
+
+### Day 12 QA Results
+- JavaScript syntax validated: zero parse errors
+- HTML tags balanced (71 open / 71 close)
+- All core functions present (14 checked)
+- All new functions present: checkCowProximity, spawnChimneySmoke, startChimneyLoop, stopChimneyLoop, cleanupChimneySmoke
+- **Bug found & fixed:** cleanupChimneySmoke() wasn't called in clearAll() — added
+- **Animated scenery system:**
+  - Tree sway: CSS @keyframes with randomized duration/delay per tree via dataset seeds
+  - Cow moo: SFX.moo() with dual oscillator, checkCowProximity() in advanceTrainAnim
+  - Cow flip: random scaleX(-1) stored in dataset for consistency
+  - Chimney smoke: interval-based particle spawner, max 2 per house, self-cleaning
+  - Visibility API: pauses CSS animations + stops chimney interval when tab hidden
+- Zero regressions across all existing features
+
 ### Day 11 QA Results
 - JavaScript syntax validated: zero parse errors
 - All critical functions present

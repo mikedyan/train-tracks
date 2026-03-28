@@ -86,6 +86,16 @@
 - LESSON-069: Random generator tunnel conversion should happen BEFORE the animation loop (before delay variable is used), not after.
 - LESSON-070: When new track types share connections with straight but have special visual behavior, add them to placeTrainOnLoop valid types.
 
+## Animated Scenery Patterns (Day 12)
+- LESSON-071: CSS animations on scenery emojis must include the base translate(-50%, -50%) in all keyframe states, otherwise the element shifts off-center during animation.
+- LESSON-072: Use cell.dataset seeds (treeSeed, cowFlip, duckSeed) to maintain visual consistency across re-renders of the same cell. renderCell clears child elements but preserves dataset.
+- LESSON-073: Ambient particle systems (chimney smoke) should be always-active, not tied to play state. Use visibility API to pause when tab is hidden.
+- LESSON-074: Max particles per source (2 per house) prevents DOM bloat when many scenery items exist. Track via data attributes on particles, not via counting in an array.
+- LESSON-075: Cow moo cooldowns should be per-cow-per-train (keyed by cell coordinates) to prevent the same cow mooing repeatedly when a train loops past it.
+- LESSON-076: Only one sound effect per cell transition (early return after first cow moo) prevents audio overload when multiple cows are nearby.
+- LESSON-077: Cleanup functions for ambient systems (cleanupChimneySmoke) must be called in clearAll() even if particles self-remove — user expects immediate visual reset.
+- LESSON-078: The .animations-paused class on the grid container pauses all CSS animations in descendants via animation-play-state: paused — cleaner than stopping each individually.
+
 ## QA Patterns
 - LESSON-015: Random → Play → watch full loop is the core regression test.
 - LESSON-016: Test on both desktop (mouse) and mobile (touch) for any interaction changes.
