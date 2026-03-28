@@ -1,0 +1,97 @@
+{
+  "day": 12,
+  "title": "Animated Scenery",
+  "description": "Make the world feel alive even when the train is stopped. Trees sway gently, cows moo when the train passes nearby, and houses emit chimney smoke. All animations are subtle, performance-conscious, and pause when the tab is hidden.",
+  "bugs": [],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Tree sway animation",
+      "description": "Add a CSS animation to tree scenery emojis that creates a gentle swaying effect (rotate ±3°, 3-4s loop). Each tree gets a randomized animation delay so they don't sway in unison.",
+      "changes": [
+        "Add @keyframes tree-sway CSS animation: subtle rotation ±3° over 3-4s",
+        "Add .scenery-tree class to tree emoji elements in renderCell()",
+        "Apply randomized animation-delay via inline style or CSS custom property per tree"
+      ],
+      "acceptance_criteria": [
+        "Trees visibly sway with subtle rotation",
+        "Trees have different animation delays (not synchronized)",
+        "Sway animation is smooth and subtle (±3° max)",
+        "Works in both day and night modes"
+      ]
+    },
+    {
+      "id": "T2",
+      "title": "Cow moo sound when train passes",
+      "description": "When a train passes within 1 cell of a cow during play, the cow emits a 'moo' sound. Use a low-frequency oscillator via Web Audio API. Each cow can only moo once per pass (cooldown prevents repeated mooing).",
+      "changes": [
+        "Add SFX.moo() function using low-frequency oscillator (sine ~120-180Hz with slight pitch bend)",
+        "In advanceTrainAnim(), when entering a new cell, check for cows within 1-cell radius",
+        "Track cow moo cooldowns to prevent rapid re-triggering (per-cell, resets after train moves away)"
+      ],
+      "acceptance_criteria": [
+        "Cows moo when train passes within 1 cell",
+        "Moo sound is a convincing low-frequency tone",
+        "Each cow only moos once per train pass (cooldown)",
+        "Moo respects soundEnabled/mute setting"
+      ]
+    },
+    {
+      "id": "T3",
+      "title": "Cow facing direction changes",
+      "description": "Cows occasionally face a different direction. Apply CSS transform scaleX(-1) randomly on render, and optionally on a slow random timer during idle.",
+      "changes": [
+        "In renderCell() for cow scenery, randomly apply scaleX(-1) transform (50% chance)",
+        "Store flip state in dataset to maintain consistency across re-renders"
+      ],
+      "acceptance_criteria": [
+        "Cows face different directions (some flipped, some not)",
+        "Flip state is consistent across re-renders of the same cell"
+      ]
+    },
+    {
+      "id": "T4",
+      "title": "House chimney smoke particles",
+      "description": "Houses emit tiny smoke wisps from the roof area. These are smaller and slower than train smoke particles. Uses CSS-animated particles spawned on an interval. Only active when the page is visible.",
+      "changes": [
+        "Add @keyframes chimney-smoke CSS animation (slower rise, smaller particles than train smoke)",
+        "Add .chimney-smoke CSS class",
+        "Create a chimney smoke system: interval spawns tiny particles above house cells",
+        "Start chimney smoke loop on init, stop when tab hidden (visibilitychange API)",
+        "Chimney smoke is always active (not just during play)"
+      ],
+      "acceptance_criteria": [
+        "House cells emit tiny smoke wisps from their top area",
+        "Chimney smoke particles are smaller and slower than train smoke",
+        "Smoke works in both day and night modes",
+        "Animations stop when tab is hidden (visibilitychange)",
+        "No performance degradation (max ~2 particles per house active at a time)"
+      ]
+    },
+    {
+      "id": "T5",
+      "title": "Visibility API pause for all ambient animations",
+      "description": "Use document.addEventListener('visibilitychange') to pause/resume ambient animations (tree sway, chimney smoke) when the tab is hidden/shown.",
+      "changes": [
+        "Add visibilitychange listener in init()",
+        "When hidden: stop chimney smoke interval, add .animations-paused class to grid",
+        "When visible: restart chimney smoke interval, remove .animations-paused class",
+        "CSS: .animations-paused .scenery-tree { animation-play-state: paused; }"
+      ],
+      "acceptance_criteria": [
+        "Tree sway pauses when tab is hidden",
+        "Chimney smoke stops spawning when tab is hidden",
+        "Animations resume when tab becomes visible again"
+      ]
+    }
+  ],
+  "files_to_modify": ["index.html"],
+  "testing_focus": [
+    "Performance: verify 60fps with multiple trees swaying and houses smoking",
+    "Day/night mode: all animations work in both modes",
+    "Sound: cow moo plays correctly, respects mute",
+    "Tab visibility: animations pause/resume correctly",
+    "Random generator: generated layouts with scenery animate correctly",
+    "Regression: train smoke, loop celebration, crash animations still work"
+  ]
+}

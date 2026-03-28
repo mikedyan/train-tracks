@@ -877,6 +877,47 @@ body.night-mode .cell.bridge-over-water::after {
   background: linear-gradient(135deg, rgba(13,71,161,0.4), rgba(26,35,126,0.3));
 }
 
+/* TREE SWAY ANIMATION */
+@keyframes tree-sway {
+  0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+  25% { transform: translate(-50%, -50%) rotate(3deg); }
+  75% { transform: translate(-50%, -50%) rotate(-3deg); }
+}
+
+.scenery-tree {
+  animation: tree-sway var(--tree-sway-duration, 3.5s) ease-in-out infinite;
+  animation-delay: var(--tree-sway-delay, 0s);
+}
+
+/* Flipped cow */
+.scenery-cow-flipped {
+  transform: translate(-50%, -50%) scaleX(-1) !important;
+}
+
+/* CHIMNEY SMOKE */
+@keyframes chimney-smoke-rise {
+  0% { opacity: 0.4; transform: translate(var(--chimney-dx, 0px), 0px) scale(0.6); }
+  100% { opacity: 0; transform: translate(var(--chimney-dx, 0px), -25px) scale(1.4); }
+}
+.chimney-smoke {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 4;
+  animation: chimney-smoke-rise var(--chimney-duration, 2s) ease-out forwards;
+}
+
+/* Pause animations when tab hidden */
+.animations-paused .scenery-tree {
+  animation-play-state: paused !important;
+}
+.animations-paused .water-duck {
+  animation-play-state: paused !important;
+}
+.animations-paused .cell.water-cell::before {
+  animation-play-state: paused !important;
+}
+
 /* TUNNEL NIGHT GLOW */
 body.night-mode .cell.has-tunnel svg {
   filter: drop-shadow(0 0 6px rgba(255, 200, 80, 0.3));
@@ -1170,6 +1211,39 @@ const SFX = {
     src.stop(ctx.currentTime + 0.35);
     // Bright exit tone
     playNote(440, 0.2, 'sine', 0.04, 0.05);
+  },
+  moo() {
+    // Cow moo — low-frequency sine with pitch bend
+    if (!soundEnabled) return;
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(140, ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(120, ctx.currentTime + 0.3);
+    osc.frequency.linearRampToValueAtTime(160, ctx.currentTime + 0.5);
+    osc.frequency.linearRampToValueAtTime(110, ctx.currentTime + 0.8);
+    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+    gain.gain.setValueAtTime(0.08, ctx.currentTime + 0.4);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.9);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.9);
+    // Nasal overtone for realism
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(280, ctx.currentTime);
+    osc2.frequency.linearRampToValueAtTime(240, ctx.currentTime + 0.3);
+    osc2.frequency.linearRampToValueAtTime(320, ctx.currentTime + 0.5);
+    gain2.gain.setValueAtTime(0.03, ctx.currentTime);
+    gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.7);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(ctx.currentTime);
+    osc2.stop(ctx.currentTime + 0.7);
   },
   boing(speed = 1) {
     // Comical bouncy crash — spring-like frequency sweep
@@ -1851,6 +1925,19 @@ function renderCell(row, col) {
       // House glow in night mode
       if (piece.type === 'house' && isNightMode()) {
         emoji.style.textShadow = '0 0 12px rgba(255, 200, 50, 0.7), 0 0 24px rgba(255, 180, 30, 0.4)';
+      }
+      // Tree sway animation with randomized delay
+      if (piece.type === 'tree') {
+        emoji.classList.add('scenery-tree');
+        if (!cell.dataset.treeSeed) cell.dataset.treeSeed = Math.random().toFixed(3);
+        const seed = parseFloat(cell.dataset.treeSeed);
+        emoji.style.setProperty('--tree-sway-duration', (3 + seed * 1.5) + 's');
+        emoji.style.setProperty('--tree-sway-delay', (seed * 3) + 's');
+      }
+      // Cow random facing direction
+      if (piece.type === 'cow') {
+        if (!cell.dataset.cowFlip) cell.dataset.cowFlip = Math.random() < 0.5 ? '1' : '0';
+        if (cell.dataset.cowFlip === '1') emoji.classList.add('scenery-cow-flipped');
       }
       cell.appendChild(emoji);
       cell.classList.add('occupied');
@@ -3156,6 +3243,82 @@ function cleanupSmokeParticles() {
 }
 
 // ============================================================
+// CHIMNEY SMOKE SYSTEM (Ambient — always active)
+// ============================================================
+let chimneyInterval = null;
+const MAX_CHIMNEY_PARTICLES_PER_HOUSE = 2;
+
+function spawnChimneySmoke() {
+  const gridContainer = document.getElementById('grid-container');
+  const grid = document.getElementById('grid');
+  if (!gridContainer || !grid) return;
+  const gridRect = grid.getBoundingClientRect();
+  const containerRect = gridContainer.getBoundingClientRect();
+  const offX = gridRect.left - containerRect.left;
+  const offY = gridRect.top - containerRect.top;
+
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const piece = state.grid[r]?.[c];
+      if (!piece || piece.type !== 'house') continue;
+
+      // Limit active particles per house
+      const cellEl = getCellEl(r, c);
+      if (!cellEl) continue;
+      const existing = gridContainer.querySelectorAll(`.chimney-smoke[data-house="${r},${c}"]`);
+      if (existing.length >= MAX_CHIMNEY_PARTICLES_PER_HOUSE) continue;
+
+      // Random chance to spawn (not every tick)
+      if (Math.random() > 0.3) continue;
+
+      const particle = document.createElement('div');
+      particle.className = 'chimney-smoke';
+      particle.dataset.house = r + ',' + c;
+
+      const size = 2 + Math.random() * 2.5;
+      particle.style.width = size + 'px';
+      particle.style.height = size + 'px';
+
+      const dx = (Math.random() - 0.5) * 10;
+      particle.style.setProperty('--chimney-dx', dx + 'px');
+
+      const duration = 1.8 + Math.random() * 1;
+      particle.style.setProperty('--chimney-duration', duration + 's');
+
+      const nightMode = isNightMode();
+      const shade = nightMode ? 180 : 160;
+      const alpha = nightMode ? 0.3 : 0.4;
+      particle.style.background = `rgba(${shade}, ${shade}, ${shade}, ${alpha})`;
+
+      // Position above the house cell (top-center area)
+      const px = c * (cellSize + 1) + cellSize * 0.5 + offX + (Math.random() - 0.5) * 6;
+      const py = r * (cellSize + 1) + cellSize * 0.15 + offY;
+      particle.style.left = px + 'px';
+      particle.style.top = py + 'px';
+
+      gridContainer.appendChild(particle);
+
+      setTimeout(() => { if (particle.parentNode) particle.remove(); }, duration * 1000 + 50);
+    }
+  }
+}
+
+function startChimneyLoop() {
+  stopChimneyLoop();
+  chimneyInterval = setInterval(() => {
+    spawnChimneySmoke();
+  }, 1200); // Spawn check every 1.2s
+}
+
+function stopChimneyLoop() {
+  if (chimneyInterval) { clearInterval(chimneyInterval); chimneyInterval = null; }
+}
+
+function cleanupChimneySmoke() {
+  document.querySelectorAll('.chimney-smoke').forEach(el => el.remove());
+}
+
+// ============================================================
 // LOOP CELEBRATION (Confetti)
 // ============================================================
 function triggerLoopCelebration(anim) {
@@ -3472,6 +3635,7 @@ function startPlay() {
       finished: false,
       inTunnel: false,
       trainObj: train,
+      mooCooldowns: {}, // "row,col" -> timestamp of last moo
     };
 
     anim.path = getPathPoints(piece.type, piece.rotation, anim.entryEdge, anim.exitEdge);
@@ -3561,6 +3725,26 @@ function animateFrame(timestamp) {
   }
 }
 
+function checkCowProximity(anim, trainRow, trainCol) {
+  const now = Date.now();
+  const cooldownMs = 3000; // 3 seconds between moos per cow
+  for (let dr = -1; dr <= 1; dr++) {
+    for (let dc = -1; dc <= 1; dc++) {
+      const r = trainRow + dr, c = trainCol + dc;
+      if (r < 0 || r >= ROWS || c < 0 || c >= COLS) continue;
+      const piece = state.grid[r]?.[c];
+      if (piece && piece.type === 'cow') {
+        const key = r + ',' + c;
+        if (!anim.mooCooldowns[key] || now - anim.mooCooldowns[key] > cooldownMs) {
+          anim.mooCooldowns[key] = now;
+          SFX.moo();
+          return; // Only one moo per cell transition
+        }
+      }
+    }
+  }
+}
+
 function advanceTrainAnim(anim, timestamp) {
   const dt = (timestamp - anim.lastTime) / 1000;
   anim.lastTime = timestamp;
@@ -3607,6 +3791,9 @@ function advanceTrainAnim(anim, timestamp) {
     anim.row = nextPos.row;
     anim.col = nextPos.col;
     anim.cellsVisited++;
+
+    // Check for cows within 1 cell and moo
+    checkCowProximity(anim, nextPos.row, nextPos.col);
 
     if (!anim.loopCompleted && anim.cellsVisited >= 4 &&
         nextPos.row === anim.startRow && nextPos.col === anim.startCol) {
@@ -4487,6 +4674,21 @@ function init() {
   if (!restored) {
     showToast('Drag track pieces to build! 🚂');
   }
+
+  // Start ambient chimney smoke
+  startChimneyLoop();
+
+  // Visibility API: pause/resume ambient animations when tab hidden
+  document.addEventListener('visibilitychange', () => {
+    const grid = document.getElementById('grid');
+    if (document.hidden) {
+      if (grid) grid.classList.add('animations-paused');
+      stopChimneyLoop();
+    } else {
+      if (grid) grid.classList.remove('animations-paused');
+      startChimneyLoop();
+    }
+  });
 }
 
 init();
