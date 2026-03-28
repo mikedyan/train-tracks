@@ -2333,6 +2333,7 @@ function clearAll() {
   state.grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
   state.trains = [];
   state.switchStates = {};
+  cleanupChimneySmoke();
   renderAllCells();
   clearAutoSave();
   showToast('Board cleared!');
