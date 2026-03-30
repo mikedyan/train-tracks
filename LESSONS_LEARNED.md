@@ -96,6 +96,15 @@
 - LESSON-077: Cleanup functions for ambient systems (cleanupChimneySmoke) must be called in clearAll() even if particles self-remove — user expects immediate visual reset.
 - LESSON-078: The .animations-paused class on the grid container pauses all CSS animations in descendants via animation-play-state: paused — cleaner than stopping each individually.
 
+## Audio Infrastructure Patterns (Day 13)
+- LESSON-079: Route ALL sound output through a single masterGainNode for volume control. Never connect directly to ctx.destination.
+- LESSON-080: Use recursive setTimeout instead of setInterval for rhythmic audio — allows interval recalculation each beat without restart.
+- LESSON-081: Delay-based reverb (DelayNode + feedback GainNode) is simpler than ConvolverNode for tunnel echo effects.
+- LESSON-082: Per-cell cooldown objects on anim state (e.g., crossingCooldowns, mooCooldowns) prevent sound spam when trains loop.
+- LESSON-083: Three-state mute (full/low/mute) needs both soundEnabled flag AND masterGain value — soundEnabled gates sound creation, masterGain controls volume.
+- LESSON-084: Audio settings (volume, mute state) should use separate localStorage keys from game state to keep concerns separated.
+- LESSON-085: When multiple trains exist, check isAnyTrainInTunnel() before disabling tunnel reverb — one train exiting shouldn't kill reverb for another still inside.
+
 ## QA Patterns
 - LESSON-015: Random → Play → watch full loop is the core regression test.
 - LESSON-016: Test on both desktop (mouse) and mobile (touch) for any interaction changes.

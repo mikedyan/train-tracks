@@ -669,6 +669,51 @@ Mark each test with the result after running.
   - Visibility API: pauses CSS animations + stops chimney interval when tab hidden
 - Zero regressions across all existing features
 
+## Day 13 — Richer Soundscape (2026-03-30)
+
+### Station Horn Upgrade
+- [x] Station horn plays when train passes station
+- [x] Horn has two distinct tones with frequency sweep
+- [x] Horn uses triangle wave + sawtooth harmonic
+- [x] No audio glitches (gain ramps to 0.001)
+
+### Crossing Bell
+- [x] Crossing bell plays when train enters crossover piece
+- [x] Bell is rapid 4-ding pattern at ~1400Hz
+- [x] Per-crossover cooldown (2s) prevents retriggering
+- [x] Bell sounds distinct from station horn
+
+### Tunnel Echo/Reverb
+- [x] Chug sound has echo when train is inside tunnel
+- [x] Reverb activates on tunnel entry (gain 0.4)
+- [x] Reverb deactivates on tunnel exit (gain 0)
+- [x] Multi-train safe: only disables when no trains in tunnel
+
+### Volume Slider
+- [x] Volume slider visible in controls near mute button
+- [x] Slider adjusts master volume via masterGainNode
+- [x] Volume persists to localStorage
+- [x] Volume slider works independently of mute button
+
+### Three-State Sound Icon
+- [x] Clicking cycles: 🔊 → 🔉 → 🔇 → 🔊
+- [x] 🔊 = full, 🔉 = 30% of slider, 🔇 = muted
+- [x] State persists to localStorage
+- [x] All sounds route through masterGainNode (0 direct ctx.destination connections)
+
+### Day 13 QA Results
+- JavaScript syntax validated: zero parse errors
+- HTML tags balanced (56 open / 56 close)
+- All 13 new functions present
+- All 22 SFX methods present
+- Zero direct ctx.destination connections (all through masterGain)
+- **Audio infrastructure overhaul:** masterGainNode → ctx.destination chain for all sound output
+- **New SFX:** crossingBell (4-ding railroad crossing), upgraded station horn (two-tone sweep)
+- **New systems:** tunnel reverb (delay-based), volume slider, three-state mute
+- **Chug rhythm refined:** setTimeout-based with alternating accent pattern
+- Zero regressions across all existing features
+- Zero bugs found
+
 ### Day 11 QA Results
 - JavaScript syntax validated: zero parse errors
 - All critical functions present
