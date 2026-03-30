@@ -1,0 +1,119 @@
+{
+  "day": 13,
+  "feature": "Richer Soundscape",
+  "date": "2026-03-30",
+  "bugs_to_fix": [],
+  "overview": "Layer the audio for immersion. Upgrade the train horn at stations, add crossing bells at crossover pieces, apply reverb/echo to chug sounds inside tunnels, refine the speed-synced chug rhythm, add a volume slider, and improve the mute button to cycle through 3 states.",
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Upgrade Station Horn — Two-Tone with Frequency Sweep",
+      "description": "Replace the existing station() SFX with a more satisfying two-tone train horn that uses a frequency sweep. The current station sound is a simple ding-ding-ding. The new horn should be a proper descending two-tone blast, like a real train horn approaching a station.",
+      "changes": [
+        "Replace SFX.station() implementation with a two-note horn using frequency ramps (start at ~520Hz sweep down to ~440Hz, second tone at ~392Hz sweep to ~349Hz)",
+        "Use 'triangle' wave for warmer horn timbre, with a slight 'sawtooth' harmonic layer",
+        "Duration ~0.8s total, with the two tones overlapping slightly"
+      ],
+      "acceptance_criteria": [
+        "Station horn plays when train passes station during play",
+        "Horn has two distinct tones with audible frequency sweep",
+        "Horn sounds more satisfying/realistic than old ding-ding",
+        "No audio glitches or clicks"
+      ]
+    },
+    {
+      "id": "T2",
+      "title": "Crossing Bell at Crossover Pieces",
+      "description": "When the train passes through a crossover piece, play a rapid ding-ding-ding crossing bell sound, like a railroad crossing signal.",
+      "changes": [
+        "Add SFX.crossingBell() — rapid high-pitched bell (3-4 dings at ~1400Hz, spaced ~100ms apart)",
+        "In advanceTrainAnim, when train enters a crossover cell, trigger the crossing bell",
+        "Add cooldown to prevent retriggering on same crossover within 2 seconds"
+      ],
+      "acceptance_criteria": [
+        "Crossing bell plays when train enters a crossover piece",
+        "Bell is a rapid ding-ding-ding pattern (3-4 dings)",
+        "Bell doesn't retrigger if train loops back through same crossover within 2s",
+        "Sounds distinct from station horn"
+      ]
+    },
+    {
+      "id": "T3",
+      "title": "Tunnel Echo — Reverb on Chug Inside Tunnel",
+      "description": "When the train is inside a tunnel, the chug sound should have a reverb/echo effect applied, making it sound like the train is in an enclosed space.",
+      "changes": [
+        "Create a ConvolverNode or use delay-based reverb when train is in tunnel",
+        "Modify the chug loop to detect when any active train's anim.inTunnel is true",
+        "Apply a simple delay-feedback reverb (delay ~0.1s, feedback gain ~0.3) to chug sounds when in tunnel",
+        "Smoothly transition reverb in/out as train enters/exits tunnel"
+      ],
+      "acceptance_criteria": [
+        "Chug sound has noticeable echo/reverb when train is inside tunnel",
+        "Echo smoothly starts when entering tunnel and fades when exiting",
+        "No audio artifacts or glitches during transition",
+        "Reverb only applies to chug, not to other sounds"
+      ]
+    },
+    {
+      "id": "T4",
+      "title": "Refine Speed-Synced Chug Rhythm",
+      "description": "The current chug rhythm exists but could be more satisfying. Refine the timing to create a more rhythmic choo-choo-choo-choo pattern that feels organic.",
+      "changes": [
+        "Adjust chug interval calculation: use a more musical formula that maintains rhythmic feel across speeds",
+        "Add subtle pitch variation between alternating chugs (higher/lower)",
+        "Ensure the chug rhythm restarts cleanly when speed changes mid-play"
+      ],
+      "acceptance_criteria": [
+        "Chug rhythm sounds like a real steam train (choo-choo pattern)",
+        "Rhythm stays musical at all speed settings (0.3x to 4x)",
+        "Speed slider changes are reflected immediately",
+        "No double-triggering or missed beats when speed changes"
+      ]
+    },
+    {
+      "id": "T5",
+      "title": "Volume Slider in Controls",
+      "description": "Add a volume slider next to the mute button that controls the master volume of all sound effects.",
+      "changes": [
+        "Add a range input (0 to 1, step 0.05) in the controls bar, styled to match the speed slider",
+        "Create a masterGain node in the audio context that all sounds route through",
+        "Connect all sound output to masterGain before ctx.destination",
+        "Persist volume level to localStorage",
+        "Restore volume on page load"
+      ],
+      "acceptance_criteria": [
+        "Volume slider visible in controls near mute button",
+        "Slider adjusts volume of all sound effects in real-time",
+        "Volume level persists across page refreshes",
+        "Volume slider works independently of mute button",
+        "Mute overrides slider (mute = silent regardless of slider position)"
+      ]
+    },
+    {
+      "id": "T6",
+      "title": "Three-State Sound Icon (🔊→🔉→🔇)",
+      "description": "Upgrade the mute button to cycle through 3 volume states instead of just on/off: full volume, reduced volume, and muted.",
+      "changes": [
+        "Change toggleMute() to cycle through 3 states: full (🔊), low (🔉), mute (🔇)",
+        "Full = masterGain at slider value, Low = masterGain at 0.3x slider value, Mute = 0",
+        "Update the button text/emoji for each state",
+        "Save state to localStorage"
+      ],
+      "acceptance_criteria": [
+        "Clicking sound button cycles: 🔊 → 🔉 → 🔇 → 🔊",
+        "🔊 = full volume, 🔉 = reduced volume (30%), 🔇 = muted",
+        "State persists across page refreshes",
+        "Volume slider still works in full and low modes"
+      ]
+    }
+  ],
+  "files_to_modify": ["index.html"],
+  "testing_focus": [
+    "All new sounds play without glitches",
+    "Volume slider controls all audio",
+    "Mute states work correctly",
+    "No regression on existing sounds (place, rotate, remove, whistle, crash, etc.)",
+    "Performance: no audio context issues with many sounds",
+    "Tunnel reverb transitions smoothly"
+  ]
+}

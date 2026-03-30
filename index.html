@@ -986,6 +986,7 @@ body.night-mode .cell.has-tunnel svg {
         🐢 <input type="range" id="speed-slider" min="0.3" max="4" step="0.1" value="1.2"> 🐇
       </div>
       <button class="btn" id="btn-mute" onclick="toggleMute()" style="background:#78909C;color:white;padding:8px 12px;">🔊</button>
+      <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.8" oninput="onVolumeChange(event)" style="width:50px;accent-color:#78909C;" title="Volume">
       <button class="btn btn-night" id="btn-night" onclick="toggleNightMode()" style="padding:8px 12px;">☀️</button>
       <button class="btn" onclick="openSaveModal()" style="background:#607D8B;color:white;box-shadow:0 3px 10px rgba(96,125,139,0.3);">💾 Save</button>
     </div>
@@ -1011,11 +1012,37 @@ body.night-mode .cell.has-tunnel svg {
 // ============================================================
 let audioCtx = null;
 let soundEnabled = true;
+let masterGainNode = null;
+let volumeLevel = 0.8;
+let soundState = 'full'; // 'full' | 'low' | 'mute'
+const VOLUME_KEY = 'trainTracks_volume';
+const SOUND_STATE_KEY = 'trainTracks_soundState';
 
 function getAudioCtx() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGainNode = audioCtx.createGain();
+    masterGainNode.connect(audioCtx.destination);
+    applyVolumeState();
+  }
   if (audioCtx.state === 'suspended') audioCtx.resume();
   return audioCtx;
+}
+
+function getMasterGain() {
+  getAudioCtx(); // ensures masterGainNode is created
+  return masterGainNode;
+}
+
+function applyVolumeState() {
+  if (!masterGainNode) return;
+  if (soundState === 'mute') {
+    masterGainNode.gain.value = 0;
+  } else if (soundState === 'low') {
+    masterGainNode.gain.value = volumeLevel * 0.3;
+  } else {
+    masterGainNode.gain.value = volumeLevel;
+  }
 }
 
 function playNote(freq, duration, type = 'sine', volume = 0.15, delay = 0) {
@@ -1028,7 +1055,7 @@ function playNote(freq, duration, type = 'sine', volume = 0.15, delay = 0) {
   gain.gain.setValueAtTime(volume, ctx.currentTime + delay);
   gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + duration);
   osc.connect(gain);
-  gain.connect(ctx.destination);
+  gain.connect(getMasterGain());
   osc.start(ctx.currentTime + delay);
   osc.stop(ctx.currentTime + delay + duration);
 }
@@ -1051,7 +1078,7 @@ function playNoise(duration, volume = 0.08) {
   gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
   src.connect(filter);
   filter.connect(gain);
-  gain.connect(ctx.destination);
+  gain.connect(getMasterGain());
   src.start();
   src.stop(ctx.currentTime + duration);
 }
@@ -1088,10 +1115,49 @@ const SFX = {
     playNoise(0.06, 0.05);
   },
   station() {
-    // Station ding-ding
-    playNote(1047, 0.15, 'sine', 0.12);
-    playNote(1047, 0.15, 'sine', 0.10, 0.2);
-    playNote(1319, 0.2, 'sine', 0.08, 0.4);
+    // Two-tone train horn with frequency sweep at stations
+    if (!soundEnabled) return;
+    const ctx = getAudioCtx();
+    const mg = getMasterGain();
+    // First horn tone: triangle wave with downward sweep
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = 'triangle';
+    osc1.frequency.setValueAtTime(520, ctx.currentTime);
+    osc1.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.4);
+    gain1.gain.setValueAtTime(0.12, ctx.currentTime);
+    gain1.gain.setValueAtTime(0.12, ctx.currentTime + 0.25);
+    gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+    osc1.connect(gain1);
+    gain1.connect(mg);
+    osc1.start(ctx.currentTime);
+    osc1.stop(ctx.currentTime + 0.45);
+    // Second horn tone: lower, overlapping
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(392, ctx.currentTime + 0.15);
+    osc2.frequency.exponentialRampToValueAtTime(349, ctx.currentTime + 0.65);
+    gain2.gain.setValueAtTime(0, ctx.currentTime);
+    gain2.gain.setValueAtTime(0.1, ctx.currentTime + 0.15);
+    gain2.gain.setValueAtTime(0.1, ctx.currentTime + 0.45);
+    gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.7);
+    osc2.connect(gain2);
+    gain2.connect(mg);
+    osc2.start(ctx.currentTime + 0.15);
+    osc2.stop(ctx.currentTime + 0.7);
+    // Harmonic overtone for richness
+    const osc3 = ctx.createOscillator();
+    const gain3 = ctx.createGain();
+    osc3.type = 'sawtooth';
+    osc3.frequency.setValueAtTime(520, ctx.currentTime);
+    osc3.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.4);
+    gain3.gain.setValueAtTime(0.03, ctx.currentTime);
+    gain3.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    osc3.connect(gain3);
+    gain3.connect(mg);
+    osc3.start(ctx.currentTime);
+    osc3.stop(ctx.currentTime + 0.4);
   },
   crash() {
     // Dead end / disconnect
@@ -1162,6 +1228,7 @@ const SFX = {
     if (!soundEnabled) return;
     const ctx = getAudioCtx();
     if (!ctx) return;
+    const mg = getMasterGain();
     // Wind whoosh using filtered noise
     const bufferSize = ctx.sampleRate * 0.4;
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
@@ -1179,7 +1246,7 @@ const SFX = {
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
     src.connect(filter);
     filter.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(mg);
     src.start();
     src.stop(ctx.currentTime + 0.4);
     // Subtle low tone for depth
@@ -1190,6 +1257,7 @@ const SFX = {
     if (!soundEnabled) return;
     const ctx = getAudioCtx();
     if (!ctx) return;
+    const mg = getMasterGain();
     const bufferSize = ctx.sampleRate * 0.35;
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const data = buffer.getChannelData(0);
@@ -1206,7 +1274,7 @@ const SFX = {
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
     src.connect(filter);
     filter.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(mg);
     src.start();
     src.stop(ctx.currentTime + 0.35);
     // Bright exit tone
@@ -1217,6 +1285,7 @@ const SFX = {
     if (!soundEnabled) return;
     const ctx = getAudioCtx();
     if (!ctx) return;
+    const mg = getMasterGain();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
@@ -1228,7 +1297,7 @@ const SFX = {
     gain.gain.setValueAtTime(0.08, ctx.currentTime + 0.4);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.9);
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(mg);
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.9);
     // Nasal overtone for realism
@@ -1241,9 +1310,40 @@ const SFX = {
     gain2.gain.setValueAtTime(0.03, ctx.currentTime);
     gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.7);
     osc2.connect(gain2);
-    gain2.connect(ctx.destination);
+    gain2.connect(mg);
     osc2.start(ctx.currentTime);
     osc2.stop(ctx.currentTime + 0.7);
+  },
+  crossingBell() {
+    // Rapid ding-ding-ding railroad crossing bell
+    if (!soundEnabled) return;
+    const ctx = getAudioCtx();
+    const mg = getMasterGain();
+    const bellFreq = 1400;
+    for (let i = 0; i < 4; i++) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = bellFreq + (i % 2 === 0 ? 0 : 30); // slight alternation
+      const startTime = ctx.currentTime + i * 0.1;
+      gain.gain.setValueAtTime(0.08, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.08);
+      osc.connect(gain);
+      gain.connect(mg);
+      osc.start(startTime);
+      osc.stop(startTime + 0.09);
+      // Metallic overtone
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.value = bellFreq * 2.2;
+      gain2.gain.setValueAtTime(0.025, startTime);
+      gain2.gain.exponentialRampToValueAtTime(0.001, startTime + 0.06);
+      osc2.connect(gain2);
+      gain2.connect(mg);
+      osc2.start(startTime);
+      osc2.stop(startTime + 0.07);
+    }
   },
   boing(speed = 1) {
     // Comical bouncy crash — spring-like frequency sweep
@@ -1251,6 +1351,7 @@ const SFX = {
     const vol = Math.min(0.08 + speed * 0.04, 0.22);
     const ctx = getAudioCtx();
     if (!ctx || !soundEnabled) return;
+    const mg = getMasterGain();
 
     // Main boing: sine sweep high→low→mid
     const osc = ctx.createOscillator();
@@ -1263,7 +1364,7 @@ const SFX = {
     gain.gain.setValueAtTime(vol, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(mg);
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.45);
 
@@ -1276,7 +1377,7 @@ const SFX = {
     gain2.gain.setValueAtTime(vol * 0.4, ctx.currentTime);
     gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
     osc2.connect(gain2);
-    gain2.connect(ctx.destination);
+    gain2.connect(mg);
     osc2.start(ctx.currentTime);
     osc2.stop(ctx.currentTime + 0.35);
 
@@ -1287,22 +1388,98 @@ const SFX = {
   }
 };
 
-// Chug rhythm during play
+// Chug rhythm during play — refined steam train pattern
 let chugInterval = null;
+let chugBeat = 0;
+let tunnelReverbNode = null;
+let tunnelReverbGain = null;
+
+function createTunnelReverb() {
+  if (tunnelReverbNode) return;
+  const ctx = getAudioCtx();
+  const mg = getMasterGain();
+  // Simple delay-based reverb for tunnel echo
+  tunnelReverbNode = ctx.createDelay(0.2);
+  tunnelReverbNode.delayTime.value = 0.1;
+  tunnelReverbGain = ctx.createGain();
+  tunnelReverbGain.gain.value = 0; // off by default
+  const feedback = ctx.createGain();
+  feedback.gain.value = 0.3;
+  tunnelReverbNode.connect(tunnelReverbGain);
+  tunnelReverbGain.connect(mg);
+  tunnelReverbNode.connect(feedback);
+  feedback.connect(tunnelReverbNode);
+}
+
+function isAnyTrainInTunnel() {
+  return animStates.some(a => a.inTunnel && !a.crashing && !a.finished);
+}
+
+function playChugWithEcho() {
+  if (!soundEnabled) return;
+  const ctx = getAudioCtx();
+  const mg = getMasterGain();
+
+  // Create chug noise
+  const bufferSize = ctx.sampleRate * 0.06;
+  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1);
+  const src = ctx.createBufferSource();
+  src.buffer = buffer;
+  const gain = ctx.createGain();
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.value = 800;
+  filter.Q.value = 0.5;
+  gain.gain.setValueAtTime(0.05, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+  src.connect(filter);
+  filter.connect(gain);
+  gain.connect(mg);
+
+  // Route through tunnel reverb if active
+  if (tunnelReverbNode && isAnyTrainInTunnel()) {
+    gain.connect(tunnelReverbNode);
+  }
+
+  src.start();
+  src.stop(ctx.currentTime + 0.06);
+}
+
 function startChugLoop() {
   stopChugLoop();
-  let beat = 0;
-  chugInterval = setInterval(() => {
+  chugBeat = 0;
+  createTunnelReverb();
+
+  const scheduleNext = () => {
     if (!state.playing || !soundEnabled) { stopChugLoop(); return; }
     const speed = parseFloat(document.getElementById('speed-slider').value) || 1;
-    SFX.chug();
-    // Alternate louder/softer for rhythm
-    if (beat % 2 === 0) playNote(100, 0.04, 'square', 0.03);
-    beat++;
-  }, Math.max(80, 300 / (parseFloat(document.getElementById('speed-slider')?.value) || 1)));
+
+    playChugWithEcho();
+
+    // Alternating accent: stronger beat on even, weaker on odd (choo-CHOO pattern)
+    const accentPitch = chugBeat % 2 === 0 ? 90 : 110;
+    const accentVol = chugBeat % 2 === 0 ? 0.025 : 0.04;
+    playNote(accentPitch, 0.04, 'square', accentVol);
+
+    chugBeat++;
+
+    // Rhythmic interval: keeps a musical feel across speeds
+    const baseInterval = 280 / speed;
+    const interval = Math.max(70, Math.min(500, baseInterval));
+    chugInterval = setTimeout(scheduleNext, interval);
+  };
+
+  scheduleNext();
 }
+
 function stopChugLoop() {
-  if (chugInterval) { clearInterval(chugInterval); chugInterval = null; }
+  if (chugInterval) { clearTimeout(chugInterval); chugInterval = null; }
+  // Fade out tunnel reverb
+  if (tunnelReverbGain) {
+    tunnelReverbGain.gain.value = 0;
+  }
 }
 
 // ============================================================
@@ -3810,6 +3987,17 @@ function advanceTrainAnim(anim, timestamp) {
       SFX.station();
       showToast('🚉 Toot toot!');
     }
+
+    // Crossing bell at crossover pieces (with cooldown)
+    if (nextPiece.type === 'crossover') {
+      const crossKey = nextPos.row + ',' + nextPos.col;
+      const now = Date.now();
+      if (!anim.crossingCooldowns) anim.crossingCooldowns = {};
+      if (!anim.crossingCooldowns[crossKey] || now - anim.crossingCooldowns[crossKey] > 2000) {
+        anim.crossingCooldowns[crossKey] = now;
+        SFX.crossingBell();
+      }
+    }
   }
 
   renderTrainAtProgress(anim);
@@ -3862,13 +4050,17 @@ function renderTrainAtProgress(anim) {
     }
   }
 
-  // Trigger tunnel enter/exit sounds
+  // Trigger tunnel enter/exit sounds + reverb
   if (isInTunnel && !anim.inTunnel) {
     anim.inTunnel = true;
     SFX.tunnelEnter();
+    // Enable tunnel reverb
+    if (tunnelReverbGain) tunnelReverbGain.gain.value = 0.4;
   } else if (!isInTunnel && anim.inTunnel) {
     anim.inTunnel = false;
     SFX.tunnelExit();
+    // Disable tunnel reverb if no trains in tunnel
+    if (tunnelReverbGain && !isAnyTrainInTunnel()) tunnelReverbGain.gain.value = 0;
   }
 
   anim.trainEl.style.opacity = locoOpacity;
@@ -3973,15 +4165,53 @@ function toggleSidebar() {
 }
 
 function toggleMute() {
-  soundEnabled = !soundEnabled;
-  document.getElementById('btn-mute').textContent = soundEnabled ? '🔊' : '🔇';
-  if (!soundEnabled) stopChugLoop();
+  // Cycle: full → low → mute → full
+  if (soundState === 'full') {
+    soundState = 'low';
+    soundEnabled = true;
+  } else if (soundState === 'low') {
+    soundState = 'mute';
+    soundEnabled = false;
+    stopChugLoop();
+  } else {
+    soundState = 'full';
+    soundEnabled = true;
+  }
+  const icons = { full: '🔊', low: '🔉', mute: '🔇' };
+  document.getElementById('btn-mute').textContent = icons[soundState];
+  applyVolumeState();
+  try { localStorage.setItem(SOUND_STATE_KEY, soundState); } catch (e) {}
+}
+
+function onVolumeChange(e) {
+  volumeLevel = parseFloat(e.target.value);
+  applyVolumeState();
+  try { localStorage.setItem(VOLUME_KEY, String(volumeLevel)); } catch (e) {}
+}
+
+function restoreAudioSettings() {
+  try {
+    const savedVol = localStorage.getItem(VOLUME_KEY);
+    if (savedVol !== null) volumeLevel = parseFloat(savedVol);
+    const savedState = localStorage.getItem(SOUND_STATE_KEY);
+    if (savedState && ['full', 'low', 'mute'].includes(savedState)) {
+      soundState = savedState;
+      soundEnabled = savedState !== 'mute';
+    }
+  } catch (e) {}
+  const icons = { full: '🔊', low: '🔉', mute: '🔇' };
+  const muteBtn = document.getElementById('btn-mute');
+  if (muteBtn) muteBtn.textContent = icons[soundState];
+  const volSlider = document.getElementById('volume-slider');
+  if (volSlider) volSlider.value = volumeLevel;
 }
 
 function stopPlay() {
   stopChugLoop();
   stopSmokeLoop();
   cleanupSmokeParticles();
+  // Clean up tunnel reverb
+  if (tunnelReverbGain) tunnelReverbGain.gain.value = 0;
   // Clean up crash particles
   document.querySelectorAll('.crash-star, .crash-dust').forEach(el => el.remove());
   state.playing = false;
@@ -4635,6 +4865,9 @@ function init() {
 
   // Restore night mode preference
   restoreNightMode();
+
+  // Restore audio settings
+  restoreAudioSettings();
 
   // Restore saved state before first render
   const restored = autoLoad();
