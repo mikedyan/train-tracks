@@ -1,0 +1,126 @@
+{
+  "day": 14,
+  "title": "Keyboard Shortcuts + Undo/Redo Polish",
+  "date": "2026-03-31",
+  "bugs_to_fix": [],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Redo Stack Implementation",
+      "description": "Add redo capability mirroring the existing undo architecture. Redo stack clears on any new action.",
+      "changes": [
+        "Add state.redoStack = [] to state initialization",
+        "Modify saveUndo() to clear redoStack on new actions",
+        "Modify undo() to push current state onto redoStack before restoring",
+        "Add redo() function that pops from redoStack, pushes current to undoStack, then restores",
+        "Add Redo button in controls bar after Undo button"
+      ],
+      "acceptance_criteria": [
+        "Redo reverses the last undo operation",
+        "Multiple sequential undos can all be redone in order",
+        "Any new action (place, remove, rotate) clears the redo stack",
+        "Redo button is disabled when redo stack is empty",
+        "Redo button visible in controls bar with ↪️ icon"
+      ]
+    },
+    {
+      "id": "T2",
+      "title": "Keyboard Event Listener + Core Shortcuts",
+      "description": "Add global keydown handler with guards for modals and input focus. Implement Space, R, Z/Ctrl+Z for undo, Shift+Z/Ctrl+Shift+Z for redo, N for night mode.",
+      "changes": [
+        "Add document keydown event listener in init()",
+        "Guard: skip if target is input/textarea, or if save modal is open",
+        "Space → togglePlay() + e.preventDefault()",
+        "R → generateRandomTrack()",
+        "Z or Ctrl+Z → undo()",
+        "Shift+Z or Ctrl+Shift+Z → redo()",
+        "N → toggleNightMode()",
+        "Escape → close save modal if open, deselect tool if selected"
+      ],
+      "acceptance_criteria": [
+        "Space toggles play/stop",
+        "R generates random track",
+        "Z/Ctrl+Z undoes last action",
+        "Shift+Z/Ctrl+Shift+Z redoes",
+        "N toggles night mode",
+        "Escape closes open modal",
+        "Shortcuts don't fire when typing in save slot name input",
+        "Shortcuts don't fire when save modal is open (except Escape)"
+      ]
+    },
+    {
+      "id": "T3",
+      "title": "Quick-Select Track Tool (Number Keys 1-7)",
+      "description": "Pressing 1-7 selects a track type from the palette. Clicking an empty grid cell then places that type with auto-connect rotation. ESC or pressing same key deselects.",
+      "changes": [
+        "Add selectedTool variable (null or type string)",
+        "Map: 1=straight, 2=curve, 3=tjunction, 4=crossover, 5=bridge, 6=tunnel, 7=station",
+        "When selectedTool is set, highlight corresponding palette piece with a CSS class (.palette-selected)",
+        "Modify onGridDown: if selectedTool is set and cell is empty (or scenery for tracks), place selectedTool with auto-connect",
+        "If selectedTool is set and click is on occupied track cell, still rotate",
+        "ESC clears selectedTool",
+        "Starting a drag clears selectedTool",
+        "Add CSS for .palette-selected highlight"
+      ],
+      "acceptance_criteria": [
+        "Pressing 1-7 highlights the corresponding palette piece",
+        "Clicking empty cell places the selected track type",
+        "Auto-connect rotation works for keyboard-placed pieces",
+        "Pressing same number again deselects",
+        "ESC deselects",
+        "Starting a palette drag clears selection",
+        "Visual highlight on selected palette piece is clear and visible"
+      ]
+    },
+    {
+      "id": "T4",
+      "title": "Delete Key for Hovered Cell Removal",
+      "description": "Track which grid cell the cursor is hovering over. Pressing Delete or Backspace removes that cell's contents.",
+      "changes": [
+        "Add hoveredCell = null variable to track current mouse-over cell",
+        "Add mouseover/mouseleave tracking on grid cells",
+        "In keyboard handler: Delete/Backspace → handleRemoveCell(hoveredCell.row, hoveredCell.col)",
+        "Guard: only if hoveredCell is set and not playing"
+      ],
+      "acceptance_criteria": [
+        "Hovering over a cell and pressing Delete removes its contents",
+        "Backspace also works as Delete alternative",
+        "Works for track, scenery, and trains",
+        "Does nothing when not hovering over a cell",
+        "Does nothing during play mode"
+      ]
+    },
+    {
+      "id": "T5",
+      "title": "Keyboard Shortcuts Overlay",
+      "description": "Add a ⌨️ button in controls that shows a modal listing all keyboard shortcuts.",
+      "changes": [
+        "Add ⌨️ button in #controls bar",
+        "Add #shortcuts-overlay and #shortcuts-modal HTML (similar to save modal)",
+        "Add CSS for the overlay/modal styling",
+        "List all shortcuts in a clean two-column layout",
+        "Close on overlay click, close button, or ESC key",
+        "Add ? key as shortcut to open the overlay"
+      ],
+      "acceptance_criteria": [
+        "⌨️ button visible in controls bar",
+        "Clicking opens a modal listing all shortcuts",
+        "All shortcuts are listed accurately",
+        "Modal closes via close button, overlay click, or ESC",
+        "? key opens the shortcuts overlay",
+        "Modal is readable and well-formatted"
+      ]
+    }
+  ],
+  "testing_focus": [
+    "Verify all keyboard shortcuts work correctly",
+    "Verify shortcuts don't fire in text inputs (save slot names)",
+    "Verify redo correctly reverses undo operations",
+    "Verify redo stack clears on new actions",
+    "Test quick-select + click placement workflow",
+    "Check for conflicts with browser defaults (Ctrl+Z handled by browser too)",
+    "Regression: all existing drag-drop, play, save/load still work",
+    "Regression: sounds still play correctly",
+    "Regression: night mode transitions still work"
+  ]
+}
