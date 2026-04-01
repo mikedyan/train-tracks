@@ -112,3 +112,16 @@
 - LESSON-023: Verify all core functions still exist after edits (use automated grep/node parse check).
 - LESSON-024: Check HTML tag balance (open vs close tags) as a quick structural integrity test.
 - LESSON-043: When batch-testing `generateRandomTrack()` in automated tests, each call's setTimeout animation can overlap with the next call. Test single generations with sufficient delay (2-3s) for reliable results. Batch testing requires long delays between runs.
+
+## Duplicate Code Prevention (Day 15)
+- LESSON-086: ALWAYS run `grep -c` for key identifiers after building to detect duplicates. Day 14 had 6x duplicated code blocks that broke JS execution.
+- LESSON-087: Use `node -e "new Function(scriptContent)"` parse check after every edit to catch syntax errors immediately.
+
+## Puzzle System Patterns (Day 15)
+- LESSON-088: When adding custom CSS classes to cells, add/remove them inside `renderCell()` — not externally. External class application gets wiped on re-render.
+- LESSON-089: Puzzle piece counting must be bidirectional: decrement on placement, increment on removal/undo.
+- LESSON-090: Bridge and crossover pieces have 4 connections in `getConnections()` but only need 2 matched through-routes. Puzzle check must tolerate unmatched connections on these types.
+- LESSON-091: Verify puzzle solvability with automated connection-checking script before shipping. Manual verification is error-prone with rotation math.
+- LESSON-092: Curve rotation reference: rot 0=N+E, rot 90=E+S, rot 180=S+W, rot 270=W+N. Use `rotateDir()` for correctness.
+- LESSON-093: When puzzle mode modifies game state, save sandbox state with `serializeState()` BEFORE clearing, and restore with `deserializeState()` on exit.
+- LESSON-094: Block sandbox-specific operations (Clear, Random, AutoSave) during puzzle mode to prevent state corruption.

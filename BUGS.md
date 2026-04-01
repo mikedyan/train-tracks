@@ -88,3 +88,18 @@ Only logged here if a bug was found, for tracking purposes.
 - **Severity:** Low (cosmetic — particles self-clean in ~2s, but clearAll should be immediate)
 - **Root cause:** `cleanupChimneySmoke()` function was defined but never invoked during board clear operations.
 - **Fix applied:** Added `cleanupChimneySmoke()` call in `clearAll()`.
+
+### BUG-011 | 🟢 FIXED | 6x duplicate code blocks from Day 14
+- **Found:** Tue Apr 1 — Factory Day 15
+- **Fixed:** Tue Apr 1 (Day 15 critical fix)
+- **Severity:** Critical (all JS execution prevented by redeclaration errors)
+- **Root cause:** Day 14 builder inserted keyboard shortcuts code 6 times across CSS, HTML, and JS sections.
+- **Fix applied:** Removed 5 duplicate copies of each section (1553 lines total).
+- **Verification:** JS parses cleanly, all keyboard shortcuts functional.
+
+### BUG-012 | 🟢 FIXED | Locked cell class not persisting in puzzle mode
+- **Found:** Tue Apr 1 — QA Day 15
+- **Fixed:** Tue Apr 1 (Day 15 QA fix)
+- **Severity:** Low (visual — lock icons not visible, but locking still works via JS guards)
+- **Root cause:** `renderCell()` removes custom classes but didn't re-apply `locked-cell`. The class was applied once in `loadPuzzle()` but any subsequent `renderCell()` call stripped it.
+- **Fix applied:** Added `isPuzzleLocked()` check in `renderCell()` to re-apply `locked-cell` class on every render.
