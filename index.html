@@ -1050,6 +1050,53 @@ body.night-mode .shortcut-desc {
 }
 .shortcut-section:first-child { margin-top: 0; }
 
+
+/* PUZZLE MODE */
+#puzzle-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6); z-index: 300;
+  display: none; align-items: center; justify-content: center;
+  backdrop-filter: blur(3px);
+}
+#puzzle-overlay.open { display: flex; }
+#puzzle-modal {
+  background: #FFF; border-radius: 16px; padding: 28px;
+  width: 480px; max-width: 92vw; max-height: 85vh;
+  overflow-y: auto; box-shadow: 0 8px 40px rgba(0,0,0,0.3); position: relative;
+}
+body.night-mode #puzzle-modal { background: #263238; color: #ECEFF1; }
+#puzzle-modal h2 { font-size: 22px; color: #3E2723; margin-bottom: 16px; text-align: center; }
+body.night-mode #puzzle-modal h2 { color: #ECEFF1; }
+#puzzle-modal .close-btn { position: absolute; top: 12px; right: 14px; background: none; border: none; font-size: 22px; cursor: pointer; color: #999; line-height: 1; }
+#puzzle-modal .close-btn:hover { color: #333; }
+.puzzle-card { background: linear-gradient(135deg, #F5F5F5, #EEEEEE); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease; border: 2px solid transparent; }
+body.night-mode .puzzle-card { background: linear-gradient(135deg, #37474F, #2C3E44); }
+.puzzle-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.15); border-color: #FFC107; }
+.puzzle-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.puzzle-card-title { font-weight: 700; font-size: 15px; color: #3E2723; }
+body.night-mode .puzzle-card-title { color: #ECEFF1; }
+.puzzle-difficulty { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+.difficulty-easy { background: #C8E6C9; color: #2E7D32; }
+.difficulty-medium { background: #FFF9C4; color: #F57F17; }
+.difficulty-hard { background: #FFCDD2; color: #C62828; }
+.puzzle-card-desc { font-size: 12px; color: #757575; line-height: 1.4; }
+body.night-mode .puzzle-card-desc { color: #90A4AE; }
+.puzzle-card-complete { font-size: 12px; color: #4CAF50; font-weight: 700; margin-top: 4px; }
+#puzzle-hud { display: none; position: fixed; top: 8px; left: 50%; transform: translateX(-50%); z-index: 200; background: rgba(255,255,255,0.95); border-radius: 12px; padding: 8px 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); font-size: 13px; gap: 12px; align-items: center; backdrop-filter: blur(5px); }
+#puzzle-hud.active { display: flex; }
+body.night-mode #puzzle-hud { background: rgba(38,50,56,0.95); color: #ECEFF1; }
+#puzzle-hud .puzzle-name { font-weight: 700; font-size: 14px; }
+#puzzle-hud .puzzle-pieces { display: flex; gap: 6px; flex-wrap: wrap; }
+.piece-badge { display: inline-flex; align-items: center; gap: 3px; background: #E8F5E9; color: #2E7D32; padding: 2px 8px; border-radius: 8px; font-size: 11px; font-weight: 700; }
+.piece-badge.depleted { background: #FFEBEE; color: #C62828; opacity: 0.6; }
+body.night-mode .piece-badge { background: #1B5E20; color: #A5D6A7; }
+body.night-mode .piece-badge.depleted { background: #B71C1C; color: #EF9A9A; }
+#puzzle-hud .btn-check-puzzle { background: #4CAF50; color: white; border: none; border-radius: 8px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'Nunito', sans-serif; }
+#puzzle-hud .btn-check-puzzle:hover { background: #43A047; }
+#puzzle-hud .btn-back-sandbox { background: #FF9800; color: white; border: none; border-radius: 8px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'Nunito', sans-serif; }
+#puzzle-hud .btn-back-sandbox:hover { background: #FB8C00; }
+.cell.locked-cell::after { content: '\1F512'; position: absolute; top: 2px; right: 2px; font-size: 10px; z-index: 20; opacity: 0.6; pointer-events: none; }
+.cell.locked-cell { cursor: not-allowed !important; }
 </style>
 </head>
 <body>
@@ -1103,6 +1150,7 @@ body.night-mode .shortcut-desc {
       <button class="btn btn-night" id="btn-night" onclick="toggleNightMode()" style="padding:8px 12px;">☀️</button>
       <button class="btn" onclick="openSaveModal()" style="background:#607D8B;color:white;box-shadow:0 3px 10px rgba(96,125,139,0.3);">💾 Save</button>
       <button class="btn" onclick="openShortcutsModal()" style="background:#546E7A;color:white;padding:8px 12px;" title="Keyboard shortcuts">⌨️</button>
+      <button class="btn" onclick="openPuzzleModal()" style="background:#FF5722;color:white;box-shadow:0 3px 10px rgba(255,87,34,0.3);">🧩 Puzzles</button>
     </div>
   </div>
 </div>
@@ -1143,6 +1191,23 @@ body.night-mode .shortcut-desc {
     <div class="shortcut-section">Other</div>
     <div class="shortcut-row"><span class="shortcut-desc">Show shortcuts</span><span class="shortcut-key">?</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Close modal / Deselect</span><span class="shortcut-key">Esc</span></div>
+  </div>
+</div>
+
+<!-- Puzzle HUD -->
+<div id="puzzle-hud">
+  <span class="puzzle-name" id="puzzle-hud-name"></span>
+  <div class="puzzle-pieces" id="puzzle-hud-pieces"></div>
+  <button class="btn-check-puzzle" onclick="checkPuzzleSolution()">✅ Check</button>
+  <button class="btn-back-sandbox" onclick="exitPuzzle()">🏖️ Sandbox</button>
+</div>
+
+<!-- Puzzle Select Modal -->
+<div id="puzzle-overlay" onclick="closePuzzleModalOutside(event)">
+  <div id="puzzle-modal">
+    <button class="close-btn" onclick="closePuzzleModal()">✕</button>
+    <h2>🧩 Challenge Puzzles</h2>
+    <div id="puzzle-list"></div>
   </div>
 </div>
 
@@ -2596,6 +2661,10 @@ function showAutoConnectPulse(row, col) {
 }
 
 function placePiece(row, col, type, rotation = 0) {
+  if (isPuzzleLocked(row, col)) { showToast('🔒 Locked!'); return; }
+  if (puzzleState.active && !SCENERY_TYPES.includes(type) && !canPlacePuzzlePiece(type)) {
+    showToast('❌ No more ' + type + ' pieces!'); return;
+  }
   saveUndo();
   if (type !== 'tjunction') delete state.switchStates[row + ',' + col];
   state.grid[row][col] = { type, rotation };
@@ -2618,10 +2687,13 @@ function placePiece(row, col, type, rotation = 0) {
     }
   });
   renderStaticCars();
+  if (puzzleState.active && !SCENERY_TYPES.includes(type)) puzzlePiecePlaced(type);
   autoSave();
 }
 
 function removePiece(row, col) {
+  if (isPuzzleLocked(row, col)) { showToast('🔒 Locked!'); return; }
+  const _removedPiece = state.grid[row][col];
   saveUndo();
   SFX.remove();
   delete state.switchStates[row + ',' + col];
@@ -2640,10 +2712,12 @@ function removePiece(row, col) {
     }
   });
   renderStaticCars();
+  if (puzzleState.active && _removedPiece && !SCENERY_TYPES.includes(_removedPiece.type)) puzzlePieceRemoved(_removedPiece.type);
   autoSave();
 }
 
 function rotatePiece(row, col) {
+  if (isPuzzleLocked(row, col)) return;
   const piece = state.grid[row][col];
   if (!piece || SCENERY_TYPES.includes(piece.type)) return;
   saveUndo();
@@ -2684,6 +2758,7 @@ function placeTrain(row, col, color) {
 }
 
 function clearAll() {
+  if (puzzleState.active) { showToast('🧩 Exit puzzle first!'); return; }
   if (state.playing) stopPlay();
   saveUndo();
   SFX.clear();
@@ -2717,6 +2792,7 @@ function showPoofEffect(row, col) {
 
 function handleRemoveCell(row, col) {
   if (state.playing) return;
+  if (isPuzzleLocked(row, col)) { showToast('🔒 Locked!'); return; }
 
   // Check if this cell has a car from any train (takes priority over track removal)
   for (const train of state.trains) {
@@ -4515,6 +4591,7 @@ function stopPlay() {
 // RANDOM TRACK GENERATOR (Feature #4)
 // ============================================================
 function generateRandomTrack() {
+  if (puzzleState.active) { showToast('🧩 Exit puzzle first!'); return; }
   if (state.playing) stopPlay();
   
   // Clear board
@@ -4911,6 +4988,7 @@ function deserializeState(json) {
 }
 
 function autoSave() {
+  if (puzzleState.active) return;
   try {
     localStorage.setItem(AUTOSAVE_KEY, serializeState());
   } catch (e) { /* localStorage full or unavailable */ }
@@ -5195,6 +5273,7 @@ function handleKeyDown(e) {
 
   // Escape: close modals, deselect tool
   if (e.key === 'Escape') {
+    if (document.getElementById('puzzle-overlay').classList.contains('open')) { closePuzzleModal(); return; }
     if (document.getElementById('shortcuts-overlay').classList.contains('open')) {
       closeShortcutsModal();
       return;
@@ -5304,6 +5383,284 @@ function closeShortcutsModalOutside(e) {
   }
 }
 
+
+// ============================================================
+// PUZZLE SYSTEM
+// ============================================================
+
+const PUZZLES = [
+  {
+    // Puzzle 1: Small rectangle loop
+    // Curves: (2,4) rot 90 = E+S (connects right to bottom)
+    //         (2,6) rot 180 = S+W (connects bottom to left)
+    //         (4,6) rot 270 = W+N (connects left to top)
+    //         (4,4) rot 0 = N+E (connects top to right)
+    // Solution: straights at (2,5) rot 90 EW, (3,6) rot 0 NS, (4,5) rot 90 EW, (3,4) rot 0 NS
+    id: 1, name: 'First Loop', difficulty: 'Easy',
+    description: 'Complete the rectangle! Add 4 straights to connect the curves.',
+    locked: [
+      { row: 2, col: 4, type: 'curve', rotation: 90 },
+      { row: 2, col: 6, type: 'curve', rotation: 180 },
+      { row: 4, col: 6, type: 'curve', rotation: 270 },
+      { row: 4, col: 4, type: 'curve', rotation: 0 },
+    ],
+    available: { straight: 4 },
+    hint: 'Connect the curves with straight tracks!',
+  },
+  {
+    // Puzzle 2: Rectangle with water in middle, bridges needed on top/bottom
+    // Curves form corners, sides need straights/bridges
+    // Corners: (1,3) rot 90 = E+S, (1,7) rot 180 = S+W, (5,7) rot 270 = W+N, (5,3) rot 0 = N+E
+    // Top: (1,4) str EW, (1,5) bridge EW, (1,6) str EW
+    // Right: (2,7) str NS, (3,7) str NS, (4,7) str NS
+    // Bottom: (5,4) str EW, (5,5) bridge EW, (5,6) str EW
+    // Left: (2,3) str NS, (3,3) str NS, (4,3) str NS
+    // Available: 10 straight + 2 bridge = 12 pieces
+    id: 2, name: 'Around the Lake', difficulty: 'Easy',
+    description: 'Build a loop around the lake!',
+    locked: [
+      { row: 2, col: 3, type: 'curve', rotation: 90 },
+      { row: 2, col: 7, type: 'curve', rotation: 180 },
+      { row: 5, col: 7, type: 'curve', rotation: 270 },
+      { row: 5, col: 3, type: 'curve', rotation: 0 },
+    ],
+    water: [
+      { row: 3, col: 4 }, { row: 3, col: 5 }, { row: 3, col: 6 },
+      { row: 4, col: 4 }, { row: 4, col: 5 }, { row: 4, col: 6 },
+    ],
+    available: { straight: 10 },
+    hint: 'Place straights around the water to connect!',
+  },
+  {
+    // Puzzle 3: Figure-8 with crossover
+    // Crossover at (3,5) rot 0: N-S pair and E-W pair
+    // Top-left loop: (2,5) curve 180=S+W, (2,4) curve 90=E+S, (3,4) curve 0=N+E
+    // Bottom-right loop: (4,5) curve 0=N+E, (4,6) curve 270=W+N, (3,6) curve 180=S+W
+    id: 3, name: 'Figure Eight', difficulty: 'Medium',
+    description: 'Build a figure-8 using the crossover!',
+    locked: [
+      { row: 3, col: 5, type: 'crossover', rotation: 0 },
+    ],
+    available: { curve: 6 },
+    hint: 'Place 3 curves on each side of the crossover!',
+  },
+  {
+    // Puzzle 4: Rectangle with tunnels on left side, water in middle
+    // Same rectangle as puzzle 1 but bigger:
+    // Curves: (2,4) rot 90=E+S, (2,7) rot 180=S+W, (5,7) rot 270=W+N, (5,4) rot 0=N+E
+    // Top: (2,5) str EW, (2,6) str EW
+    // Right: (3,7) str NS, (4,7) str NS
+    // Bottom: (5,5) str EW, (5,6) str EW
+    // Left: (3,4) tunnel NS, (4,4) tunnel NS
+    id: 4, name: 'Tunnel Run', difficulty: 'Medium',
+    description: 'Route through tunnels around the water!',
+    locked: [
+      { row: 2, col: 4, type: 'curve', rotation: 90 },
+      { row: 2, col: 7, type: 'curve', rotation: 180 },
+      { row: 5, col: 7, type: 'curve', rotation: 270 },
+      { row: 5, col: 4, type: 'curve', rotation: 0 },
+    ],
+    water: [
+      { row: 3, col: 5 }, { row: 4, col: 5 },
+      { row: 3, col: 6 }, { row: 4, col: 6 },
+    ],
+    available: { straight: 6, tunnel: 2 },
+    hint: 'Tunnels go on the left, straights everywhere else!',
+  },
+  {
+    // Puzzle 5: Connect 3 stations
+    // Stations: (2,3) rot 90=EW, (2,8) rot 90=EW, (5,5) rot 90=EW
+    // A U-shaped loop: top row left→right through both stations, down right side,
+    // bottom row through third station, up left side
+    id: 5, name: 'Grand Station', difficulty: 'Hard',
+    description: 'Connect all 3 stations in one loop!',
+    locked: [
+      { row: 2, col: 3, type: 'station', rotation: 90 },
+      { row: 2, col: 8, type: 'station', rotation: 90 },
+      { row: 5, col: 5, type: 'station', rotation: 90 },
+    ],
+    available: { straight: 9, curve: 8 },
+    hint: 'Build one big loop visiting all 3 stations!',
+  },
+];
+
+let puzzleState = {
+  active: false, puzzleId: null,
+  lockedCells: {}, pieceCounts: {},
+  completed: {}, savedSandboxState: null,
+};
+
+function loadPuzzleProgress() {
+  try { const d = localStorage.getItem('trainTracks_puzzles'); if (d) puzzleState.completed = JSON.parse(d); } catch(e) {}
+}
+function savePuzzleProgress() {
+  try { localStorage.setItem('trainTracks_puzzles', JSON.stringify(puzzleState.completed)); } catch(e) {}
+}
+
+function openPuzzleModal() {
+  if (state.playing) return;
+  loadPuzzleProgress();
+  const list = document.getElementById('puzzle-list');
+  list.innerHTML = '';
+  PUZZLES.forEach(p => {
+    const complete = puzzleState.completed[p.id];
+    const diffClass = 'difficulty-' + p.difficulty.toLowerCase();
+    const card = document.createElement('div');
+    card.className = 'puzzle-card';
+    card.onclick = () => { closePuzzleModal(); loadPuzzle(p.id); };
+    card.innerHTML = '<div class="puzzle-card-header"><span class="puzzle-card-title">' +
+      (complete ? '\u2705 ' : '') + p.name +
+      '</span><span class="puzzle-difficulty ' + diffClass + '">' + p.difficulty +
+      '</span></div><div class="puzzle-card-desc">' + p.description + '</div>' +
+      (complete ? '<div class="puzzle-card-complete">Completed!</div>' : '');
+    list.appendChild(card);
+  });
+  document.getElementById('puzzle-overlay').classList.add('open');
+}
+function closePuzzleModal() { document.getElementById('puzzle-overlay').classList.remove('open'); }
+function closePuzzleModalOutside(e) { if (e.target === document.getElementById('puzzle-overlay')) closePuzzleModal(); }
+
+function loadPuzzle(id) {
+  const puzzle = PUZZLES.find(p => p.id === id);
+  if (!puzzle) return;
+  puzzleState.savedSandboxState = serializeState();
+  if (state.playing) stopPlay();
+  cleanupChimneySmoke();
+  state.grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+  state.trains = []; state.switchStates = {};
+  state.undoStack = []; state.redoStack = [];
+  puzzleState.active = true; puzzleState.puzzleId = id;
+  puzzleState.lockedCells = {}; puzzleState.pieceCounts = {};
+  for (const [type, count] of Object.entries(puzzle.available)) puzzleState.pieceCounts[type] = count;
+  if (puzzle.water) puzzle.water.forEach(w => { state.grid[w.row][w.col] = { type: 'water', rotation: 0 }; });
+  puzzle.locked.forEach(lp => {
+    state.grid[lp.row][lp.col] = { type: lp.type, rotation: lp.rotation };
+    puzzleState.lockedCells[lp.row + ',' + lp.col] = true;
+  });
+  renderAllCells();
+  for (const key of Object.keys(puzzleState.lockedCells)) {
+    const [r, c] = key.split(',');
+    const cellEl = document.querySelector('.cell[data-row="' + r + '"][data-col="' + c + '"]');
+    if (cellEl) cellEl.classList.add('locked-cell');
+  }
+  updatePuzzleHUD();
+  document.getElementById('puzzle-hud').classList.add('active');
+  showToast('\ud83e\udde9 ' + puzzle.name + ' \u2014 ' + puzzle.hint);
+}
+
+function updatePuzzleHUD() {
+  const puzzle = PUZZLES.find(p => p.id === puzzleState.puzzleId);
+  if (!puzzle) return;
+  document.getElementById('puzzle-hud-name').textContent = '\ud83e\udde9 ' + puzzle.name;
+  const piecesDiv = document.getElementById('puzzle-hud-pieces');
+  piecesDiv.innerHTML = '';
+  for (const [type, total] of Object.entries(puzzle.available)) {
+    const remaining = puzzleState.pieceCounts[type] || 0;
+    const badge = document.createElement('span');
+    badge.className = 'piece-badge' + (remaining <= 0 ? ' depleted' : '');
+    badge.textContent = type.charAt(0).toUpperCase() + type.slice(1) + ': ' + remaining;
+    piecesDiv.appendChild(badge);
+  }
+}
+
+function isPuzzleLocked(row, col) { return puzzleState.active && puzzleState.lockedCells[row + ',' + col]; }
+function canPlacePuzzlePiece(type) {
+  if (!puzzleState.active) return true;
+  return (puzzleState.pieceCounts[type] || 0) > 0;
+}
+function puzzlePiecePlaced(type) {
+  if (!puzzleState.active || !puzzleState.pieceCounts.hasOwnProperty(type)) return;
+  puzzleState.pieceCounts[type]--; updatePuzzleHUD();
+}
+function puzzlePieceRemoved(type) {
+  if (!puzzleState.active || !puzzleState.pieceCounts.hasOwnProperty(type)) return;
+  puzzleState.pieceCounts[type]++; updatePuzzleHUD();
+}
+
+function checkPuzzleSolution() {
+  if (!puzzleState.active) return;
+  const trackCells = [];
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+    const cell = state.grid[r][c];
+    if (cell && !SCENERY_TYPES.includes(cell.type)) trackCells.push({ row: r, col: c, piece: cell });
+  }
+  if (trackCells.length < 4) { showToast('\u274c Place more tracks!'); return; }
+
+  let allConnected = true, openEnds = 0;
+  const _multiConn = ['crossover', 'bridge'];
+  for (const tc of trackCells) {
+    const conns = getConnections(tc.piece.type, tc.piece.rotation);
+    let _matched = 0;
+    for (const dir of conns) {
+      const nb = getNeighbor(tc.row, tc.col, dir);
+      if (!nb) { if (!_multiConn.includes(tc.piece.type)) { allConnected = false; openEnds++; } continue; }
+      const nbPiece = state.grid[nb.row][nb.col];
+      if (!nbPiece || SCENERY_TYPES.includes(nbPiece.type)) { if (!_multiConn.includes(tc.piece.type)) { allConnected = false; openEnds++; } continue; }
+      const opp = { N:'S', S:'N', E:'W', W:'E' }[dir];
+      if (getConnections(nbPiece.type, nbPiece.rotation).includes(opp)) { _matched++; }
+      else if (!_multiConn.includes(tc.piece.type)) { allConnected = false; openEnds++; }
+    }
+    if (_multiConn.includes(tc.piece.type) && _matched < 2) { allConnected = false; openEnds++; }
+  }
+
+  const visited = new Set();
+  const queue = [trackCells[0].row + ',' + trackCells[0].col];
+  visited.add(queue[0]);
+  while (queue.length > 0) {
+    const key = queue.shift();
+    const [r, c] = key.split(',').map(Number);
+    const piece = state.grid[r][c]; if (!piece) continue;
+    for (const dir of getConnections(piece.type, piece.rotation)) {
+      const nb = getNeighbor(r, c, dir); if (!nb) continue;
+      const nbKey = nb.row + ',' + nb.col;
+      if (visited.has(nbKey)) continue;
+      const nbPiece = state.grid[nb.row][nb.col];
+      if (!nbPiece || SCENERY_TYPES.includes(nbPiece.type)) continue;
+      const opp = { N:'S', S:'N', E:'W', W:'E' }[dir];
+      if (getConnections(nbPiece.type, nbPiece.rotation).includes(opp)) { visited.add(nbKey); queue.push(nbKey); }
+    }
+  }
+
+  if (allConnected && visited.size === trackCells.length) {
+    puzzleState.completed[puzzleState.puzzleId] = true;
+    savePuzzleProgress();
+    showToast('\ud83c\udf89 Puzzle Complete! Well done!');
+    SFX.celebrate();
+    // Confetti at center of track
+    let avgR = 0, avgC = 0;
+    trackCells.forEach(t => { avgR += t.row; avgC += t.col; });
+    avgR = Math.floor(avgR / trackCells.length);
+    avgC = Math.floor(avgC / trackCells.length);
+    const cellEl = document.querySelector('.cell[data-row="' + avgR + '"][data-col="' + avgC + '"]');
+    if (cellEl && typeof triggerLoopCelebration === 'function') {
+      const rect = cellEl.getBoundingClientRect();
+      triggerLoopCelebration({ style: { left: rect.left + rect.width/2 + 'px', top: rect.top + rect.height/2 + 'px' } });
+    }
+  } else if (!allConnected) {
+    showToast('\u274c ' + Math.floor(openEnds/2) + ' disconnected edges! Check your connections.');
+  } else {
+    showToast('\u274c Not all tracks are connected into one loop!');
+  }
+}
+
+function exitPuzzle() {
+  if (!puzzleState.active) return;
+  if (state.playing) stopPlay();
+  puzzleState.active = false; puzzleState.puzzleId = null;
+  puzzleState.lockedCells = {}; puzzleState.pieceCounts = {};
+  document.getElementById('puzzle-hud').classList.remove('active');
+  if (puzzleState.savedSandboxState) {
+    deserializeState(puzzleState.savedSandboxState);
+    puzzleState.savedSandboxState = null;
+  } else {
+    state.grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+    state.trains = []; state.switchStates = {};
+  }
+  state.undoStack = []; state.redoStack = [];
+  renderAllCells();
+  showToast('\ud83c\udfd6\ufe0f Back to sandbox!');
+}
+
 // ============================================================
 // INIT
 // ============================================================
@@ -5360,6 +5717,8 @@ function init() {
   if (!restored) {
     showToast('Drag track pieces to build! 🚂');
   }
+
+  loadPuzzleProgress();
 
   // Start ambient chimney smoke
   startChimneyLoop();
