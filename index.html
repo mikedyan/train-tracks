@@ -2284,6 +2284,8 @@ function renderCell(row, col) {
   // Clear existing content except connection dots
   cell.querySelectorAll('svg, .train-emoji, .train-svg, .scenery-emoji, .car-svg, .car-count-badge, .switch-lever, .water-duck').forEach(el => el.remove());
   cell.classList.remove('occupied', 'has-train', 'has-switch', 'has-tunnel', 'water-cell', 'bridge-over-water');
+  cell.classList.remove('locked-cell');
+  if (isPuzzleLocked(row, col)) cell.classList.add('locked-cell');
 
   const piece = state.grid[row][col];
   if (piece) {
