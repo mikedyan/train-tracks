@@ -1050,7 +1050,6 @@ body.night-mode .shortcut-desc {
 }
 .shortcut-section:first-child { margin-top: 0; }
 
-</style>
 </head>
 <body>
 <div id="app">
@@ -1113,6 +1112,156 @@ body.night-mode .shortcut-desc {
     <button class="close-btn" onclick="closeSaveModal()">✕</button>
     <h2>💾 Save & Load</h2>
     <div id="save-slots"></div>
+  </div>
+</div>
+
+<!-- Keyboard Shortcuts Modal -->
+<div id="shortcuts-overlay" onclick="closeShortcutsModalOutside(event)">
+  <div id="shortcuts-modal">
+    <button class="close-btn" onclick="closeShortcutsModal()">✕</button>
+    <h2>⌨️ Keyboard Shortcuts</h2>
+    <div class="shortcut-section">Playback</div>
+    <div class="shortcut-row"><span class="shortcut-desc">Play / Stop</span><span class="shortcut-key">Space</span></div>
+    <div class="shortcut-section">Building</div>
+    <div class="shortcut-row"><span class="shortcut-desc">Straight track</span><span class="shortcut-key">1</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Curve track</span><span class="shortcut-key">2</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">T-Split</span><span class="shortcut-key">3</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Crossover</span><span class="shortcut-key">4</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Bridge</span><span class="shortcut-key">5</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Tunnel</span><span class="shortcut-key">6</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Station</span><span class="shortcut-key">7</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Remove hovered piece</span><span class="shortcut-key">Del</span></div>
+    <div class="shortcut-section">Actions</div>
+    <div class="shortcut-row"><span class="shortcut-desc">Random track</span><span class="shortcut-key">R</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Undo</span><span class="shortcut-key">Z</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Redo</span><span class="shortcut-key">⇧Z</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Clear board</span><span class="shortcut-key">C</span></div>
+    <div class="shortcut-section">Display</div>
+    <div class="shortcut-row"><span class="shortcut-desc">Night mode</span><span class="shortcut-key">N</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Toggle sidebar</span><span class="shortcut-key">Tab</span></div>
+    <div class="shortcut-section">Other</div>
+    <div class="shortcut-row"><span class="shortcut-desc">Show shortcuts</span><span class="shortcut-key">?</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Close modal / Deselect</span><span class="shortcut-key">Esc</span></div>
+  </div>
+</div>
+
+<!-- Keyboard Shortcuts Modal -->
+<div id="shortcuts-overlay" onclick="closeShortcutsModalOutside(event)">
+  <div id="shortcuts-modal">
+    <button class="close-btn" onclick="closeShortcutsModal()">✕</button>
+    <h2>⌨️ Keyboard Shortcuts</h2>
+    <div class="shortcut-section">Playback</div>
+    <div class="shortcut-row"><span class="shortcut-desc">Play / Stop</span><span class="shortcut-key">Space</span></div>
+    <div class="shortcut-section">Building</div>
+    <div class="shortcut-row"><span class="shortcut-desc">Straight track</span><span class="shortcut-key">1</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Curve track</span><span class="shortcut-key">2</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">T-Split</span><span class="shortcut-key">3</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Crossover</span><span class="shortcut-key">4</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Bridge</span><span class="shortcut-key">5</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Tunnel</span><span class="shortcut-key">6</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Station</span><span class="shortcut-key">7</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Remove hovered piece</span><span class="shortcut-key">Del</span></div>
+    <div class="shortcut-section">Actions</div>
+    <div class="shortcut-row"><span class="shortcut-desc">Random track</span><span class="shortcut-key">R</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Undo</span><span class="shortcut-key">Z</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Redo</span><span class="shortcut-key">⇧Z</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Clear board</span><span class="shortcut-key">C</span></div>
+    <div class="shortcut-section">Display</div>
+    <div class="shortcut-row"><span class="shortcut-desc">Night mode</span><span class="shortcut-key">N</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Toggle sidebar</span><span class="shortcut-key">Tab</span></div>
+    <div class="shortcut-section">Other</div>
+    <div class="shortcut-row"><span class="shortcut-desc">Show shortcuts</span><span class="shortcut-key">?</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Close modal / Deselect</span><span class="shortcut-key">Esc</span></div>
+  </div>
+</div>
+
+<!-- Keyboard Shortcuts Modal -->
+<div id="shortcuts-overlay" onclick="closeShortcutsModalOutside(event)">
+  <div id="shortcuts-modal">
+    <button class="close-btn" onclick="closeShortcutsModal()">✕</button>
+    <h2>⌨️ Keyboard Shortcuts</h2>
+    <div class="shortcut-section">Playback</div>
+    <div class="shortcut-row"><span class="shortcut-desc">Play / Stop</span><span class="shortcut-key">Space</span></div>
+    <div class="shortcut-section">Building</div>
+    <div class="shortcut-row"><span class="shortcut-desc">Straight track</span><span class="shortcut-key">1</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Curve track</span><span class="shortcut-key">2</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">T-Split</span><span class="shortcut-key">3</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Crossover</span><span class="shortcut-key">4</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Bridge</span><span class="shortcut-key">5</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Tunnel</span><span class="shortcut-key">6</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Station</span><span class="shortcut-key">7</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Remove hovered piece</span><span class="shortcut-key">Del</span></div>
+    <div class="shortcut-section">Actions</div>
+    <div class="shortcut-row"><span class="shortcut-desc">Random track</span><span class="shortcut-key">R</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Undo</span><span class="shortcut-key">Z</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Redo</span><span class="shortcut-key">⇧Z</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Clear board</span><span class="shortcut-key">C</span></div>
+    <div class="shortcut-section">Display</div>
+    <div class="shortcut-row"><span class="shortcut-desc">Night mode</span><span class="shortcut-key">N</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Toggle sidebar</span><span class="shortcut-key">Tab</span></div>
+    <div class="shortcut-section">Other</div>
+    <div class="shortcut-row"><span class="shortcut-desc">Show shortcuts</span><span class="shortcut-key">?</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Close modal / Deselect</span><span class="shortcut-key">Esc</span></div>
+  </div>
+</div>
+
+<!-- Keyboard Shortcuts Modal -->
+<div id="shortcuts-overlay" onclick="closeShortcutsModalOutside(event)">
+  <div id="shortcuts-modal">
+    <button class="close-btn" onclick="closeShortcutsModal()">✕</button>
+    <h2>⌨️ Keyboard Shortcuts</h2>
+    <div class="shortcut-section">Playback</div>
+    <div class="shortcut-row"><span class="shortcut-desc">Play / Stop</span><span class="shortcut-key">Space</span></div>
+    <div class="shortcut-section">Building</div>
+    <div class="shortcut-row"><span class="shortcut-desc">Straight track</span><span class="shortcut-key">1</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Curve track</span><span class="shortcut-key">2</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">T-Split</span><span class="shortcut-key">3</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Crossover</span><span class="shortcut-key">4</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Bridge</span><span class="shortcut-key">5</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Tunnel</span><span class="shortcut-key">6</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Station</span><span class="shortcut-key">7</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Remove hovered piece</span><span class="shortcut-key">Del</span></div>
+    <div class="shortcut-section">Actions</div>
+    <div class="shortcut-row"><span class="shortcut-desc">Random track</span><span class="shortcut-key">R</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Undo</span><span class="shortcut-key">Z</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Redo</span><span class="shortcut-key">⇧Z</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Clear board</span><span class="shortcut-key">C</span></div>
+    <div class="shortcut-section">Display</div>
+    <div class="shortcut-row"><span class="shortcut-desc">Night mode</span><span class="shortcut-key">N</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Toggle sidebar</span><span class="shortcut-key">Tab</span></div>
+    <div class="shortcut-section">Other</div>
+    <div class="shortcut-row"><span class="shortcut-desc">Show shortcuts</span><span class="shortcut-key">?</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Close modal / Deselect</span><span class="shortcut-key">Esc</span></div>
+  </div>
+</div>
+
+<!-- Keyboard Shortcuts Modal -->
+<div id="shortcuts-overlay" onclick="closeShortcutsModalOutside(event)">
+  <div id="shortcuts-modal">
+    <button class="close-btn" onclick="closeShortcutsModal()">✕</button>
+    <h2>⌨️ Keyboard Shortcuts</h2>
+    <div class="shortcut-section">Playback</div>
+    <div class="shortcut-row"><span class="shortcut-desc">Play / Stop</span><span class="shortcut-key">Space</span></div>
+    <div class="shortcut-section">Building</div>
+    <div class="shortcut-row"><span class="shortcut-desc">Straight track</span><span class="shortcut-key">1</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Curve track</span><span class="shortcut-key">2</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">T-Split</span><span class="shortcut-key">3</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Crossover</span><span class="shortcut-key">4</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Bridge</span><span class="shortcut-key">5</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Tunnel</span><span class="shortcut-key">6</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Station</span><span class="shortcut-key">7</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Remove hovered piece</span><span class="shortcut-key">Del</span></div>
+    <div class="shortcut-section">Actions</div>
+    <div class="shortcut-row"><span class="shortcut-desc">Random track</span><span class="shortcut-key">R</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Undo</span><span class="shortcut-key">Z</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Redo</span><span class="shortcut-key">⇧Z</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Clear board</span><span class="shortcut-key">C</span></div>
+    <div class="shortcut-section">Display</div>
+    <div class="shortcut-row"><span class="shortcut-desc">Night mode</span><span class="shortcut-key">N</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Toggle sidebar</span><span class="shortcut-key">Tab</span></div>
+    <div class="shortcut-section">Other</div>
+    <div class="shortcut-row"><span class="shortcut-desc">Show shortcuts</span><span class="shortcut-key">?</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Close modal / Deselect</span><span class="shortcut-key">Esc</span></div>
   </div>
 </div>
 
@@ -5304,6 +5453,855 @@ function closeShortcutsModalOutside(e) {
   }
 }
 
+// ============================================================
+// KEYBOARD SHORTCUTS + QUICK SELECT
+// ============================================================
+let selectedTool = null;
+let hoveredCell = null;
+
+const TOOL_KEY_MAP = {
+  '1': 'straight',
+  '2': 'curve',
+  '3': 'tjunction',
+  '4': 'crossover',
+  '5': 'bridge',
+  '6': 'tunnel',
+  '7': 'station',
+};
+
+function selectTool(type) {
+  // Deselect previous
+  if (selectedTool) {
+    document.querySelectorAll('.palette-piece.palette-selected').forEach(el => el.classList.remove('palette-selected'));
+  }
+
+  if (selectedTool === type) {
+    // Toggle off
+    selectedTool = null;
+    return;
+  }
+
+  selectedTool = type;
+
+  // Highlight the matching palette piece
+  const paletteEl = document.querySelector(`.palette-piece[data-type="${type}"]`);
+  if (paletteEl) paletteEl.classList.add('palette-selected');
+}
+
+function clearSelectedTool() {
+  if (selectedTool) {
+    document.querySelectorAll('.palette-piece.palette-selected').forEach(el => el.classList.remove('palette-selected'));
+    selectedTool = null;
+  }
+}
+
+function initHoverTracking() {
+  const grid = document.getElementById('grid');
+  grid.addEventListener('mouseover', (e) => {
+    const cell = e.target.closest('.cell');
+    if (cell) {
+      hoveredCell = { row: +cell.dataset.row, col: +cell.dataset.col };
+    }
+  });
+  grid.addEventListener('mouseleave', () => {
+    hoveredCell = null;
+  });
+}
+
+function handleKeyDown(e) {
+  // Don't fire shortcuts when typing in inputs
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+
+  // Escape: close modals, deselect tool
+  if (e.key === 'Escape') {
+    if (document.getElementById('shortcuts-overlay').classList.contains('open')) {
+      closeShortcutsModal();
+      return;
+    }
+    if (document.getElementById('save-overlay').classList.contains('open')) {
+      closeSaveModal();
+      return;
+    }
+    clearSelectedTool();
+    return;
+  }
+
+  // Don't fire other shortcuts when modals are open
+  if (document.getElementById('save-overlay').classList.contains('open')) return;
+  if (document.getElementById('shortcuts-overlay').classList.contains('open')) return;
+
+  const key = e.key;
+
+  // ? or / for shortcuts overlay
+  if (key === '?' || (key === '/' && !e.ctrlKey && !e.metaKey)) {
+    e.preventDefault();
+    openShortcutsModal();
+    return;
+  }
+
+  // Space: play/stop
+  if (key === ' ') {
+    e.preventDefault();
+    togglePlay();
+    return;
+  }
+
+  // Don't allow building shortcuts during play (except space to stop)
+  if (state.playing) return;
+
+  // R: random track
+  if (key === 'r' || key === 'R') {
+    if (!e.ctrlKey && !e.metaKey) {
+      generateRandomTrack();
+      return;
+    }
+  }
+
+  // Z / Ctrl+Z: undo; Shift+Z / Ctrl+Shift+Z: redo
+  if (key === 'z' || key === 'Z') {
+    if (e.shiftKey || (e.ctrlKey && e.shiftKey) || (e.metaKey && e.shiftKey)) {
+      e.preventDefault();
+      redo();
+      return;
+    }
+    if (!e.shiftKey) {
+      e.preventDefault();
+      undo();
+      return;
+    }
+  }
+
+  // N: night mode
+  if ((key === 'n' || key === 'N') && !e.ctrlKey && !e.metaKey) {
+    toggleNightMode();
+    return;
+  }
+
+  // C: clear (with confirmation toast behavior — only if not Ctrl+C)
+  if ((key === 'c' || key === 'C') && !e.ctrlKey && !e.metaKey) {
+    clearAll();
+    return;
+  }
+
+  // Tab: toggle sidebar
+  if (key === 'Tab') {
+    e.preventDefault();
+    toggleSidebar();
+    return;
+  }
+
+  // Delete/Backspace: remove hovered cell
+  if (key === 'Delete' || key === 'Backspace') {
+    e.preventDefault();
+    if (hoveredCell) {
+      handleRemoveCell(hoveredCell.row, hoveredCell.col);
+    }
+    return;
+  }
+
+  // 1-7: quick select track type
+  if (TOOL_KEY_MAP[key]) {
+    selectTool(TOOL_KEY_MAP[key]);
+    return;
+  }
+}
+
+// ============================================================
+// SHORTCUTS MODAL
+// ============================================================
+function openShortcutsModal() {
+  document.getElementById('shortcuts-overlay').classList.add('open');
+}
+
+function closeShortcutsModal() {
+  document.getElementById('shortcuts-overlay').classList.remove('open');
+}
+
+function closeShortcutsModalOutside(e) {
+  if (e.target === document.getElementById('shortcuts-overlay')) {
+    closeShortcutsModal();
+  }
+}
+
+// ============================================================
+// KEYBOARD SHORTCUTS + QUICK SELECT
+// ============================================================
+let selectedTool = null;
+let hoveredCell = null;
+
+const TOOL_KEY_MAP = {
+  '1': 'straight',
+  '2': 'curve',
+  '3': 'tjunction',
+  '4': 'crossover',
+  '5': 'bridge',
+  '6': 'tunnel',
+  '7': 'station',
+};
+
+function selectTool(type) {
+  // Deselect previous
+  if (selectedTool) {
+    document.querySelectorAll('.palette-piece.palette-selected').forEach(el => el.classList.remove('palette-selected'));
+  }
+
+  if (selectedTool === type) {
+    // Toggle off
+    selectedTool = null;
+    return;
+  }
+
+  selectedTool = type;
+
+  // Highlight the matching palette piece
+  const paletteEl = document.querySelector(`.palette-piece[data-type="${type}"]`);
+  if (paletteEl) paletteEl.classList.add('palette-selected');
+}
+
+function clearSelectedTool() {
+  if (selectedTool) {
+    document.querySelectorAll('.palette-piece.palette-selected').forEach(el => el.classList.remove('palette-selected'));
+    selectedTool = null;
+  }
+}
+
+function initHoverTracking() {
+  const grid = document.getElementById('grid');
+  grid.addEventListener('mouseover', (e) => {
+    const cell = e.target.closest('.cell');
+    if (cell) {
+      hoveredCell = { row: +cell.dataset.row, col: +cell.dataset.col };
+    }
+  });
+  grid.addEventListener('mouseleave', () => {
+    hoveredCell = null;
+  });
+}
+
+function handleKeyDown(e) {
+  // Don't fire shortcuts when typing in inputs
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+
+  // Escape: close modals, deselect tool
+  if (e.key === 'Escape') {
+    if (document.getElementById('shortcuts-overlay').classList.contains('open')) {
+      closeShortcutsModal();
+      return;
+    }
+    if (document.getElementById('save-overlay').classList.contains('open')) {
+      closeSaveModal();
+      return;
+    }
+    clearSelectedTool();
+    return;
+  }
+
+  // Don't fire other shortcuts when modals are open
+  if (document.getElementById('save-overlay').classList.contains('open')) return;
+  if (document.getElementById('shortcuts-overlay').classList.contains('open')) return;
+
+  const key = e.key;
+
+  // ? or / for shortcuts overlay
+  if (key === '?' || (key === '/' && !e.ctrlKey && !e.metaKey)) {
+    e.preventDefault();
+    openShortcutsModal();
+    return;
+  }
+
+  // Space: play/stop
+  if (key === ' ') {
+    e.preventDefault();
+    togglePlay();
+    return;
+  }
+
+  // Don't allow building shortcuts during play (except space to stop)
+  if (state.playing) return;
+
+  // R: random track
+  if (key === 'r' || key === 'R') {
+    if (!e.ctrlKey && !e.metaKey) {
+      generateRandomTrack();
+      return;
+    }
+  }
+
+  // Z / Ctrl+Z: undo; Shift+Z / Ctrl+Shift+Z: redo
+  if (key === 'z' || key === 'Z') {
+    if (e.shiftKey || (e.ctrlKey && e.shiftKey) || (e.metaKey && e.shiftKey)) {
+      e.preventDefault();
+      redo();
+      return;
+    }
+    if (!e.shiftKey) {
+      e.preventDefault();
+      undo();
+      return;
+    }
+  }
+
+  // N: night mode
+  if ((key === 'n' || key === 'N') && !e.ctrlKey && !e.metaKey) {
+    toggleNightMode();
+    return;
+  }
+
+  // C: clear (with confirmation toast behavior — only if not Ctrl+C)
+  if ((key === 'c' || key === 'C') && !e.ctrlKey && !e.metaKey) {
+    clearAll();
+    return;
+  }
+
+  // Tab: toggle sidebar
+  if (key === 'Tab') {
+    e.preventDefault();
+    toggleSidebar();
+    return;
+  }
+
+  // Delete/Backspace: remove hovered cell
+  if (key === 'Delete' || key === 'Backspace') {
+    e.preventDefault();
+    if (hoveredCell) {
+      handleRemoveCell(hoveredCell.row, hoveredCell.col);
+    }
+    return;
+  }
+
+  // 1-7: quick select track type
+  if (TOOL_KEY_MAP[key]) {
+    selectTool(TOOL_KEY_MAP[key]);
+    return;
+  }
+}
+
+// ============================================================
+// SHORTCUTS MODAL
+// ============================================================
+function openShortcutsModal() {
+  document.getElementById('shortcuts-overlay').classList.add('open');
+}
+
+function closeShortcutsModal() {
+  document.getElementById('shortcuts-overlay').classList.remove('open');
+}
+
+function closeShortcutsModalOutside(e) {
+  if (e.target === document.getElementById('shortcuts-overlay')) {
+    closeShortcutsModal();
+  }
+}
+
+// ============================================================
+// KEYBOARD SHORTCUTS + QUICK SELECT
+// ============================================================
+let selectedTool = null;
+let hoveredCell = null;
+
+const TOOL_KEY_MAP = {
+  '1': 'straight',
+  '2': 'curve',
+  '3': 'tjunction',
+  '4': 'crossover',
+  '5': 'bridge',
+  '6': 'tunnel',
+  '7': 'station',
+};
+
+function selectTool(type) {
+  // Deselect previous
+  if (selectedTool) {
+    document.querySelectorAll('.palette-piece.palette-selected').forEach(el => el.classList.remove('palette-selected'));
+  }
+
+  if (selectedTool === type) {
+    // Toggle off
+    selectedTool = null;
+    return;
+  }
+
+  selectedTool = type;
+
+  // Highlight the matching palette piece
+  const paletteEl = document.querySelector(`.palette-piece[data-type="${type}"]`);
+  if (paletteEl) paletteEl.classList.add('palette-selected');
+}
+
+function clearSelectedTool() {
+  if (selectedTool) {
+    document.querySelectorAll('.palette-piece.palette-selected').forEach(el => el.classList.remove('palette-selected'));
+    selectedTool = null;
+  }
+}
+
+function initHoverTracking() {
+  const grid = document.getElementById('grid');
+  grid.addEventListener('mouseover', (e) => {
+    const cell = e.target.closest('.cell');
+    if (cell) {
+      hoveredCell = { row: +cell.dataset.row, col: +cell.dataset.col };
+    }
+  });
+  grid.addEventListener('mouseleave', () => {
+    hoveredCell = null;
+  });
+}
+
+function handleKeyDown(e) {
+  // Don't fire shortcuts when typing in inputs
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+
+  // Escape: close modals, deselect tool
+  if (e.key === 'Escape') {
+    if (document.getElementById('shortcuts-overlay').classList.contains('open')) {
+      closeShortcutsModal();
+      return;
+    }
+    if (document.getElementById('save-overlay').classList.contains('open')) {
+      closeSaveModal();
+      return;
+    }
+    clearSelectedTool();
+    return;
+  }
+
+  // Don't fire other shortcuts when modals are open
+  if (document.getElementById('save-overlay').classList.contains('open')) return;
+  if (document.getElementById('shortcuts-overlay').classList.contains('open')) return;
+
+  const key = e.key;
+
+  // ? or / for shortcuts overlay
+  if (key === '?' || (key === '/' && !e.ctrlKey && !e.metaKey)) {
+    e.preventDefault();
+    openShortcutsModal();
+    return;
+  }
+
+  // Space: play/stop
+  if (key === ' ') {
+    e.preventDefault();
+    togglePlay();
+    return;
+  }
+
+  // Don't allow building shortcuts during play (except space to stop)
+  if (state.playing) return;
+
+  // R: random track
+  if (key === 'r' || key === 'R') {
+    if (!e.ctrlKey && !e.metaKey) {
+      generateRandomTrack();
+      return;
+    }
+  }
+
+  // Z / Ctrl+Z: undo; Shift+Z / Ctrl+Shift+Z: redo
+  if (key === 'z' || key === 'Z') {
+    if (e.shiftKey || (e.ctrlKey && e.shiftKey) || (e.metaKey && e.shiftKey)) {
+      e.preventDefault();
+      redo();
+      return;
+    }
+    if (!e.shiftKey) {
+      e.preventDefault();
+      undo();
+      return;
+    }
+  }
+
+  // N: night mode
+  if ((key === 'n' || key === 'N') && !e.ctrlKey && !e.metaKey) {
+    toggleNightMode();
+    return;
+  }
+
+  // C: clear (with confirmation toast behavior — only if not Ctrl+C)
+  if ((key === 'c' || key === 'C') && !e.ctrlKey && !e.metaKey) {
+    clearAll();
+    return;
+  }
+
+  // Tab: toggle sidebar
+  if (key === 'Tab') {
+    e.preventDefault();
+    toggleSidebar();
+    return;
+  }
+
+  // Delete/Backspace: remove hovered cell
+  if (key === 'Delete' || key === 'Backspace') {
+    e.preventDefault();
+    if (hoveredCell) {
+      handleRemoveCell(hoveredCell.row, hoveredCell.col);
+    }
+    return;
+  }
+
+  // 1-7: quick select track type
+  if (TOOL_KEY_MAP[key]) {
+    selectTool(TOOL_KEY_MAP[key]);
+    return;
+  }
+}
+
+// ============================================================
+// SHORTCUTS MODAL
+// ============================================================
+function openShortcutsModal() {
+  document.getElementById('shortcuts-overlay').classList.add('open');
+}
+
+function closeShortcutsModal() {
+  document.getElementById('shortcuts-overlay').classList.remove('open');
+}
+
+function closeShortcutsModalOutside(e) {
+  if (e.target === document.getElementById('shortcuts-overlay')) {
+    closeShortcutsModal();
+  }
+}
+
+// ============================================================
+// KEYBOARD SHORTCUTS + QUICK SELECT
+// ============================================================
+let selectedTool = null;
+let hoveredCell = null;
+
+const TOOL_KEY_MAP = {
+  '1': 'straight',
+  '2': 'curve',
+  '3': 'tjunction',
+  '4': 'crossover',
+  '5': 'bridge',
+  '6': 'tunnel',
+  '7': 'station',
+};
+
+function selectTool(type) {
+  // Deselect previous
+  if (selectedTool) {
+    document.querySelectorAll('.palette-piece.palette-selected').forEach(el => el.classList.remove('palette-selected'));
+  }
+
+  if (selectedTool === type) {
+    // Toggle off
+    selectedTool = null;
+    return;
+  }
+
+  selectedTool = type;
+
+  // Highlight the matching palette piece
+  const paletteEl = document.querySelector(`.palette-piece[data-type="${type}"]`);
+  if (paletteEl) paletteEl.classList.add('palette-selected');
+}
+
+function clearSelectedTool() {
+  if (selectedTool) {
+    document.querySelectorAll('.palette-piece.palette-selected').forEach(el => el.classList.remove('palette-selected'));
+    selectedTool = null;
+  }
+}
+
+function initHoverTracking() {
+  const grid = document.getElementById('grid');
+  grid.addEventListener('mouseover', (e) => {
+    const cell = e.target.closest('.cell');
+    if (cell) {
+      hoveredCell = { row: +cell.dataset.row, col: +cell.dataset.col };
+    }
+  });
+  grid.addEventListener('mouseleave', () => {
+    hoveredCell = null;
+  });
+}
+
+function handleKeyDown(e) {
+  // Don't fire shortcuts when typing in inputs
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+
+  // Escape: close modals, deselect tool
+  if (e.key === 'Escape') {
+    if (document.getElementById('shortcuts-overlay').classList.contains('open')) {
+      closeShortcutsModal();
+      return;
+    }
+    if (document.getElementById('save-overlay').classList.contains('open')) {
+      closeSaveModal();
+      return;
+    }
+    clearSelectedTool();
+    return;
+  }
+
+  // Don't fire other shortcuts when modals are open
+  if (document.getElementById('save-overlay').classList.contains('open')) return;
+  if (document.getElementById('shortcuts-overlay').classList.contains('open')) return;
+
+  const key = e.key;
+
+  // ? or / for shortcuts overlay
+  if (key === '?' || (key === '/' && !e.ctrlKey && !e.metaKey)) {
+    e.preventDefault();
+    openShortcutsModal();
+    return;
+  }
+
+  // Space: play/stop
+  if (key === ' ') {
+    e.preventDefault();
+    togglePlay();
+    return;
+  }
+
+  // Don't allow building shortcuts during play (except space to stop)
+  if (state.playing) return;
+
+  // R: random track
+  if (key === 'r' || key === 'R') {
+    if (!e.ctrlKey && !e.metaKey) {
+      generateRandomTrack();
+      return;
+    }
+  }
+
+  // Z / Ctrl+Z: undo; Shift+Z / Ctrl+Shift+Z: redo
+  if (key === 'z' || key === 'Z') {
+    if (e.shiftKey || (e.ctrlKey && e.shiftKey) || (e.metaKey && e.shiftKey)) {
+      e.preventDefault();
+      redo();
+      return;
+    }
+    if (!e.shiftKey) {
+      e.preventDefault();
+      undo();
+      return;
+    }
+  }
+
+  // N: night mode
+  if ((key === 'n' || key === 'N') && !e.ctrlKey && !e.metaKey) {
+    toggleNightMode();
+    return;
+  }
+
+  // C: clear (with confirmation toast behavior — only if not Ctrl+C)
+  if ((key === 'c' || key === 'C') && !e.ctrlKey && !e.metaKey) {
+    clearAll();
+    return;
+  }
+
+  // Tab: toggle sidebar
+  if (key === 'Tab') {
+    e.preventDefault();
+    toggleSidebar();
+    return;
+  }
+
+  // Delete/Backspace: remove hovered cell
+  if (key === 'Delete' || key === 'Backspace') {
+    e.preventDefault();
+    if (hoveredCell) {
+      handleRemoveCell(hoveredCell.row, hoveredCell.col);
+    }
+    return;
+  }
+
+  // 1-7: quick select track type
+  if (TOOL_KEY_MAP[key]) {
+    selectTool(TOOL_KEY_MAP[key]);
+    return;
+  }
+}
+
+// ============================================================
+// SHORTCUTS MODAL
+// ============================================================
+function openShortcutsModal() {
+  document.getElementById('shortcuts-overlay').classList.add('open');
+}
+
+function closeShortcutsModal() {
+  document.getElementById('shortcuts-overlay').classList.remove('open');
+}
+
+function closeShortcutsModalOutside(e) {
+  if (e.target === document.getElementById('shortcuts-overlay')) {
+    closeShortcutsModal();
+  }
+}
+
+// ============================================================
+// KEYBOARD SHORTCUTS + QUICK SELECT
+// ============================================================
+let selectedTool = null;
+let hoveredCell = null;
+
+const TOOL_KEY_MAP = {
+  '1': 'straight',
+  '2': 'curve',
+  '3': 'tjunction',
+  '4': 'crossover',
+  '5': 'bridge',
+  '6': 'tunnel',
+  '7': 'station',
+};
+
+function selectTool(type) {
+  // Deselect previous
+  if (selectedTool) {
+    document.querySelectorAll('.palette-piece.palette-selected').forEach(el => el.classList.remove('palette-selected'));
+  }
+
+  if (selectedTool === type) {
+    // Toggle off
+    selectedTool = null;
+    return;
+  }
+
+  selectedTool = type;
+
+  // Highlight the matching palette piece
+  const paletteEl = document.querySelector(`.palette-piece[data-type="${type}"]`);
+  if (paletteEl) paletteEl.classList.add('palette-selected');
+}
+
+function clearSelectedTool() {
+  if (selectedTool) {
+    document.querySelectorAll('.palette-piece.palette-selected').forEach(el => el.classList.remove('palette-selected'));
+    selectedTool = null;
+  }
+}
+
+function initHoverTracking() {
+  const grid = document.getElementById('grid');
+  grid.addEventListener('mouseover', (e) => {
+    const cell = e.target.closest('.cell');
+    if (cell) {
+      hoveredCell = { row: +cell.dataset.row, col: +cell.dataset.col };
+    }
+  });
+  grid.addEventListener('mouseleave', () => {
+    hoveredCell = null;
+  });
+}
+
+function handleKeyDown(e) {
+  // Don't fire shortcuts when typing in inputs
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+
+  // Escape: close modals, deselect tool
+  if (e.key === 'Escape') {
+    if (document.getElementById('shortcuts-overlay').classList.contains('open')) {
+      closeShortcutsModal();
+      return;
+    }
+    if (document.getElementById('save-overlay').classList.contains('open')) {
+      closeSaveModal();
+      return;
+    }
+    clearSelectedTool();
+    return;
+  }
+
+  // Don't fire other shortcuts when modals are open
+  if (document.getElementById('save-overlay').classList.contains('open')) return;
+  if (document.getElementById('shortcuts-overlay').classList.contains('open')) return;
+
+  const key = e.key;
+
+  // ? or / for shortcuts overlay
+  if (key === '?' || (key === '/' && !e.ctrlKey && !e.metaKey)) {
+    e.preventDefault();
+    openShortcutsModal();
+    return;
+  }
+
+  // Space: play/stop
+  if (key === ' ') {
+    e.preventDefault();
+    togglePlay();
+    return;
+  }
+
+  // Don't allow building shortcuts during play (except space to stop)
+  if (state.playing) return;
+
+  // R: random track
+  if (key === 'r' || key === 'R') {
+    if (!e.ctrlKey && !e.metaKey) {
+      generateRandomTrack();
+      return;
+    }
+  }
+
+  // Z / Ctrl+Z: undo; Shift+Z / Ctrl+Shift+Z: redo
+  if (key === 'z' || key === 'Z') {
+    if (e.shiftKey || (e.ctrlKey && e.shiftKey) || (e.metaKey && e.shiftKey)) {
+      e.preventDefault();
+      redo();
+      return;
+    }
+    if (!e.shiftKey) {
+      e.preventDefault();
+      undo();
+      return;
+    }
+  }
+
+  // N: night mode
+  if ((key === 'n' || key === 'N') && !e.ctrlKey && !e.metaKey) {
+    toggleNightMode();
+    return;
+  }
+
+  // C: clear (with confirmation toast behavior — only if not Ctrl+C)
+  if ((key === 'c' || key === 'C') && !e.ctrlKey && !e.metaKey) {
+    clearAll();
+    return;
+  }
+
+  // Tab: toggle sidebar
+  if (key === 'Tab') {
+    e.preventDefault();
+    toggleSidebar();
+    return;
+  }
+
+  // Delete/Backspace: remove hovered cell
+  if (key === 'Delete' || key === 'Backspace') {
+    e.preventDefault();
+    if (hoveredCell) {
+      handleRemoveCell(hoveredCell.row, hoveredCell.col);
+    }
+    return;
+  }
+
+  // 1-7: quick select track type
+  if (TOOL_KEY_MAP[key]) {
+    selectTool(TOOL_KEY_MAP[key]);
+    return;
+  }
+}
+
+// ============================================================
+// SHORTCUTS MODAL
+// ============================================================
+function openShortcutsModal() {
+  document.getElementById('shortcuts-overlay').classList.add('open');
+}
+
+function closeShortcutsModal() {
+  document.getElementById('shortcuts-overlay').classList.remove('open');
+}
+
+function closeShortcutsModalOutside(e) {
+  if (e.target === document.getElementById('shortcuts-overlay')) {
+    closeShortcutsModal();
+  }
+}
 // ============================================================
 // INIT
 // ============================================================

@@ -1,0 +1,141 @@
+{
+  "day": 15,
+  "title": "Critical Bug Fix: Remove Duplicate Code + Challenge Puzzles (Set 1)",
+  "date": "2026-04-01",
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "CRITICAL: Remove 6x duplicate code blocks from Day 14",
+      "priority": "P0",
+      "description": "Day 14 introduced 6 copies of the keyboard shortcuts code in CSS, HTML, and JS sections. This causes 'let selectedTool' redeclaration errors that break all JavaScript execution. The page loads but no JS works.",
+      "changes": [
+        {
+          "area": "CSS",
+          "description": "Remove 5 duplicate CSS blocks (lines ~1053-1606): each contains /* PALETTE SELECTED */ + /* KEYBOARD SHORTCUTS OVERLAY */ CSS rules. Keep only the first instance (lines ~942-1052).",
+          "file": "index.html"
+        },
+        {
+          "area": "HTML",
+          "description": "Remove 5 duplicate <!-- Keyboard Shortcuts Modal --> HTML blocks. Keep only the first instance (lines ~1673-1702).",
+          "file": "index.html"
+        },
+        {
+          "area": "JS",
+          "description": "Remove 5 duplicate JS blocks (lines ~6012-6860) containing: let selectedTool/hoveredCell, TOOL_KEY_MAP, selectTool, clearSelectedTool, initHoverTracking, handleKeyDown, openShortcutsModal, closeShortcutsModal, closeShortcutsModalOutside. Keep only the first instance (lines ~5842-6009).",
+          "file": "index.html"
+        }
+      ],
+      "acceptance_criteria": [
+        "Zero JS console errors on page load",
+        "Only 1 instance of each: #shortcuts-overlay CSS, shortcuts HTML modal, keyboard JS functions",
+        "All keyboard shortcuts work (Space, R, Z, Shift+Z, N, C, Tab, 1-7, Del, ?, Esc)",
+        "File size reduced by ~800-900 lines (from ~6936 to ~6100)"
+      ]
+    },
+    {
+      "id": "T2",
+      "title": "Challenge Puzzles System (Set 1 — 5 puzzles)",
+      "priority": "P1",
+      "description": "Add a puzzle mode with 5 hand-crafted puzzles of increasing difficulty. Players get limited pieces and must complete a track layout with some pre-placed locked cells.",
+      "changes": [
+        {
+          "area": "CSS",
+          "description": "Add puzzle-related CSS: puzzle overlay/modal styles, locked cell indicator (semi-transparent lock icon), limited palette badge (count), puzzle-active indicator, check button styles.",
+          "file": "index.html"
+        },
+        {
+          "area": "HTML",
+          "description": "Add 🧩 Puzzles button in controls bar. Add puzzle select overlay with 5 puzzle cards. Add puzzle HUD (puzzle name, piece counts, check button, back to sandbox button).",
+          "file": "index.html"
+        },
+        {
+          "area": "JS",
+          "description": "Implement puzzle system: puzzle definitions (5 puzzles), loadPuzzle(), checkPuzzleSolution(), puzzle piece counting/enforcement, locked cell protection, puzzle mode state management, back-to-sandbox function.",
+          "file": "index.html"
+        }
+      ],
+      "puzzles": [
+        {
+          "id": 1,
+          "name": "First Loop",
+          "difficulty": "Easy",
+          "description": "4 curves pre-placed at corners. Add 4 straights to complete the rectangle loop.",
+          "grid_size": "4x4 subset of 12x8",
+          "locked_pieces": 4,
+          "available_pieces": {"straight": 4},
+          "solution": "Rectangle loop"
+        },
+        {
+          "id": 2,
+          "name": "Bridge Over Water",
+          "difficulty": "Easy",
+          "description": "Water strip in the middle. Use bridge pieces to cross and complete the loop.",
+          "locked_pieces": 6,
+          "available_pieces": {"bridge": 2, "straight": 2, "curve": 2},
+          "solution": "Loop crossing water via bridge"
+        },
+        {
+          "id": 3,
+          "name": "Figure Eight",
+          "difficulty": "Medium",
+          "description": "Create a figure-8 using the crossover piece with limited track pieces.",
+          "locked_pieces": 1,
+          "available_pieces": {"crossover": 1, "curve": 8},
+          "solution": "Figure-8 with crossover at center"
+        },
+        {
+          "id": 4,
+          "name": "Tunnel Run",
+          "difficulty": "Medium",
+          "description": "Route the train through 2 tunnels around water obstacles.",
+          "locked_pieces": 4,
+          "available_pieces": {"straight": 4, "curve": 4, "tunnel": 2},
+          "solution": "Path through tunnels avoiding water"
+        },
+        {
+          "id": 5,
+          "name": "Grand Station",
+          "difficulty": "Hard",
+          "description": "Connect 3 pre-placed stations in one continuous loop.",
+          "locked_pieces": 3,
+          "available_pieces": {"straight": 8, "curve": 6, "tjunction": 2},
+          "solution": "Single loop visiting all 3 stations"
+        }
+      ],
+      "acceptance_criteria": [
+        "🧩 Puzzles button visible in controls bar",
+        "Puzzle select overlay shows 5 puzzle cards with name, difficulty, description",
+        "Loading a puzzle clears the board and places locked pieces",
+        "Locked pieces cannot be moved, removed, or rotated (visual lock indicator)",
+        "Palette shows only available pieces with count badges",
+        "Count badges decrement when pieces are placed, increment on undo/remove",
+        "Cannot place pieces when count is 0 for that type",
+        "Check button validates: all available pieces placed AND track forms a complete loop",
+        "Success: confetti + toast + puzzle marked complete",
+        "Failure: helpful toast explaining what's wrong",
+        "'Back to Sandbox' button returns to freeform mode with empty board",
+        "Puzzle state does NOT affect sandbox auto-save",
+        "All 5 puzzles are solvable (verified)",
+        "Train can be placed and run on completed puzzle",
+        "Undo works within puzzle mode (respects locked pieces)"
+      ]
+    }
+  ],
+  "bugs_to_fix": [
+    {
+      "id": "BUG-CRITICAL",
+      "description": "6x duplicate code blocks from Day 14 (CSS, HTML, JS) causing JS execution failure",
+      "severity": "Critical — game non-functional"
+    }
+  ],
+  "testing_focus": [
+    "JS console must be error-free after duplicate removal",
+    "All keyboard shortcuts still work",
+    "All 5 puzzles are solvable",
+    "Puzzle mode doesn't corrupt sandbox state",
+    "Back-to-sandbox restores freeform mode cleanly",
+    "Locked pieces are truly immutable",
+    "Piece counting is accurate through place/remove/undo cycles",
+    "Regression test: Random → Play → full loop still works"
+  ]
+}
