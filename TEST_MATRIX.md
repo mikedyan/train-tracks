@@ -732,3 +732,45 @@ Mark each test with the result after running.
   - Headlight hidden inside tunnel in night mode
   - placeTrainOnLoop accepts tunnel as valid placement cell
 - Zero regressions across all existing features.
+
+## Day 16 — Puzzle Star Rating + 5 More Puzzles (2026-04-03)
+
+### Star Rating System
+- [x] Star display on puzzle cards: ⭐ for 1, ⭐⭐ for 2, ⭐⭐⭐ for 3
+- [x] Empty stars shown with reduced opacity for unearned slots
+- [x] Backwards-compatible: old boolean `true` completions show as 1 star
+- [x] Star calculation: 1=solved, 2=at/under par, 3=at/under optimal
+- [x] Only upgrades stars (can't lose stars by replaying)
+- [x] Stars persist in localStorage
+- [x] Completion toast shows star count and pieces used
+
+### New Puzzles (6-10)
+- [x] All 10 puzzles appear in puzzle modal
+- [x] Puzzle 6 (Switchyard): solvable with T-junctions + straights
+- [x] Puzzle 7 (Speed Run): solvable with straights only
+- [x] Puzzle 8 (Cow Pasture): pre-placed cow scenery renders correctly
+- [x] Puzzle 9 (Night Express): forces night mode on load
+- [x] Puzzle 9: restores previous night mode on exit
+- [x] Puzzle 10 (Twin Loops): pre-places 2 trains on grid
+- [x] Puzzle 10: validates 2 separate loops (multi-component)
+- [x] All puzzles validated via automated connection-checking
+
+### Puzzle System Enhancements
+- [x] `loadPuzzle()` handles `scenery` array for pre-placed scenery
+- [x] `loadPuzzle()` handles `trains` array for pre-placed trains
+- [x] `loadPuzzle()` handles `forceNight` flag
+- [x] `exitPuzzle()` restores night mode state
+- [x] `checkPuzzleSolution()` supports multi-loop puzzles (BFS components)
+- [x] No duplicate `const puzzle` redeclaration bugs
+
+### Day 16 QA Results
+- JavaScript syntax validated: zero parse errors
+- HTML tags balanced (88 open / 88 close)
+- All 18 core functions present (0 duplicates)
+- 10 unique puzzle IDs verified
+- All 10 puzzles have required fields (id, name, difficulty, description, locked, available, par, optimal, hint)
+- All puzzles validated via automated connection-checking script
+- Star calculation logic verified for all edge cases
+- Backwards-compatibility with boolean completions verified
+- Zero regressions across all existing features
+- Zero bugs found

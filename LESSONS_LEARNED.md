@@ -125,3 +125,13 @@
 - LESSON-092: Curve rotation reference: rot 0=N+E, rot 90=E+S, rot 180=S+W, rot 270=W+N. Use `rotateDir()` for correctness.
 - LESSON-093: When puzzle mode modifies game state, save sandbox state with `serializeState()` BEFORE clearing, and restore with `deserializeState()` on exit.
 - LESSON-094: Block sandbox-specific operations (Clear, Random, AutoSave) during puzzle mode to prevent state corruption.
+
+## Puzzle Star Rating Patterns (Day 16)
+- LESSON-095: Store puzzle completion as `{ stars: N }` instead of boolean for richer tracking. Keep backwards-compatibility by treating old `true` values as 1 star.
+- LESSON-096: Star calculation: count player-placed pieces only (exclude locked cells from count). Compare against par and optimal thresholds.
+- LESSON-097: Only save star progress if new stars > previous stars — players shouldn't lose progress by replaying.
+- LESSON-098: When puzzles support pre-placed scenery, add a `scenery` array to puzzle definition and handle in `loadPuzzle()` — scenery items are placed before locked track pieces.
+- LESSON-099: Multi-loop puzzles (multiple trains) need BFS connectivity check that finds ALL components, not just one. Allow N components for N-train puzzles.
+- LESSON-100: ForceNight puzzles must save night mode state in puzzleState on load and restore it in exitPuzzle() — otherwise users lose their night mode preference.
+- LESSON-101: When pre-placing trains in puzzles, add them to state.trains BEFORE renderAllCells() so they render on the first pass.
+- LESSON-102: Avoid redundant `const` redeclarations in the same function scope even if they're in separate block scopes (if/else) — can confuse maintainers.

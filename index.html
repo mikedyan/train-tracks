@@ -5785,7 +5785,6 @@ function checkPuzzleSolution() {
     for (const tc of trackCells) {
       if (!puzzleState.lockedCells[tc.row + ',' + tc.col]) playerPieces++;
     }
-    const puzzle = PUZZLES.find(p => p.id === puzzleState.puzzleId);
     let stars = 1; // solved = 1 star
     if (puzzle && puzzle.par && playerPieces <= puzzle.par) stars = 2; // under or at par = 2 stars
     if (puzzle && puzzle.optimal && playerPieces <= puzzle.optimal) stars = 3; // optimal = 3 stars
