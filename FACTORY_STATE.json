@@ -1,10 +1,10 @@
 {
   "project": "Train Tracks",
-  "currentDay": 15,
+  "currentDay": 16,
   "status": "phase2_in_progress",
-  "lastRun": "2026-04-01T09:30:00-07:00",
-  "completedDays": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
-  "nextDay": 16,
+  "lastRun": "2026-04-03T09:30:00-07:00",
+  "completedDays": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+  "nextDay": 17,
   "phase": 2,
   "roadmap": "ROADMAP_PHASE2.md",
   "review": "reviews/expert-panel-day14.md",
@@ -23,7 +23,8 @@
     { "day": 12, "date": "2026-03-28", "feature": "Animated Scenery", "status": "complete" },
     { "day": 13, "date": "2026-03-30", "feature": "Richer Soundscape", "status": "complete" },
     { "day": 14, "date": "2026-03-31", "feature": "Keyboard Shortcuts + Undo/Redo Polish", "status": "complete" },
-    { "day": 15, "date": "2026-04-01", "feature": "Challenge Puzzles (Set 1)", "status": "complete" }
+    { "day": 15, "date": "2026-04-01", "feature": "Challenge Puzzles (Set 1)", "status": "complete" },
+    { "day": 16, "date": "2026-04-03", "feature": "Puzzle Star Rating + 5 More Puzzles", "status": "complete" }
   ],
-  "notes": "Day 15 fixed critical Day 14 bug (6x duplicate code blocks), then added 5 challenge puzzles with full puzzle mode system."
+  "notes": "Day 16: Added ⭐⭐⭐ star rating system to all puzzles, 5 new puzzles (Switchyard, Speed Run, Cow Pasture, Night Express, Twin Loops), scenery/train/forceNight puzzle features, multi-loop validation."
 }
