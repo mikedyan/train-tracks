@@ -1082,6 +1082,8 @@ body.night-mode .puzzle-card-title { color: #ECEFF1; }
 .puzzle-card-desc { font-size: 12px; color: #757575; line-height: 1.4; }
 body.night-mode .puzzle-card-desc { color: #90A4AE; }
 .puzzle-card-complete { font-size: 12px; color: #4CAF50; font-weight: 700; margin-top: 4px; }
+.puzzle-card-stars { font-size: 14px; margin-top: 4px; letter-spacing: 2px; }
+.puzzle-card-stars .star-empty { opacity: 0.3; }
 #puzzle-hud { display: none; position: fixed; top: 8px; left: 50%; transform: translateX(-50%); z-index: 200; background: rgba(255,255,255,0.95); border-radius: 12px; padding: 8px 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); font-size: 13px; gap: 12px; align-items: center; backdrop-filter: blur(5px); }
 #puzzle-hud.active { display: flex; }
 body.night-mode #puzzle-hud { background: rgba(38,50,56,0.95); color: #ECEFF1; }
@@ -5393,11 +5395,6 @@ function closeShortcutsModalOutside(e) {
 const PUZZLES = [
   {
     // Puzzle 1: Small rectangle loop
-    // Curves: (2,4) rot 90 = E+S (connects right to bottom)
-    //         (2,6) rot 180 = S+W (connects bottom to left)
-    //         (4,6) rot 270 = W+N (connects left to top)
-    //         (4,4) rot 0 = N+E (connects top to right)
-    // Solution: straights at (2,5) rot 90 EW, (3,6) rot 0 NS, (4,5) rot 90 EW, (3,4) rot 0 NS
     id: 1, name: 'First Loop', difficulty: 'Easy',
     description: 'Complete the rectangle! Add 4 straights to connect the curves.',
     locked: [
@@ -5407,17 +5404,11 @@ const PUZZLES = [
       { row: 4, col: 4, type: 'curve', rotation: 0 },
     ],
     available: { straight: 4 },
+    par: 4, optimal: 4,
     hint: 'Connect the curves with straight tracks!',
   },
   {
-    // Puzzle 2: Rectangle with water in middle, bridges needed on top/bottom
-    // Curves form corners, sides need straights/bridges
-    // Corners: (1,3) rot 90 = E+S, (1,7) rot 180 = S+W, (5,7) rot 270 = W+N, (5,3) rot 0 = N+E
-    // Top: (1,4) str EW, (1,5) bridge EW, (1,6) str EW
-    // Right: (2,7) str NS, (3,7) str NS, (4,7) str NS
-    // Bottom: (5,4) str EW, (5,5) bridge EW, (5,6) str EW
-    // Left: (2,3) str NS, (3,3) str NS, (4,3) str NS
-    // Available: 10 straight + 2 bridge = 12 pieces
+    // Puzzle 2: Rectangle with water in middle
     id: 2, name: 'Around the Lake', difficulty: 'Easy',
     description: 'Build a loop around the lake!',
     locked: [
@@ -5431,29 +5422,22 @@ const PUZZLES = [
       { row: 4, col: 4 }, { row: 4, col: 5 }, { row: 4, col: 6 },
     ],
     available: { straight: 10 },
+    par: 10, optimal: 10,
     hint: 'Place straights around the water to connect!',
   },
   {
     // Puzzle 3: Figure-8 with crossover
-    // Crossover at (3,5) rot 0: N-S pair and E-W pair
-    // Top-left loop: (2,5) curve 180=S+W, (2,4) curve 90=E+S, (3,4) curve 0=N+E
-    // Bottom-right loop: (4,5) curve 0=N+E, (4,6) curve 270=W+N, (3,6) curve 180=S+W
     id: 3, name: 'Figure Eight', difficulty: 'Medium',
     description: 'Build a figure-8 using the crossover!',
     locked: [
       { row: 3, col: 5, type: 'crossover', rotation: 0 },
     ],
     available: { curve: 6 },
+    par: 6, optimal: 6,
     hint: 'Place 3 curves on each side of the crossover!',
   },
   {
-    // Puzzle 4: Rectangle with tunnels on left side, water in middle
-    // Same rectangle as puzzle 1 but bigger:
-    // Curves: (2,4) rot 90=E+S, (2,7) rot 180=S+W, (5,7) rot 270=W+N, (5,4) rot 0=N+E
-    // Top: (2,5) str EW, (2,6) str EW
-    // Right: (3,7) str NS, (4,7) str NS
-    // Bottom: (5,5) str EW, (5,6) str EW
-    // Left: (3,4) tunnel NS, (4,4) tunnel NS
+    // Puzzle 4: Rectangle with tunnels on left, water in middle
     id: 4, name: 'Tunnel Run', difficulty: 'Medium',
     description: 'Route through tunnels around the water!',
     locked: [
@@ -5467,13 +5451,11 @@ const PUZZLES = [
       { row: 3, col: 6 }, { row: 4, col: 6 },
     ],
     available: { straight: 6, tunnel: 2 },
+    par: 8, optimal: 8,
     hint: 'Tunnels go on the left, straights everywhere else!',
   },
   {
     // Puzzle 5: Connect 3 stations
-    // Stations: (2,3) rot 90=EW, (2,8) rot 90=EW, (5,5) rot 90=EW
-    // A U-shaped loop: top row left→right through both stations, down right side,
-    // bottom row through third station, up left side
     id: 5, name: 'Grand Station', difficulty: 'Hard',
     description: 'Connect all 3 stations in one loop!',
     locked: [
@@ -5482,7 +5464,146 @@ const PUZZLES = [
       { row: 5, col: 5, type: 'station', rotation: 90 },
     ],
     available: { straight: 9, curve: 8 },
+    par: 17, optimal: 17,
     hint: 'Build one big loop visiting all 3 stations!',
+  },
+  {
+    // Puzzle 6: Switchyard — T-junctions to route train
+    // Layout: Two stations at top-left and top-right, T-junctions in middle to route between them
+    // Locked: 2 stations, 2 curves for bottom corners
+    // Player places: T-junctions + straights to create a figure that visits both stations
+    // Solution: (2,3) station EW, (2,8) station EW
+    // Top path: (2,4) str EW, (2,5) tjunction, (2,6) str EW, (2,7) str EW
+    // Left side: (3,3) curve 0=N+E (connects top to right)
+    // Right side: (3,8) curve 270=W+N (connects left to top)
+    // Bottom: (3,4) str EW, (3,5) str EW, (3,6) str EW, (3,7) str EW
+    // But we want player to place tjunctions:
+    // Simpler: rectangle with T-junctions
+    // Corners locked: (1,3) curve 90=E+S, (1,7) curve 180=S+W, (4,7) curve 270=W+N, (4,3) curve 0=N+E
+    // Station locked: (1,5) station 90=EW (in middle of top row)
+    // Player places: straights + 2 tjunctions to complete the loop
+    // Top: (1,4) str EW, (1,6) str EW
+    // Right: (2,7) str NS, (3,7) str NS
+    // Bottom: (4,4) str EW, (4,5) tjunction 90, (4,6) str EW
+    // Left: (2,3) str NS, (3,3) str NS
+    // Total player: 7 straights + 1 tjunction = 8 pieces
+    id: 6, name: 'Switchyard', difficulty: 'Medium',
+    description: 'Use T-junctions to route through the station!',
+    locked: [
+      { row: 2, col: 4, type: 'curve', rotation: 90 },
+      { row: 2, col: 7, type: 'curve', rotation: 180 },
+      { row: 5, col: 7, type: 'curve', rotation: 270 },
+      { row: 5, col: 4, type: 'curve', rotation: 0 },
+      { row: 3, col: 5, type: 'station', rotation: 90 },
+    ],
+    available: { straight: 7, tjunction: 2 },
+    par: 9, optimal: 9,
+    hint: 'T-junctions connect the outer loop to the station!',
+  },
+  {
+    // Puzzle 7: Speed Run — long winding track
+    // A longer S-shaped path requiring more pieces
+    // Top-left to bottom-right via S-curve
+    // Locked corners define an S-shape
+    // Row 1: (1,2) curve 90=E+S → (1,3) str EW → (1,4) str EW → (1,5) curve 180=S+W
+    // Down: (2,5) str NS → (3,5) str NS
+    // Row 3: (3,5) already → (3,6) curve 90=E+S wait...
+    // Simpler: an oval that's wider than tall
+    // Locked: 4 corners spread out
+    // (1,2) curve 90=E+S, (1,9) curve 180=S+W, (5,9) curve 270=W+N, (5,2) curve 0=N+E
+    // Player fills: top 6 straights, right 3 straights, bottom 6 straights, left 3 straights = 18
+    // Give 20 straights for par, 18 optimal
+    id: 7, name: 'Speed Run', difficulty: 'Medium',
+    description: 'Build the longest loop you can — straights only!',
+    locked: [
+      { row: 1, col: 2, type: 'curve', rotation: 90 },
+      { row: 1, col: 9, type: 'curve', rotation: 180 },
+      { row: 5, col: 9, type: 'curve', rotation: 270 },
+      { row: 5, col: 2, type: 'curve', rotation: 0 },
+    ],
+    available: { straight: 20 },
+    par: 20, optimal: 18,
+    hint: 'Fill in all the gaps between the corners!',
+  },
+  {
+    // Puzzle 8: Cow Pasture — loop passing all cows
+    // 4 cows placed as scenery, loop must go adjacent to them
+    // Simple rectangle loop: (2,3) to (2,8) to (5,8) to (5,3) corners
+    // Cows at (3,5), (3,7), (4,4), (4,6) — inside the loop
+    // Locked: 4 corner curves
+    // Player fills: 4 top straights, 2 right straights, 4 bottom straights, 2 left straights = 12
+    id: 8, name: 'Cow Pasture', difficulty: 'Easy',
+    description: 'Build a loop around the pasture — the cows want to see trains!',
+    locked: [
+      { row: 2, col: 3, type: 'curve', rotation: 90 },
+      { row: 2, col: 8, type: 'curve', rotation: 180 },
+      { row: 5, col: 8, type: 'curve', rotation: 270 },
+      { row: 5, col: 3, type: 'curve', rotation: 0 },
+    ],
+    scenery: [
+      { row: 3, col: 5, type: 'cow' },
+      { row: 3, col: 7, type: 'cow' },
+      { row: 4, col: 4, type: 'cow' },
+      { row: 4, col: 6, type: 'cow' },
+    ],
+    available: { straight: 14 },
+    par: 14, optimal: 12,
+    hint: 'Connect all the corners with straights around the cows!',
+  },
+  {
+    // Puzzle 9: Night Express — build in forced night mode with tunnels
+    // A loop requiring tunnels, played in night mode
+    // Locked: curves + 1 tunnel, player adds straights + tunnels
+    // (1,4) curve 90=E+S, (1,8) curve 180=S+W
+    // (4,8) curve 270=W+N, (4,4) curve 0=N+E
+    // Right: (2,8) str NS, (3,8) str NS
+    // Left: (2,4) tunnel NS, (3,4) tunnel NS (locked)
+    // Top: (1,5) str EW, (1,6) str EW, (1,7) str EW
+    // Bottom: (4,5) str EW, (4,6) str EW, (4,7) str EW
+    // Locked: 4 curves + 1 tunnel on left = 5 locked
+    // Player: 1 tunnel + 6 straights = 7 pieces
+    id: 9, name: 'Night Express', difficulty: 'Hard',
+    description: 'Navigate the dark! Build through tunnels with only your headlight.',
+    locked: [
+      { row: 1, col: 4, type: 'curve', rotation: 90 },
+      { row: 1, col: 8, type: 'curve', rotation: 180 },
+      { row: 4, col: 8, type: 'curve', rotation: 270 },
+      { row: 4, col: 4, type: 'curve', rotation: 0 },
+      { row: 2, col: 4, type: 'tunnel', rotation: 0 },
+    ],
+    available: { straight: 8, tunnel: 1 },
+    par: 9, optimal: 9,
+    forceNight: true,
+    hint: 'Place the tunnel on the left, straights everywhere else!',
+  },
+  {
+    // Puzzle 10: Multi-Train — 2 separate loops
+    // Two small rectangles side by side, each with its own train
+    // Left loop: (2,2) curve 90, (2,4) curve 180, (4,4) curve 270, (4,2) curve 0
+    //   needs: (2,3) str EW, (3,4) str NS, (4,3) str EW, (3,2) str NS = 4 str
+    // Right loop: (2,7) curve 90, (2,9) curve 180, (4,9) curve 270, (4,7) curve 0
+    //   needs: (2,8) str EW, (3,9) str NS, (4,8) str EW, (3,7) str NS = 4 str
+    // 8 corners locked, player places 8 straights
+    // Pre-place red train at (2,2), blue at (2,7) — on the locked curves
+    id: 10, name: 'Twin Loops', difficulty: 'Hard',
+    description: 'Build two separate loops for two trains — no collisions!',
+    locked: [
+      { row: 2, col: 2, type: 'curve', rotation: 90 },
+      { row: 2, col: 4, type: 'curve', rotation: 180 },
+      { row: 4, col: 4, type: 'curve', rotation: 270 },
+      { row: 4, col: 2, type: 'curve', rotation: 0 },
+      { row: 2, col: 7, type: 'curve', rotation: 90 },
+      { row: 2, col: 9, type: 'curve', rotation: 180 },
+      { row: 4, col: 9, type: 'curve', rotation: 270 },
+      { row: 4, col: 7, type: 'curve', rotation: 0 },
+    ],
+    trains: [
+      { row: 2, col: 2, color: 'red' },
+      { row: 2, col: 7, color: 'blue' },
+    ],
+    available: { straight: 8 },
+    par: 8, optimal: 8,
+    hint: 'Complete both rectangles — each train needs its own loop!',
   },
 ];
 
@@ -5490,13 +5611,30 @@ let puzzleState = {
   active: false, puzzleId: null,
   lockedCells: {}, pieceCounts: {},
   completed: {}, savedSandboxState: null,
+  savedNightMode: null,
 };
-
 function loadPuzzleProgress() {
   try { const d = localStorage.getItem('trainTracks_puzzles'); if (d) puzzleState.completed = JSON.parse(d); } catch(e) {}
 }
 function savePuzzleProgress() {
   try { localStorage.setItem('trainTracks_puzzles', JSON.stringify(puzzleState.completed)); } catch(e) {}
+}
+
+function getPuzzleStars(puzzleId) {
+  const val = puzzleState.completed[puzzleId];
+  if (!val) return 0;
+  if (val === true) return 1; // backwards-compat: old boolean completions = 1 star
+  if (typeof val === 'object' && val.stars) return val.stars;
+  return 0;
+}
+
+function renderStarDisplay(stars) {
+  let html = '<div class="puzzle-card-stars">';
+  for (let i = 1; i <= 3; i++) {
+    html += '<span class="' + (i <= stars ? '' : 'star-empty') + '">⭐</span>';
+  }
+  html += '</div>';
+  return html;
 }
 
 function openPuzzleModal() {
@@ -5505,16 +5643,16 @@ function openPuzzleModal() {
   const list = document.getElementById('puzzle-list');
   list.innerHTML = '';
   PUZZLES.forEach(p => {
-    const complete = puzzleState.completed[p.id];
+    const stars = getPuzzleStars(p.id);
     const diffClass = 'difficulty-' + p.difficulty.toLowerCase();
     const card = document.createElement('div');
     card.className = 'puzzle-card';
     card.onclick = () => { closePuzzleModal(); loadPuzzle(p.id); };
     card.innerHTML = '<div class="puzzle-card-header"><span class="puzzle-card-title">' +
-      (complete ? '\u2705 ' : '') + p.name +
+      (stars > 0 ? '✅ ' : '') + p.name +
       '</span><span class="puzzle-difficulty ' + diffClass + '">' + p.difficulty +
       '</span></div><div class="puzzle-card-desc">' + p.description + '</div>' +
-      (complete ? '<div class="puzzle-card-complete">Completed!</div>' : '');
+      (stars > 0 ? renderStarDisplay(stars) : '');
     list.appendChild(card);
   });
   document.getElementById('puzzle-overlay').classList.add('open');
@@ -5526,6 +5664,7 @@ function loadPuzzle(id) {
   const puzzle = PUZZLES.find(p => p.id === id);
   if (!puzzle) return;
   puzzleState.savedSandboxState = serializeState();
+  puzzleState.savedNightMode = isNightMode();
   if (state.playing) stopPlay();
   cleanupChimneySmoke();
   state.grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
@@ -5535,10 +5674,15 @@ function loadPuzzle(id) {
   puzzleState.lockedCells = {}; puzzleState.pieceCounts = {};
   for (const [type, count] of Object.entries(puzzle.available)) puzzleState.pieceCounts[type] = count;
   if (puzzle.water) puzzle.water.forEach(w => { state.grid[w.row][w.col] = { type: 'water', rotation: 0 }; });
+  if (puzzle.scenery) puzzle.scenery.forEach(s => { state.grid[s.row][s.col] = { type: s.type, rotation: 0 }; });
   puzzle.locked.forEach(lp => {
     state.grid[lp.row][lp.col] = { type: lp.type, rotation: lp.rotation };
     puzzleState.lockedCells[lp.row + ',' + lp.col] = true;
   });
+  if (puzzle.trains) puzzle.trains.forEach(t => {
+    state.trains.push({ row: t.row, col: t.col, color: t.color, cars: [] });
+  });
+  if (puzzle.forceNight && !isNightMode()) toggleNightMode();
   renderAllCells();
   for (const key of Object.keys(puzzleState.lockedCells)) {
     const [r, c] = key.split(',');
@@ -5605,28 +5749,53 @@ function checkPuzzleSolution() {
     if (_multiConn.includes(tc.piece.type) && _matched < 2) { allConnected = false; openEnds++; }
   }
 
-  const visited = new Set();
-  const queue = [trackCells[0].row + ',' + trackCells[0].col];
-  visited.add(queue[0]);
-  while (queue.length > 0) {
-    const key = queue.shift();
-    const [r, c] = key.split(',').map(Number);
-    const piece = state.grid[r][c]; if (!piece) continue;
-    for (const dir of getConnections(piece.type, piece.rotation)) {
-      const nb = getNeighbor(r, c, dir); if (!nb) continue;
-      const nbKey = nb.row + ',' + nb.col;
-      if (visited.has(nbKey)) continue;
-      const nbPiece = state.grid[nb.row][nb.col];
-      if (!nbPiece || SCENERY_TYPES.includes(nbPiece.type)) continue;
-      const opp = { N:'S', S:'N', E:'W', W:'E' }[dir];
-      if (getConnections(nbPiece.type, nbPiece.rotation).includes(opp)) { visited.add(nbKey); queue.push(nbKey); }
+  // BFS connectivity — find all connected components
+  const globalVisited = new Set();
+  let numComponents = 0;
+  for (const startTC of trackCells) {
+    const startKey = startTC.row + ',' + startTC.col;
+    if (globalVisited.has(startKey)) continue;
+    numComponents++;
+    const queue = [startKey];
+    globalVisited.add(startKey);
+    while (queue.length > 0) {
+      const key = queue.shift();
+      const [r, c] = key.split(',').map(Number);
+      const piece = state.grid[r][c]; if (!piece) continue;
+      for (const dir of getConnections(piece.type, piece.rotation)) {
+        const nb = getNeighbor(r, c, dir); if (!nb) continue;
+        const nbKey = nb.row + ',' + nb.col;
+        if (globalVisited.has(nbKey)) continue;
+        const nbPiece = state.grid[nb.row][nb.col];
+        if (!nbPiece || SCENERY_TYPES.includes(nbPiece.type)) continue;
+        const opp = { N:'S', S:'N', E:'W', W:'E' }[dir];
+        if (getConnections(nbPiece.type, nbPiece.rotation).includes(opp)) { globalVisited.add(nbKey); queue.push(nbKey); }
+      }
     }
   }
 
-  if (allConnected && visited.size === trackCells.length) {
-    puzzleState.completed[puzzleState.puzzleId] = true;
-    savePuzzleProgress();
-    showToast('\ud83c\udf89 Puzzle Complete! Well done!');
+  // Multi-train puzzles allow multiple separate loops
+  const puzzle = PUZZLES.find(p => p.id === puzzleState.puzzleId);
+  const allowedComponents = (puzzle && puzzle.trains && puzzle.trains.length > 1) ? puzzle.trains.length : 1;
+  const connectivityOK = globalVisited.size === trackCells.length && numComponents <= allowedComponents;
+
+  if (allConnected && connectivityOK) {
+    // Count player-placed pieces (non-locked track cells)
+    let playerPieces = 0;
+    for (const tc of trackCells) {
+      if (!puzzleState.lockedCells[tc.row + ',' + tc.col]) playerPieces++;
+    }
+    const puzzle = PUZZLES.find(p => p.id === puzzleState.puzzleId);
+    let stars = 1; // solved = 1 star
+    if (puzzle && puzzle.par && playerPieces <= puzzle.par) stars = 2; // under or at par = 2 stars
+    if (puzzle && puzzle.optimal && playerPieces <= puzzle.optimal) stars = 3; // optimal = 3 stars
+    const prev = getPuzzleStars(puzzleState.puzzleId);
+    if (stars > prev) {
+      puzzleState.completed[puzzleState.puzzleId] = { stars: stars };
+      savePuzzleProgress();
+    }
+    const starStr = '\u2b50'.repeat(stars);
+    showToast('\ud83c\udf89 Puzzle Complete! ' + starStr + ' (' + playerPieces + ' pieces)');
     SFX.celebrate();
     // Confetti at center of track
     let avgR = 0, avgC = 0;
@@ -5648,6 +5817,11 @@ function checkPuzzleSolution() {
 function exitPuzzle() {
   if (!puzzleState.active) return;
   if (state.playing) stopPlay();
+  // Restore night mode if puzzle forced it
+  if (puzzleState.savedNightMode !== null && isNightMode() !== puzzleState.savedNightMode) {
+    toggleNightMode();
+  }
+  puzzleState.savedNightMode = null;
   puzzleState.active = false; puzzleState.puzzleId = null;
   puzzleState.lockedCells = {}; puzzleState.pieceCounts = {};
   document.getElementById('puzzle-hud').classList.remove('active');

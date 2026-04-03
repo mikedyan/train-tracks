@@ -1,0 +1,101 @@
+{
+  "day": 16,
+  "feature": "Puzzle Star Rating + 5 More Puzzles",
+  "date": "2026-04-03",
+  "bugs": [],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Add star rating system to puzzles",
+      "description": "Each puzzle gets par (piece count thresholds) for 1/2/3 stars. 1 star = solved. 2 stars = under par. 3 stars = optimal (fewest possible). Track pieces used by player (non-locked, non-water, non-scenery). Store stars in puzzleState.completed as { stars: N } instead of boolean true.",
+      "changes": [
+        "Add 'par' and 'optimal' fields to each PUZZLES entry (existing 5 puzzles)",
+        "Modify checkPuzzleSolution() to count player-placed pieces and calculate stars",
+        "Update puzzleState.completed to store { stars: N } (backwards-compatible with true)",
+        "Update savePuzzleProgress/loadPuzzleProgress",
+        "Update openPuzzleModal() card rendering to show star count (⭐⭐⭐)"
+      ],
+      "file": "index.html"
+    },
+    {
+      "id": "T2",
+      "title": "Add CSS for star display on puzzle cards",
+      "description": "Add .puzzle-card-stars styling for gold stars on the puzzle select modal cards.",
+      "changes": [
+        "Add .puzzle-card-stars CSS class (gold color, proper sizing)"
+      ],
+      "file": "index.html"
+    },
+    {
+      "id": "T3",
+      "title": "Add Puzzle 6: Switchyard",
+      "description": "Use T-junctions to route train to correct station. Player places T-junctions and some straights to connect stations.",
+      "changes": [
+        "Add puzzle object to PUZZLES array with id:6, locked pieces, available pieces, par/optimal"
+      ],
+      "file": "index.html"
+    },
+    {
+      "id": "T4",
+      "title": "Add Puzzle 7: Speed Run (long track)",
+      "description": "Build a long track loop using lots of straights and curves. Tests ability to connect a large circuit.",
+      "changes": [
+        "Add puzzle object to PUZZLES array with id:7"
+      ],
+      "file": "index.html"
+    },
+    {
+      "id": "T5",
+      "title": "Add Puzzle 8: Cow Pasture",
+      "description": "Build a loop that passes by all 4 cow scenery tiles. Cows are pre-placed as scenery.",
+      "changes": [
+        "Add puzzle object to PUZZLES array with id:8, with scenery (cows) pre-placed"
+      ],
+      "file": "index.html"
+    },
+    {
+      "id": "T6",
+      "title": "Add Puzzle 9: Night Express",
+      "description": "Build in night mode - puzzle forces night mode on load. Uses tunnel pieces.",
+      "changes": [
+        "Add puzzle object to PUZZLES array with id:9",
+        "Add 'forceNight' flag to puzzle definition",
+        "Modify loadPuzzle() to check forceNight and toggle night mode",
+        "Modify exitPuzzle() to restore previous night mode state"
+      ],
+      "file": "index.html"
+    },
+    {
+      "id": "T7",
+      "title": "Add Puzzle 10: Multi-Train",
+      "description": "Route 2 trains on separate loops without collision. Pre-places 2 trains and some track pieces.",
+      "changes": [
+        "Add puzzle object to PUZZLES array with id:10",
+        "Add 'trains' field to puzzle definition for pre-placed trains",
+        "Modify loadPuzzle() to place trains from puzzle definition"
+      ],
+      "file": "index.html"
+    }
+  ],
+  "acceptance_criteria": [
+    "AC1: All 10 puzzles appear in the puzzle modal",
+    "AC2: Existing 5 puzzles still work correctly (backwards-compatible)",
+    "AC3: Star rating displays on puzzle cards (⭐/⭐⭐/⭐⭐⭐)",
+    "AC4: Stars persist across refreshes via localStorage",
+    "AC5: Old completions (boolean true) display as 1 star (backwards-compatible)",
+    "AC6: Puzzles 6-10 are solvable with the given pieces",
+    "AC7: Night Express puzzle (9) forces night mode on load, restores on exit",
+    "AC8: Multi-Train puzzle (10) pre-places trains correctly",
+    "AC9: Difficulty ramps appropriately across all 10 puzzles",
+    "AC10: Check button accurately validates all new puzzles"
+  ],
+  "testing_focus": [
+    "Test star rating calculation for each puzzle",
+    "Test backwards-compatibility of puzzleState.completed",
+    "Verify all 10 puzzles are solvable",
+    "Test night mode toggle in Night Express puzzle",
+    "Test train placement in Multi-Train puzzle",
+    "Verify no regressions in sandbox mode",
+    "Check puzzle exit restores sandbox state correctly"
+  ]
+}
