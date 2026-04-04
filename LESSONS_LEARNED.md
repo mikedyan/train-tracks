@@ -135,3 +135,14 @@
 - LESSON-100: ForceNight puzzles must save night mode state in puzzleState on load and restore it in exitPuzzle() — otherwise users lose their night mode preference.
 - LESSON-101: When pre-placing trains in puzzles, add them to state.trains BEFORE renderAllCells() so they render on the first pass.
 - LESSON-102: Avoid redundant `const` redeclarations in the same function scope even if they're in separate block scopes (if/else) — can confuse maintainers.
+
+
+## Mobile Layout Patterns (Day 17)
+- LESSON-103: On mobile (<768px), hide the desktop sidebar entirely and show a horizontal scroll bottom drawer instead. Never try to shrink the sidebar — it doesn't work on small screens.
+- LESSON-104: The body's touch-action: none prevents all touch gestures. For scrollable sub-elements (like the drawer), override with touch-action: pan-x to allow horizontal scrolling.
+- LESSON-105: Mobile drawer palette pieces share the same .palette-piece class as sidebar pieces. querySelectorAll('.palette-piece') in init picks up both, so no separate init code is needed.
+- LESSON-106: Haptic feedback (navigator.vibrate) must be wrapped in try/catch — not all browsers support it, and some throw even when the API exists.
+- LESSON-107: When checking for mobile layout, use window.innerWidth (JS) and @media (max-width: 768px) (CSS) consistently. Don't rely on user-agent sniffing.
+- LESSON-108: calculateSize() must account for the bottom drawer height on mobile (subtract from available height before computing cell size).
+- LESSON-109: Mobile drawer should auto-collapse during play state via CSS (no JS needed) using #app.playing #mobile-drawer { transform: translateY(...) }.
+- LESSON-110: Duplicate code blocks from previous builds must be checked with grep -c after each build. Day 14's duplicates survived through Day 16.

@@ -103,3 +103,12 @@ Only logged here if a bug was found, for tracking purposes.
 - **Severity:** Low (visual — lock icons not visible, but locking still works via JS guards)
 - **Root cause:** `renderCell()` removes custom classes but didn't re-apply `locked-cell`. The class was applied once in `loadPuzzle()` but any subsequent `renderCell()` call stripped it.
 - **Fix applied:** Added `isPuzzleLocked()` check in `renderCell()` to re-apply `locked-cell` class on every render.
+
+
+### BUG-013 | 🟢 FIXED | 6x duplicated quick-select blocks in onGridDown
+- **Found:** Fri Apr 4 — Factory Day 17
+- **Fixed:** Fri Apr 4 (Day 17 build)
+- **Severity:** Medium (functional — extra iterations through redundant code, performance waste)
+- **Root cause:** Previous build inserted the quick-select tool check block 6 times instead of once in onGridDown.
+- **Fix applied:** Removed 5 duplicate copies (98 lines total).
+- **Verification:** grep confirms exactly 1 occurrence of "Quick-select tool: click to place".

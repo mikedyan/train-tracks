@@ -774,3 +774,33 @@ Mark each test with the result after running.
 - Backwards-compatibility with boolean completions verified
 - Zero regressions across all existing features
 - Zero bugs found
+
+
+## Day 17 — Mobile Touch Overhaul
+
+### Mobile Layout
+- [ ] Desktop (>768px): sidebar visible, no bottom drawer
+- [ ] Mobile (≤768px): bottom drawer visible, sidebar hidden
+- [ ] Mobile: grid fills available space above drawer
+- [ ] Mobile: no horizontal page scroll
+- [ ] Mobile: controls wrap properly
+- [ ] iPhone SE (375px): game is usable
+
+### Bottom Drawer
+- [ ] Drawer shows all palette items (tracks, trains, cars, scenery)
+- [ ] Drawer toggle button collapses/expands
+- [ ] Horizontal scroll through all items works
+- [ ] Drag from drawer places track on grid
+- [ ] Drawer auto-collapses during play
+
+### Touch & Haptics
+- [ ] Track placement triggers haptic (navigator.vibrate)
+- [ ] Track removal triggers haptic pattern
+- [ ] No accidental zoom during gameplay
+- [ ] Touch-action allows drawer scrolling
+
+### Desktop Regression
+- [ ] Sidebar still works on desktop
+- [ ] Sidebar toggle (◀/▶) still works
+- [ ] All keyboard shortcuts still work
+- [ ] Tab toggles sidebar on desktop, drawer on mobile
