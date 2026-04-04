@@ -1,0 +1,82 @@
+{
+  "day": 17,
+  "feature": "Mobile Touch Overhaul",
+  "date": "2026-04-04",
+  "bugs_to_fix": [
+    {
+      "id": "BUG-013",
+      "severity": "High",
+      "description": "onGridDown has the 'Quick-select tool' block duplicated 6 times (~lines 2944-3040). Only 1 copy should exist.",
+      "fix": "Remove the 5 duplicate blocks, keeping only the first occurrence."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Fix duplicated quick-select blocks in onGridDown",
+      "description": "Remove the 5 duplicate copies of the quick-select tool check in onGridDown. Only the first block should remain.",
+      "file": "index.html",
+      "acceptance": "onGridDown contains exactly 1 occurrence of the quick-select tool block."
+    },
+    {
+      "id": "T2",
+      "title": "Mobile detection and CSS custom properties",
+      "description": "Add CSS media query for screens < 768px in portrait. Set --mobile: 1 custom property. Add mobile-specific layout variables.",
+      "file": "index.html",
+      "acceptance": "On viewport < 768px wide, mobile layout activates via CSS media queries."
+    },
+    {
+      "id": "T3",
+      "title": "Bottom drawer palette for mobile",
+      "description": "On mobile, the sidebar becomes a horizontal scroll strip docked to the bottom. Collapsible via a toggle handle. Uses CSS flex with overflow-x: auto. Palette pieces scroll horizontally with section labels.",
+      "file": "index.html",
+      "acceptance": "On mobile, palette appears as bottom drawer with horizontal scroll. Sidebar is hidden. Toggle handle shows/hides drawer."
+    },
+    {
+      "id": "T4",
+      "title": "Larger touch targets on mobile",
+      "description": "Palette pieces: 72px on mobile (up from 54px). Control buttons: min 48px height. Sidebar toggle adapted for mobile.",
+      "file": "index.html",
+      "acceptance": "Palette pieces are 72px on mobile. Control buttons are at least 48px tall."
+    },
+    {
+      "id": "T5",
+      "title": "Grid fills available space above drawer",
+      "description": "On mobile, grid fills the viewport above the bottom drawer and below the controls. calculateSize() updated to account for bottom drawer height.",
+      "file": "index.html",
+      "acceptance": "Grid uses full available height on mobile. No horizontal scroll. Game fills screen on iPhone SE (375px)."
+    },
+    {
+      "id": "T6",
+      "title": "Prevent accidental page zoom/scroll",
+      "description": "Already have touch-action: none on body. Ensure grid and drawer also have proper touch-action settings. Prevent double-tap zoom on buttons.",
+      "file": "index.html",
+      "acceptance": "No accidental zoom or scroll during gameplay on mobile."
+    },
+    {
+      "id": "T7",
+      "title": "Haptic feedback on mobile",
+      "description": "Add navigator.vibrate(10) on track placement, vibrate([5,5,5]) on removal. Only trigger when vibrate API is available.",
+      "file": "index.html",
+      "acceptance": "Haptic feedback fires on place and remove on supported devices. No errors on unsupported devices."
+    },
+    {
+      "id": "T8",
+      "title": "Mobile-optimized controls layout",
+      "description": "Controls bar wraps nicely on mobile. Essential buttons (Play, Random, Clear, Puzzles) are prominent. Secondary buttons (Undo, Redo, Night, Save, Shortcuts) are smaller or in a collapsed row.",
+      "file": "index.html",
+      "acceptance": "Controls fit on mobile without horizontal scroll. Key buttons are easily tappable."
+    }
+  ],
+  "testing_focus": [
+    "Mobile layout renders correctly at 375px width (iPhone SE)",
+    "Bottom drawer scrolls horizontally through all palette items",
+    "Drawer toggle works (show/hide)",
+    "Track placement works via drag from bottom drawer",
+    "Grid fills available space, no overflow",
+    "Desktop layout remains unchanged",
+    "All existing features still work on desktop",
+    "Haptic feedback fires on supported devices",
+    "No accidental zoom during gameplay"
+  ]
+}

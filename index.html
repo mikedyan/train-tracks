@@ -930,13 +930,213 @@ body.night-mode .cell.has-tunnel svg {
 #app.playing .cell.has-switch:hover { background: var(--grass-hover); }
 #app.playing #sidebar { opacity: 0.5; pointer-events: none; }
 
-/* RESPONSIVE */
-@media (max-width: 768px) {
+/* MOBILE DRAWER (hidden by default, shown via media query) */
+#mobile-drawer {
+  display: none;
+}
+#drawer-toggle {
+  display: none;
+}
+
+/* RESPONSIVE — Desktop small */
+@media (max-width: 900px) and (min-width: 769px) {
   :root { --sidebar-w: 70px; }
   .palette-piece { width: 54px; height: 54px; }
   #header h1 { font-size: 18px; }
   .btn { padding: 6px 14px; font-size: 12px; }
-  #sidebar-toggle { width: 28px; height: 56px; font-size: 16px; }
+}
+
+/* MOBILE LAYOUT — Portrait phones & small tablets */
+@media (max-width: 768px) {
+  :root {
+    --sidebar-w: 0px;
+    --drawer-height: 88px;
+  }
+
+  /* Switch to vertical layout */
+  #app {
+    flex-direction: column;
+  }
+
+  /* Hide desktop sidebar entirely */
+  #sidebar {
+    display: none !important;
+  }
+
+  #sidebar-toggle {
+    display: none !important;
+  }
+
+  /* Main area fills screen above bottom drawer */
+  #main {
+    flex: 1;
+    padding: 6px 4px;
+    gap: 6px;
+    overflow: hidden;
+    min-height: 0;
+    padding-bottom: var(--drawer-height);
+  }
+
+  #header h1 {
+    font-size: 16px;
+  }
+
+  /* Controls bar — compact mobile layout */
+  #controls {
+    gap: 6px;
+    padding: 2px 0;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .btn {
+    padding: 8px 12px;
+    font-size: 12px;
+    min-height: 40px;
+    border-radius: 16px;
+  }
+
+  .speed-control {
+    font-size: 11px;
+    gap: 4px;
+  }
+
+  .speed-control input[type=range] {
+    width: 60px;
+  }
+
+  /* Volume slider smaller on mobile */
+  #volume-slider {
+    width: 40px !important;
+  }
+
+  /* Bottom Drawer */
+  #mobile-drawer {
+    display: flex !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: var(--drawer-height);
+    background: linear-gradient(180deg, var(--sidebar-top), var(--sidebar-bottom));
+    z-index: 60;
+    flex-direction: column;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.25);
+    transition: transform 0.3s ease, background 0.5s ease;
+  }
+
+  #mobile-drawer.collapsed {
+    transform: translateY(calc(var(--drawer-height) - 28px));
+  }
+
+  #drawer-toggle {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 28px;
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.7);
+    font-size: 18px;
+    cursor: pointer;
+    flex-shrink: 0;
+    padding: 0;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #drawer-toggle:active {
+    color: white;
+  }
+
+  #drawer-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0 8px 6px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  #drawer-content::-webkit-scrollbar {
+    display: none;
+  }
+
+  #drawer-content .drawer-section-label {
+    color: #FFCC80;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+    white-space: nowrap;
+    padding: 0 2px;
+    flex-shrink: 0;
+  }
+
+  #drawer-content .palette-piece {
+    width: 56px;
+    height: 56px;
+    flex-shrink: 0;
+    border-radius: 10px;
+  }
+
+  #drawer-content .palette-piece .label {
+    font-size: 7px;
+  }
+
+  #drawer-content .palette-divider {
+    width: 1px;
+    height: 40px;
+    background: rgba(255,255,255,0.15);
+    flex-shrink: 0;
+    margin: 0;
+  }
+
+  /* Trash zone position for mobile */
+  #trash-zone {
+    bottom: calc(var(--drawer-height) + 10px);
+    right: 10px;
+  }
+
+  /* Toast position for mobile */
+  #toast {
+    top: auto;
+    bottom: calc(var(--drawer-height) + 16px);
+    font-size: 12px;
+  }
+  #toast.show {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Puzzle HUD mobile adjustment */
+  #puzzle-hud {
+    top: auto;
+    bottom: calc(var(--drawer-height) + 8px);
+    font-size: 11px;
+    padding: 6px 12px;
+    gap: 8px;
+    flex-wrap: wrap;
+    max-width: 95vw;
+  }
+
+  /* Modal sizing for mobile */
+  #save-modal, #shortcuts-modal, #puzzle-modal {
+    width: 95vw;
+    max-height: 75vh;
+    padding: 16px;
+  }
+
+  /* Playing state: collapse drawer */
+  #app.playing #mobile-drawer {
+    transform: translateY(calc(var(--drawer-height) - 28px));
+  }
+  #app.playing #mobile-drawer #drawer-toggle {
+    pointer-events: auto;
+  }
 }
 
 /* PALETTE SELECTED */
@@ -1130,6 +1330,37 @@ body.night-mode .piece-badge.depleted { background: #B71C1C; color: #EF9A9A; }
     <div class="palette-piece" data-type="cow"><div class="label">Cow</div></div>
     <div class="palette-piece" data-type="water"><div class="label">Water</div></div>
   </div>
+  <!-- Mobile Bottom Drawer (shown on mobile via CSS) -->
+  <div id="mobile-drawer">
+    <button id="drawer-toggle" onclick="toggleMobileDrawer()">▲ Pieces</button>
+    <div id="drawer-content">
+      <span class="drawer-section-label">Tracks</span>
+      <div class="palette-piece" data-type="straight"><div class="label">Straight</div></div>
+      <div class="palette-piece" data-type="curve"><div class="label">Curve</div></div>
+      <div class="palette-piece" data-type="tjunction"><div class="label">T-Split</div></div>
+      <div class="palette-piece" data-type="crossover"><div class="label">Cross</div></div>
+      <div class="palette-piece" data-type="bridge"><div class="label">Bridge</div></div>
+      <div class="palette-piece" data-type="tunnel"><div class="label">Tunnel</div></div>
+      <div class="palette-piece" data-type="station"><div class="label">Station</div></div>
+      <div class="palette-divider"></div>
+      <span class="drawer-section-label">Trains</span>
+      <div class="palette-piece palette-train palette-train-red" data-type="train-red"><div class="label">Red</div></div>
+      <div class="palette-piece palette-train palette-train-blue" data-type="train-blue"><div class="label">Blue</div></div>
+      <div class="palette-piece palette-train palette-train-green" data-type="train-green"><div class="label">Green</div></div>
+      <div class="palette-divider"></div>
+      <span class="drawer-section-label">Cars</span>
+      <div class="palette-piece palette-car" data-type="freight"><div class="label">Freight</div></div>
+      <div class="palette-piece palette-car" data-type="passenger"><div class="label">Passenger</div></div>
+      <div class="palette-piece palette-car" data-type="caboose"><div class="label">Caboose</div></div>
+      <div class="palette-divider"></div>
+      <span class="drawer-section-label">Scenery</span>
+      <div class="palette-piece" data-type="tree"><div class="label">Tree</div></div>
+      <div class="palette-piece" data-type="house"><div class="label">House</div></div>
+      <div class="palette-piece" data-type="cow"><div class="label">Cow</div></div>
+      <div class="palette-piece" data-type="water"><div class="label">Water</div></div>
+    </div>
+  </div>
+
   <div id="main">
     <div id="header">
       <h1>🚂 Train Tracks</h1>
@@ -2674,8 +2905,10 @@ function placePiece(row, col, type, rotation = 0) {
   state.grid[row][col] = { type, rotation };
   if (SCENERY_TYPES.includes(type)) {
     SFX.placeScenery();
+    hapticPlace();
   } else {
     SFX.place();
+    hapticPlace();
   }
   renderCell(row, col);
   // Update neighbors' dots + bridge-over-water class
@@ -2980,106 +3213,8 @@ function onGridDown(e) {
     }
   }
 
-  // Quick-select tool: click to place
-  if (selectedTool && !e.target.closest('.train-svg')) {
-    if (!piece || SCENERY_TYPES.includes(piece.type)) {
-      // Place selected track type with auto-connect
-      const autoResult = findBestRotation(row, col, selectedTool);
-      placePiece(row, col, selectedTool, autoResult.rotation);
-      if (autoResult.score > 0) showAutoConnectPulse(row, col);
-      return;
-    }
-    // If clicking on an occupied track, still allow rotation
-    if (piece && !SCENERY_TYPES.includes(piece.type)) {
-      rotatePiece(row, col);
-      return;
-    }
-  }
 
-  // Quick-select tool: click to place
-  if (selectedTool && !e.target.closest('.train-svg')) {
-    if (!piece || SCENERY_TYPES.includes(piece.type)) {
-      // Place selected track type with auto-connect
-      const autoResult = findBestRotation(row, col, selectedTool);
-      placePiece(row, col, selectedTool, autoResult.rotation);
-      if (autoResult.score > 0) showAutoConnectPulse(row, col);
-      return;
-    }
-    // If clicking on an occupied track, still allow rotation
-    if (piece && !SCENERY_TYPES.includes(piece.type)) {
-      rotatePiece(row, col);
-      return;
-    }
-  }
 
-  // Quick-select tool: click to place
-  if (selectedTool && !e.target.closest('.train-svg')) {
-    if (!piece || SCENERY_TYPES.includes(piece.type)) {
-      // Place selected track type with auto-connect
-      const autoResult = findBestRotation(row, col, selectedTool);
-      placePiece(row, col, selectedTool, autoResult.rotation);
-      if (autoResult.score > 0) showAutoConnectPulse(row, col);
-      return;
-    }
-    // If clicking on an occupied track, still allow rotation
-    if (piece && !SCENERY_TYPES.includes(piece.type)) {
-      rotatePiece(row, col);
-      return;
-    }
-  }
-
-  // Quick-select tool: click to place
-  if (selectedTool && !e.target.closest('.train-svg')) {
-    if (!piece || SCENERY_TYPES.includes(piece.type)) {
-      // Place selected track type with auto-connect
-      const autoResult = findBestRotation(row, col, selectedTool);
-      placePiece(row, col, selectedTool, autoResult.rotation);
-      if (autoResult.score > 0) showAutoConnectPulse(row, col);
-      return;
-    }
-    // If clicking on an occupied track, still allow rotation
-    if (piece && !SCENERY_TYPES.includes(piece.type)) {
-      rotatePiece(row, col);
-      return;
-    }
-  }
-
-  // Quick-select tool: click to place
-  if (selectedTool && !e.target.closest('.train-svg')) {
-    if (!piece || SCENERY_TYPES.includes(piece.type)) {
-      // Place selected track type with auto-connect
-      const autoResult = findBestRotation(row, col, selectedTool);
-      placePiece(row, col, selectedTool, autoResult.rotation);
-      if (autoResult.score > 0) showAutoConnectPulse(row, col);
-      return;
-    }
-    // If clicking on an occupied track, still allow rotation
-    if (piece && !SCENERY_TYPES.includes(piece.type)) {
-      rotatePiece(row, col);
-      return;
-    }
-  }
-
-  // Start long-press timer for mobile (touch) removal
-  startLongPress(row, col);
-
-  // If clicking an occupied cell and not starting a drag, rotate
-  if (piece && !SCENERY_TYPES.includes(piece.type)) {
-    // Start potential drag — if they move enough, it's a drag; else it's a click (rotate)
-    dragInfo = {
-      type: piece.type,
-      source: 'grid',
-      startX: e.clientX,
-      startY: e.clientY,
-      sourceRow: row,
-      sourceCol: col,
-      rotation: piece.rotation,
-      moved: false,
-      hasTrain: !!getTrainAt(row, col),
-      trainColor: getTrainAt(row, col)?.color,
-    };
-    return;
-  }
 
   if (piece && SCENERY_TYPES.includes(piece.type)) {
     dragInfo = {
@@ -4513,10 +4648,15 @@ function renderTrainAtProgress(anim) {
 }
 
 function toggleSidebar() {
+  // On mobile, toggle the drawer instead of sidebar
+  if (isMobileLayout()) {
+    toggleMobileDrawer();
+    return;
+  }
   const app = document.getElementById('app');
   const btn = document.getElementById('sidebar-toggle');
   app.classList.toggle('sidebar-hidden');
-  btn.textContent = app.classList.contains('sidebar-hidden') ? '▶' : '◀';
+  if (btn) btn.textContent = app.classList.contains('sidebar-hidden') ? '▶' : '◀';
   calculateSize();
   renderAllCells();
 }
@@ -5205,14 +5345,58 @@ function closeSaveModalOutside(e) {
 // ============================================================
 // SIZING
 // ============================================================
+function isMobileLayout() {
+  return window.innerWidth <= 768;
+}
+
 function calculateSize() {
-  const sidebarHidden = document.getElementById('app').classList.contains('sidebar-hidden');
-  const sidebarW = sidebarHidden ? 0 : parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-w'));
-  const availW = window.innerWidth - sidebarW - 40;
-  const availH = window.innerHeight - 120;
-  cellSize = Math.floor(Math.min(availW / COLS, availH / ROWS));
-  cellSize = Math.max(40, Math.min(cellSize, 80));
+  if (isMobileLayout()) {
+    // Mobile: grid fills width, account for bottom drawer
+    const drawerH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--drawer-height')) || 88;
+    const availW = window.innerWidth - 12; // small padding
+    const controlsH = 50; // approximate controls + header height
+    const headerH = 36;
+    const availH = window.innerHeight - drawerH - controlsH - headerH - 20;
+    cellSize = Math.floor(Math.min(availW / COLS, availH / ROWS));
+    cellSize = Math.max(32, Math.min(cellSize, 60));
+  } else {
+    // Desktop: original calculation
+    const sidebarHidden = document.getElementById('app').classList.contains('sidebar-hidden');
+    const sidebarW = sidebarHidden ? 0 : parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-w'));
+    const availW = window.innerWidth - sidebarW - 40;
+    const availH = window.innerHeight - 120;
+    cellSize = Math.floor(Math.min(availW / COLS, availH / ROWS));
+    cellSize = Math.max(40, Math.min(cellSize, 80));
+  }
   document.documentElement.style.setProperty('--cell-size', cellSize + 'px');
+}
+
+// ============================================================
+// MOBILE DRAWER
+// ============================================================
+function toggleMobileDrawer() {
+  const drawer = document.getElementById('mobile-drawer');
+  if (!drawer) return;
+  const toggle = document.getElementById('drawer-toggle');
+  drawer.classList.toggle('collapsed');
+  if (toggle) {
+    toggle.textContent = drawer.classList.contains('collapsed') ? '▲ Pieces' : '▼ Pieces';
+  }
+}
+
+// ============================================================
+// HAPTIC FEEDBACK
+// ============================================================
+function hapticPlace() {
+  if (navigator.vibrate) {
+    try { navigator.vibrate(10); } catch(e) {}
+  }
+}
+
+function hapticRemove() {
+  if (navigator.vibrate) {
+    try { navigator.vibrate([5, 5, 5]); } catch(e) {}
+  }
 }
 
 
