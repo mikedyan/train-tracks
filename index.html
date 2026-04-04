@@ -1060,6 +1060,7 @@ body.night-mode .cell.has-tunnel svg {
     padding: 0 8px 6px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    touch-action: pan-x;
   }
 
   #drawer-content::-webkit-scrollbar {
@@ -2933,6 +2934,7 @@ function removePiece(row, col) {
   const _removedPiece = state.grid[row][col];
   saveUndo();
   SFX.remove();
+  hapticRemove();
   delete state.switchStates[row + ',' + col];
   // If train is here, remove it
   const trainIdx = getTrainIndex(row, col);
