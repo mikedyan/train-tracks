@@ -1,0 +1,100 @@
+{
+  "day": 18,
+  "feature": "Pinch-to-Zoom + Pan",
+  "phase": 2,
+  "date": "2026-04-06",
+  "bugs_to_fix": [],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Add grid-viewport wrapper HTML",
+      "description": "Wrap #grid-container in a new #grid-viewport div. Move visual props (border-radius, box-shadow, overflow:hidden) from grid-container to viewport. Add #zoom-indicator badge inside viewport.",
+      "file": "index.html",
+      "section": "HTML structure"
+    },
+    {
+      "id": "T2",
+      "title": "CSS for viewport, zoom transform, and indicator",
+      "description": "Style #grid-viewport with overflow:hidden, border-radius, box-shadow. Update #grid-container to have transform-origin:0 0, will-change:transform, remove old overflow/radius/shadow. Style #zoom-indicator as floating badge. Update night-mode selectors.",
+      "file": "index.html",
+      "section": "CSS"
+    },
+    {
+      "id": "T3",
+      "title": "Zoom/pan state and applyZoomTransform()",
+      "description": "Add zoomLevel (1), panX (0), panY (0) state vars. Add applyZoomTransform() that sets grid-container transform: translate(panX, panY) scale(zoomLevel). Add enforcePanBounds() to keep grid within viewport. Add updateZoomIndicator() to show/hide zoom badge.",
+      "file": "index.html",
+      "section": "JS"
+    },
+    {
+      "id": "T4",
+      "title": "Fix getCellUnder() for zoom",
+      "description": "Convert screen coordinates to grid-container local space using viewport rect and zoom/pan values instead of raw getBoundingClientRect math.",
+      "file": "index.html",
+      "section": "JS - getCellUnder"
+    },
+    {
+      "id": "T5",
+      "title": "Fix animation offset calculations",
+      "description": "Replace all (gridRect.left - containerRect.left) patterns with grid.offsetLeft/offsetTop for local-space positioning. Affects: renderTrainAtProgress (2 places), startPlay car pre-seeding, spawnChimneySmoke, puzzle confetti.",
+      "file": "index.html",
+      "section": "JS - multiple animation functions"
+    },
+    {
+      "id": "T6",
+      "title": "Mouse wheel zoom on desktop",
+      "description": "Add wheel event listener on grid-viewport. Zoom toward cursor position. Range 0.5x-2.0x. Ctrl+wheel for finer control.",
+      "file": "index.html",
+      "section": "JS - init"
+    },
+    {
+      "id": "T7",
+      "title": "Pinch-to-zoom and two-finger pan on mobile",
+      "description": "Track touch events on grid-viewport. Two-finger pinch scales zoomLevel centered on midpoint. Two-finger drag pans. Ensure single-finger still works for drag-and-drop.",
+      "file": "index.html",
+      "section": "JS - touch handlers"
+    },
+    {
+      "id": "T8",
+      "title": "Double-tap to reset zoom",
+      "description": "Track tap timing on grid area. Two taps within 300ms resets zoom to 1.0 and pan to (0,0).",
+      "file": "index.html",
+      "section": "JS - tap handlers"
+    },
+    {
+      "id": "T9",
+      "title": "Keyboard zoom shortcuts",
+      "description": "Add +/= for zoom in, - for zoom out, 0 for reset. Update shortcuts overlay.",
+      "file": "index.html",
+      "section": "JS - handleKeyDown"
+    },
+    {
+      "id": "T10",
+      "title": "Reset zoom on resize",
+      "description": "In the window resize handler, reset zoom to 1.0 and pan to (0,0) to prevent layout issues.",
+      "file": "index.html",
+      "section": "JS - init resize handler"
+    }
+  ],
+  "acceptance_criteria": [
+    "Pinch-to-zoom works on iPad/iPhone with range 0.5x-2.0x",
+    "Mouse wheel zoom works on desktop, zooming toward cursor",
+    "Two-finger pan works when zoomed in",
+    "Double-tap on grid resets zoom to 1:1",
+    "Zoom level indicator appears in corner when zoom != 1x",
+    "Grid stays within viewport bounds (can't pan off-screen)",
+    "All existing features work at all zoom levels: drag-and-drop, rotation, train animation, particles, sounds",
+    "Keyboard shortcuts +/-/0 for zoom in/out/reset",
+    "No JS errors at any zoom level",
+    "Performance stays smooth (CSS transform is GPU-accelerated)"
+  ],
+  "testing_focus": [
+    "Drag-and-drop at various zoom levels",
+    "Train animation positioning at zoom > 1",
+    "Smoke/confetti particles at zoom > 1",
+    "Cell identification (getCellUnder) accuracy at all zoom levels",
+    "Pinch gesture doesn't interfere with single-finger drag",
+    "Boundary enforcement when panning",
+    "Mobile drawer interaction unaffected by zoom"
+  ]
+}

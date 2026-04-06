@@ -213,45 +213,17 @@ html, body {
   transition: color 0.5s ease;
 }
 
-/* GRID VIEWPORT (zoom/pan container) */
-#grid-viewport {
+/* GRID */
+#grid-container {
   position: relative;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0,0,0,0.15), inset 0 0 0 3px rgba(0,0,0,0.1);
   transition: box-shadow 0.5s ease;
-  touch-action: none;
 }
 
-body.night-mode #grid-viewport {
+body.night-mode #grid-container {
   box-shadow: 0 4px 20px rgba(0,0,0,0.4), inset 0 0 0 3px rgba(0,0,0,0.3);
-}
-
-#grid-container {
-  position: relative;
-  transform-origin: 0 0;
-  will-change: transform;
-}
-
-/* Zoom indicator badge */
-#zoom-indicator {
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
-  background: rgba(0,0,0,0.55);
-  color: white;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 8px;
-  z-index: 80;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  font-family: "Nunito", sans-serif;
-}
-#zoom-indicator.visible {
-  opacity: 1;
 }
 
 #grid {
@@ -1394,12 +1366,9 @@ body.night-mode .piece-badge.depleted { background: #B71C1C; color: #EF9A9A; }
     <div id="header">
       <h1>🚂 Train Tracks</h1>
     </div>
-    <div id="grid-viewport">
-      <div id="grid-container">
-        <div id="grid"></div>
-        <div id="train-headlight"></div>
-      </div>
-      <div id="zoom-indicator">1.0×</div>
+    <div id="grid-container">
+      <div id="grid"></div>
+      <div id="train-headlight"></div>
     </div>
     <div id="controls">
       <button class="btn btn-play" id="btn-play" onclick="togglePlay()">▶️ Play</button>
@@ -1453,9 +1422,6 @@ body.night-mode .piece-badge.depleted { background: #B71C1C; color: #EF9A9A; }
     <div class="shortcut-section">Display</div>
     <div class="shortcut-row"><span class="shortcut-desc">Night mode</span><span class="shortcut-key">N</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Toggle sidebar</span><span class="shortcut-key">Tab</span></div>
-    <div class="shortcut-row"><span class="shortcut-desc">Zoom in</span><span class="shortcut-key">+</span></div>
-    <div class="shortcut-row"><span class="shortcut-desc">Zoom out</span><span class="shortcut-key">-</span></div>
-    <div class="shortcut-row"><span class="shortcut-desc">Reset zoom</span><span class="shortcut-key">0</span></div>
     <div class="shortcut-section">Other</div>
     <div class="shortcut-row"><span class="shortcut-desc">Show shortcuts</span><span class="shortcut-key">?</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Close modal / Deselect</span><span class="shortcut-key">Esc</span></div>
@@ -2060,90 +2026,6 @@ const state = {
 let cellSize = 60;
 let animStates = []; // array of per-train animation states
 
-// ============================================================
-// ZOOM / PAN STATE
-// ============================================================
-const ZOOM_MIN = 0.5;
-const ZOOM_MAX = 2.0;
-const ZOOM_KEY = 'trainTracks_zoom';
-let zoomLevel = 1;
-let panX = 0;
-let panY = 0;
-let zoomTouchState = null; // for pinch/pan tracking
-
-function applyZoomTransform() {
-  const gc = document.getElementById('grid-container');
-  if (!gc) return;
-  gc.style.transform = 'translate(' + panX + 'px,' + panY + 'px) scale(' + zoomLevel + ')';
-  updateZoomIndicator();
-}
-
-function enforcePanBounds() {
-  const vp = document.getElementById('grid-viewport');
-  const gc = document.getElementById('grid-container');
-  if (!vp || !gc) return;
-  const vpW = vp.clientWidth;
-  const vpH = vp.clientHeight;
-  const gcW = gc.scrollWidth * zoomLevel;
-  const gcH = gc.scrollHeight * zoomLevel;
-
-  if (gcW <= vpW) {
-    // Centered when smaller than viewport
-    panX = (vpW - gcW) / 2;
-  } else {
-    // Clamp so grid doesn't leave viewport
-    panX = Math.min(0, Math.max(vpW - gcW, panX));
-  }
-
-  if (gcH <= vpH) {
-    panY = (vpH - gcH) / 2;
-  } else {
-    panY = Math.min(0, Math.max(vpH - gcH, panY));
-  }
-}
-
-function updateZoomIndicator() {
-  const el = document.getElementById('zoom-indicator');
-  if (!el) return;
-  if (Math.abs(zoomLevel - 1) < 0.01) {
-    el.classList.remove('visible');
-  } else {
-    el.textContent = zoomLevel.toFixed(1) + '×';
-    el.classList.add('visible');
-  }
-}
-
-function resetZoom() {
-  zoomLevel = 1;
-  panX = 0;
-  panY = 0;
-  applyZoomTransform();
-}
-
-function setZoomAtPoint(newZoom, screenX, screenY) {
-  const vp = document.getElementById('grid-viewport');
-  if (!vp) return;
-  const vpRect = vp.getBoundingClientRect();
-
-  // Point in viewport space
-  const vpX = screenX - vpRect.left;
-  const vpY = screenY - vpRect.top;
-
-  // Point in grid-container local space before zoom
-  const localX = (vpX - panX) / zoomLevel;
-  const localY = (vpY - panY) / zoomLevel;
-
-  const oldZoom = zoomLevel;
-  zoomLevel = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, newZoom));
-
-  // Adjust pan so the same local point stays under the cursor
-  panX = vpX - localX * zoomLevel;
-  panY = vpY - localY * zoomLevel;
-
-  enforcePanBounds();
-  applyZoomTransform();
-}
-
 // Train lookup helpers
 function getTrainAt(row, col) {
   return state.trains.find(t => t.row === row && t.col === col) || null;
@@ -2626,15 +2508,6 @@ function initGrid() {
       cell.dataset.col = c;
       grid.appendChild(cell);
     }
-  }
-
-  // Set viewport size to match grid-container natural dimensions
-  const gridW = COLS * cellSize + (COLS - 1); // cells + gaps
-  const gridH = ROWS * cellSize + (ROWS - 1);
-  const vp = document.getElementById('grid-viewport');
-  if (vp) {
-    vp.style.width = gridW + 'px';
-    vp.style.height = gridH + 'px';
   }
 }
 
@@ -3702,18 +3575,10 @@ function hideGhost() {
 }
 
 function getCellUnder(x, y) {
-  // Convert screen coords to grid-container local space accounting for zoom/pan
-  const vp = document.getElementById('grid-viewport');
-  if (!vp) return null;
-  const vpRect = vp.getBoundingClientRect();
-  const localX = (x - vpRect.left - panX) / zoomLevel;
-  const localY = (y - vpRect.top - panY) / zoomLevel;
-  // grid offset within container (normally 0)
   const grid = document.getElementById('grid');
-  const gOffX = grid ? grid.offsetLeft : 0;
-  const gOffY = grid ? grid.offsetTop : 0;
-  const col = Math.floor((localX - gOffX) / (cellSize + 1)); // +1 for gap
-  const row = Math.floor((localY - gOffY) / (cellSize + 1));
+  const rect = grid.getBoundingClientRect();
+  const col = Math.floor((x - rect.left) / (cellSize + 1)); // +1 for gap
+  const row = Math.floor((y - rect.top) / (cellSize + 1));
   if (row >= 0 && row < ROWS && col >= 0 && col < COLS) {
     return { row, col };
   }
@@ -4059,8 +3924,10 @@ function spawnChimneySmoke() {
   const gridContainer = document.getElementById('grid-container');
   const grid = document.getElementById('grid');
   if (!gridContainer || !grid) return;
-  const offX = grid ? grid.offsetLeft : 0;
-  const offY = grid ? grid.offsetTop : 0;
+  const gridRect = grid.getBoundingClientRect();
+  const containerRect = gridContainer.getBoundingClientRect();
+  const offX = gridRect.left - containerRect.left;
+  const offY = gridRect.top - containerRect.top;
 
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
@@ -4449,8 +4316,10 @@ function startPlay() {
     if (train.cars.length > 0) {
       const carSpacing = cellSize * 0.85;
       const gridEl = document.getElementById('grid');
-      const offX = gridEl ? gridEl.offsetLeft : 0;
-      const offY = gridEl ? gridEl.offsetTop : 0;
+      const gRect = gridEl.getBoundingClientRect();
+      const cRect = document.getElementById('grid-container').getBoundingClientRect();
+      const offX = gRect.left - cRect.left;
+      const offY = gRect.top - cRect.top;
       const dirAngles = { N: 0, E: 90, S: 180, W: 270 };
 
       const staticCarPos = getCarCellPositions(train);
@@ -4633,8 +4502,8 @@ function renderTrainAtProgress(anim) {
 
   const pos = interpolatePath(anim.path, Math.min(anim.progress, 1));
   const grid = document.getElementById('grid');
-  const offX = grid ? grid.offsetLeft : 0;
-  const offY = grid ? grid.offsetTop : 0;
+  const gridRect = grid.getBoundingClientRect();
+  const containerRect = document.getElementById('grid-container').getBoundingClientRect();
 
   const cellX = anim.col * (cellSize + 1);
   const cellY = anim.row * (cellSize + 1);
@@ -4642,8 +4511,8 @@ function renderTrainAtProgress(anim) {
   const pixelX = cellX + pos.x * cellSize;
   const pixelY = cellY + pos.y * cellSize;
 
-  const locoX = pixelX + offX;
-  const locoY = pixelY + offY;
+  const locoX = pixelX + gridRect.left - containerRect.left;
+  const locoY = pixelY + gridRect.top - containerRect.top;
 
   anim.trainEl.style.left = locoX + 'px';
   anim.trainEl.style.top = locoY + 'px';
@@ -4724,8 +4593,10 @@ function renderTrainAtProgress(anim) {
 
     const carSpacing = cellSize * 0.85;
     const gridEl2 = document.getElementById('grid');
-    const gridOffX = gridEl2 ? gridEl2.offsetLeft : 0;
-    const gridOffY = gridEl2 ? gridEl2.offsetTop : 0;
+    const gRect2 = gridEl2.getBoundingClientRect();
+    const cRect2 = document.getElementById('grid-container').getBoundingClientRect();
+    const gridOffX = gRect2.left - cRect2.left;
+    const gridOffY = gRect2.top - cRect2.top;
 
     for (let i = 0; i < anim.carEls.length; i++) {
       const targetDist = anim.cumulativeDistance - (i + 1) * carSpacing;
@@ -5618,25 +5489,6 @@ function handleKeyDown(e) {
     return;
   }
 
-  // Zoom shortcuts: +/= zoom in, - zoom out, 0 reset
-  if (key === '+' || key === '=') {
-    e.preventDefault();
-    const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
-    setZoomAtPoint(zoomLevel + 0.1, cx, cy);
-    return;
-  }
-  if (key === '-' && !e.ctrlKey && !e.metaKey) {
-    e.preventDefault();
-    const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
-    setZoomAtPoint(zoomLevel - 0.1, cx, cy);
-    return;
-  }
-  if (key === '0' && !e.ctrlKey && !e.metaKey) {
-    e.preventDefault();
-    resetZoom();
-    return;
-  }
-
   // Space: play/stop
   if (key === ' ') {
     e.preventDefault();
@@ -6137,13 +5989,8 @@ function checkPuzzleSolution() {
     avgC = Math.floor(avgC / trackCells.length);
     const cellEl = document.querySelector('.cell[data-row="' + avgR + '"][data-col="' + avgC + '"]');
     if (cellEl && typeof triggerLoopCelebration === 'function') {
-      // Convert cell position to grid-container local coords (zoom-safe)
-      const grid = document.getElementById('grid');
-      const gOff = grid ? grid.offsetLeft : 0;
-      const gOffY = grid ? grid.offsetTop : 0;
-      const localX = avgC * (cellSize + 1) + cellSize / 2 + gOff;
-      const localY = avgR * (cellSize + 1) + cellSize / 2 + gOffY;
-      triggerLoopCelebration({ trainEl: { style: { left: localX + 'px', top: localY + 'px' } } });
+      const rect = cellEl.getBoundingClientRect();
+      triggerLoopCelebration({ style: { left: rect.left + rect.width/2 + 'px', top: rect.top + rect.height/2 + 'px' } });
     }
   } else if (!allConnected) {
     showToast('\u274c ' + Math.floor(openEnds/2) + ' disconnected edges! Check your connections.');
@@ -6178,128 +6025,6 @@ function exitPuzzle() {
 // ============================================================
 // INIT
 // ============================================================
-// ============================================================
-// ZOOM / PAN EVENT HANDLERS
-// ============================================================
-
-// Mouse wheel zoom (desktop)
-function onViewportWheel(e) {
-  e.preventDefault();
-  const delta = -e.deltaY * 0.001;
-  const newZoom = zoomLevel + delta;
-  setZoomAtPoint(newZoom, e.clientX, e.clientY);
-}
-
-// Pinch-to-zoom + two-finger pan (mobile)
-function onViewportTouchStart(e) {
-  if (e.touches.length === 2) {
-    e.preventDefault();
-    const t1 = e.touches[0], t2 = e.touches[1];
-    const dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
-    zoomTouchState = {
-      initialDist: dist,
-      initialZoom: zoomLevel,
-      initialPanX: panX,
-      initialPanY: panY,
-      midX: (t1.clientX + t2.clientX) / 2,
-      midY: (t1.clientY + t2.clientY) / 2,
-    };
-  }
-}
-
-function onViewportTouchMove(e) {
-  if (e.touches.length === 2 && zoomTouchState) {
-    e.preventDefault();
-    const t1 = e.touches[0], t2 = e.touches[1];
-    const dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
-    const midX = (t1.clientX + t2.clientX) / 2;
-    const midY = (t1.clientY + t2.clientY) / 2;
-
-    // Pinch zoom
-    const scale = dist / zoomTouchState.initialDist;
-    const newZoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoomTouchState.initialZoom * scale));
-
-    // Pan from finger midpoint movement
-    const dmx = midX - zoomTouchState.midX;
-    const dmy = midY - zoomTouchState.midY;
-
-    // Zoom toward initial midpoint
-    const vp = document.getElementById('grid-viewport');
-    if (!vp) return;
-    const vpRect = vp.getBoundingClientRect();
-    const vpMidX = zoomTouchState.midX - vpRect.left;
-    const vpMidY = zoomTouchState.midY - vpRect.top;
-
-    const localX = (vpMidX - zoomTouchState.initialPanX) / zoomTouchState.initialZoom;
-    const localY = (vpMidY - zoomTouchState.initialPanY) / zoomTouchState.initialZoom;
-
-    panX = vpMidX - localX * newZoom + dmx;
-    panY = vpMidY - localY * newZoom + dmy;
-    zoomLevel = newZoom;
-
-    enforcePanBounds();
-    applyZoomTransform();
-  }
-}
-
-function onViewportTouchEnd(e) {
-  if (e.touches.length < 2) {
-    zoomTouchState = null;
-  }
-}
-
-// Double-tap to reset zoom
-let lastTapTime = 0;
-function onViewportDoubleTap(e) {
-  // Only detect double-tap on single-finger taps
-  if (e.touches && e.touches.length > 1) return;
-  const now = Date.now();
-  if (now - lastTapTime < 300) {
-    // Double-tap detected
-    e.preventDefault();
-    if (Math.abs(zoomLevel - 1) > 0.01 || Math.abs(panX) > 1 || Math.abs(panY) > 1) {
-      resetZoom();
-      showToast('🔍 Zoom reset');
-    } else {
-      // Zoom in to 1.5x at tap point
-      const tx = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
-      const ty = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
-      setZoomAtPoint(1.5, tx, ty);
-    }
-    lastTapTime = 0;
-    return;
-  }
-  lastTapTime = now;
-}
-
-function initZoomPan() {
-  const vp = document.getElementById('grid-viewport');
-  if (!vp) return;
-
-  // Desktop: mouse wheel
-  vp.addEventListener('wheel', onViewportWheel, { passive: false });
-
-  // Mobile: pinch-to-zoom and two-finger pan
-  vp.addEventListener('touchstart', onViewportTouchStart, { passive: false });
-  vp.addEventListener('touchmove', onViewportTouchMove, { passive: false });
-  vp.addEventListener('touchend', onViewportTouchEnd, { passive: true });
-
-  // Double-tap to reset (fires on touchend for single finger)
-  vp.addEventListener('touchend', onViewportDoubleTap, { passive: false });
-  // Desktop double-click: only on viewport itself (not on grid cells)
-  vp.addEventListener('dblclick', (e) => {
-    // Don't intercept double-clicks on grid cells (those rotate pieces)
-    if (e.target.closest('.cell')) return;
-    e.preventDefault();
-    if (Math.abs(zoomLevel - 1) > 0.01 || Math.abs(panX) > 1 || Math.abs(panY) > 1) {
-      resetZoom();
-      showToast('\ud83d\udd0d Zoom reset');
-    } else {
-      setZoomAtPoint(1.5, e.clientX, e.clientY);
-    }
-  });
-}
-
 function init() {
   calculateSize();
   initGrid();
@@ -6328,9 +6053,6 @@ function init() {
 
   initDragAndDrop();
 
-  // Zoom/pan
-  initZoomPan();
-
   // Keyboard shortcuts
   document.addEventListener('keydown', handleKeyDown);
   initHoverTracking();
@@ -6339,7 +6061,6 @@ function init() {
   document.getElementById('speed-slider').addEventListener('input', updateSmokeRate);
 
   window.addEventListener('resize', () => {
-    resetZoom();
     calculateSize();
     initGrid();
     renderAllCells();
