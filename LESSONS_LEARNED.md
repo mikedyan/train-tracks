@@ -146,3 +146,15 @@
 - LESSON-108: calculateSize() must account for the bottom drawer height on mobile (subtract from available height before computing cell size).
 - LESSON-109: Mobile drawer should auto-collapse during play state via CSS (no JS needed) using #app.playing #mobile-drawer { transform: translateY(...) }.
 - LESSON-110: Duplicate code blocks from previous builds must be checked with grep -c after each build. Day 14's duplicates survived through Day 16.
+
+## Zoom/Pan Patterns (Day 18)
+- LESSON-111: Use a viewport wrapper (#grid-viewport) with overflow:hidden around the grid container. Apply CSS transform on the inner container, not the viewport — this keeps the visible area fixed while the content zooms.
+- LESSON-112: CSS transform: scale() with transform-origin: 0 0 is GPU-accelerated and doesn't trigger reflow. All children scale automatically — no per-element adjustment needed.
+- LESSON-113: For coordinate conversion with zoom, use viewport.getBoundingClientRect() + panX/panY + zoomLevel to convert screen coords to grid-local coords. Don't use grid.getBoundingClientRect() which returns scaled values.
+- LESSON-114: Replace all getBoundingClientRect()-based offset diffs (gridRect.left - containerRect.left) with element.offsetLeft/offsetTop for positioning within the container. These are zoom-safe (always in local space).
+- LESSON-115: setZoomAtPoint() must calculate the local-space point BEFORE changing zoom, then adjust pan to keep that point under the cursor. Formula: panX = vpX - localX * newZoom.
+- LESSON-116: enforcePanBounds() should center the grid when it's smaller than the viewport (zoom < 1), and clamp pan when larger (zoom > 1).
+- LESSON-117: Two-finger pinch handlers (touchstart/touchmove/touchend) must only activate on e.touches.length === 2 to avoid interfering with single-finger drag-and-drop.
+- LESSON-118: Double-tap/double-click zoom reset must not fire on grid cells — check e.target.closest('.cell') to avoid interfering with click-to-rotate.
+- LESSON-119: Reset zoom on window resize to prevent layout inconsistencies when viewport dimensions change.
+- LESSON-120: The wheel event on the viewport must use { passive: false } and e.preventDefault() to prevent page scroll during zoom.

@@ -1,10 +1,10 @@
 {
   "project": "Train Tracks",
-  "currentDay": 17,
+  "currentDay": 18,
   "status": "phase2_in_progress",
-  "lastRun": "2026-04-04T09:30:00-07:00",
-  "completedDays": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
-  "nextDay": 18,
+  "lastRun": "2026-04-06T09:30:00-07:00",
+  "completedDays": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+  "nextDay": 19,
   "phase": 2,
   "roadmap": "ROADMAP_PHASE2.md",
   "review": "reviews/expert-panel-day14.md",
@@ -25,7 +25,8 @@
     { "day": 14, "date": "2026-03-31", "feature": "Keyboard Shortcuts + Undo/Redo Polish", "status": "complete" },
     { "day": 15, "date": "2026-04-01", "feature": "Challenge Puzzles (Set 1)", "status": "complete" },
     { "day": 16, "date": "2026-04-03", "feature": "Puzzle Star Rating + 5 More Puzzles", "status": "complete" },
-    { "day": 17, "date": "2026-04-04", "feature": "Mobile Touch Overhaul", "status": "complete" }
+    { "day": 17, "date": "2026-04-04", "feature": "Mobile Touch Overhaul", "status": "complete" },
+    { "day": 18, "date": "2026-04-06", "feature": "Pinch-to-Zoom + Pan", "status": "complete" }
   ],
-  "notes": "Day 17: Mobile-first layout with bottom drawer palette, haptic feedback, 56px touch targets, auto-collapsing drawer during play. Fixed BUG-013 (6x duplicated quick-select blocks). 8 lessons learned."
+  "notes": "Day 18: Zoom/pan system with viewport wrapper, CSS transform-based zoom (0.5x-2.0x), mouse wheel zoom toward cursor, pinch-to-zoom + two-finger pan for mobile, double-tap/dblclick reset, keyboard shortcuts (+/-/0), zoom indicator badge. Fixed all animation offset calculations to use offsetLeft/offsetTop for zoom-safety. 10 lessons learned."
 }

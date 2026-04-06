@@ -804,3 +804,67 @@ Mark each test with the result after running.
 - [ ] Sidebar toggle (◀/▶) still works
 - [ ] All keyboard shortcuts still work
 - [ ] Tab toggles sidebar on desktop, drawer on mobile
+
+## Day 18 — Pinch-to-Zoom + Pan (2026-04-06)
+
+### Zoom State & DOM
+- [x] `zoomLevel` = 1 at startup
+- [x] `panX` = 0, `panY` = 0 at startup
+- [x] `#grid-viewport` wraps `#grid-container`
+- [x] `#zoom-indicator` inside viewport, hidden at 1.0x
+- [x] Viewport has `overflow: hidden`
+- [x] Container has `transform-origin: 0 0`
+
+### Zoom In/Out
+- [x] `setZoomAtPoint(1.5, ...)` zooms to 1.5x
+- [x] `setZoomAtPoint(0.7, ...)` zooms out to 0.7x
+- [x] `setZoomAtPoint(0.5, ...)` zooms to min (0.5x)
+- [x] `setZoomAtPoint(3.0, ...)` clamped to max (2.0x)
+- [x] Transform applied on grid-container: `translate(px) scale(zoom)`
+
+### Zoom Indicator
+- [x] Hidden at 1.0x
+- [x] Visible at 1.5x, shows "1.5×"
+- [x] Visible at 2.0x, shows "2.0×"
+- [x] Hidden after resetZoom()
+
+### Pan Boundaries
+- [x] Pan +5000,+5000 clamped to 0,0
+- [x] Pan -5000,-5000 clamped to viewport bounds
+- [x] Grid centered at 0.5x zoom
+
+### getCellUnder at Zoom
+- [x] Cell (0,0) correctly identified at 1.3x zoom
+- [x] Cell (0,11) correctly identified at 1.3x zoom
+- [x] Cell (7,0) correctly identified at 1.3x zoom
+- [x] Cell (7,11) correctly identified at 1.3x zoom
+- [x] Cell (4,6) correctly identified at 1.3x zoom
+
+### Keyboard Shortcuts
+- [x] `=` zooms in 0.1
+- [x] `-` zooms out 0.1
+- [x] `0` resets zoom
+- [x] Shortcuts overlay shows all 3 zoom shortcuts
+
+### Animation at Zoom
+- [x] Train animates at 1.5x zoom
+- [x] Smoke particles spawn during zoomed play
+- [x] Chimney smoke active during zoomed play
+- [x] Zero JS errors during zoomed playback
+
+### Double-Tap/Click Reset
+- [x] Desktop dblclick on viewport (not on cell) resets zoom
+- [x] Touch double-tap within 300ms resets zoom
+
+### Reset on Resize
+- [x] Window resize resets zoom to 1.0x
+
+### Day 18 QA Results
+- JavaScript syntax validated: zero parse errors
+- HTML tags balanced (125 open / 125 close)
+- All 11 new zoom/pan functions present
+- All core functions present (0 missing)
+- 22 SFX methods present
+- Zero JS console errors (only favicon 404)
+- Zero bugs found
+- Zero regressions
