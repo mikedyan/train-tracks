@@ -158,3 +158,10 @@
 - LESSON-118: Double-tap/double-click zoom reset must not fire on grid cells — check e.target.closest('.cell') to avoid interfering with click-to-rotate.
 - LESSON-119: Reset zoom on window resize to prevent layout inconsistencies when viewport dimensions change.
 - LESSON-120: The wheel event on the viewport must use { passive: false } and e.preventDefault() to prevent page scroll during zoom.
+
+## Expanded Scenery Patterns (Day 19)
+- LESSON-121: When adding new scenery types that behave like existing ones (animals with flip, plants with sway), reuse CSS class patterns (e.g., `.scenery-animal-flipped` shared by sheep/horse like `.scenery-cow-flipped` for cow).
+- LESSON-122: Use hyphenated type names (`duck-land`) when a new type might collide with existing visual elements (water-duck decoration). Keep the type name distinct and descriptive.
+- LESSON-123: When expanding a per-type proximity check (like cow moo), refactor into a lookup table (ANIMAL_SFX map) instead of growing an if-else chain. Scales better with more types.
+- LESSON-124: All sound-producing scenery should use the shared `anim.mooCooldowns` object for per-cell cooldowns. The key is "row,col" and works across all animal types.
+- LESSON-125: The random scenery weighted distribution should keep trees as the most common type (~35%) to maintain the forest feel. New types should fill in the remaining probability space proportionally.

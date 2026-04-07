@@ -868,3 +868,60 @@ Mark each test with the result after running.
 - Zero JS console errors (only favicon 404)
 - Zero bugs found
 - Zero regressions
+
+---
+
+## Day 19 — More Scenery + Expanded Palette
+
+### New Scenery Placement
+- [x] Flower (🌻) draggable from palette and placeable on empty cells
+- [x] Sheep (🐑) draggable from palette and placeable on empty cells
+- [x] Horse (🐴) draggable from palette and placeable on empty cells
+- [x] Duck (🦆) draggable from palette and placeable on empty cells
+- [x] People (👨‍👩‍👦) draggable from palette and placeable on empty cells
+- [x] All new types appear in sidebar palette
+- [x] All new types appear in mobile bottom drawer
+
+### Scenery Animations
+- [x] Flowers sway gently with randomized timing
+- [x] Sheep randomly face left or right
+- [x] Horse randomly face left or right
+- [x] Land duck waddles with subtle animation
+- [x] People have subtle wave/bounce animation
+- [x] All new animations pause when tab hidden
+
+### Animal Sounds
+- [x] Sheep makes 'baa' when train passes within 1 cell
+- [x] Horse makes 'neigh' when train passes within 1 cell
+- [x] Duck makes 'quack' when train passes within 1 cell
+- [x] People make 'cheer' when train passes within 1 cell
+- [x] Per-cell 3s cooldown prevents sound spam
+- [x] Only one sound per cell transition
+
+### Random Generator
+- [x] Random track places variety of new scenery types
+- [x] Trees still most common (~35%)
+- [x] All 9 scenery types possible in random generation
+
+### Compatibility
+- [x] All new scenery visible in day mode
+- [x] All new scenery visible in night mode
+- [x] Save/Load preserves new scenery types
+- [x] Undo/Redo works with new scenery
+- [x] Right-click removes new scenery with poof effect
+- [x] Ghost preview shows correct emoji for new types
+- [x] Thumbnails render green dots for new scenery
+
+### Regressions
+- [x] Tree sway animation still works
+- [x] Cow moo still fires
+- [x] House chimney smoke still active
+- [x] Water waves still animate
+- [x] Night mode house glow preserved
+
+### Day 19 QA Results
+- JavaScript syntax validated: zero parse errors
+- HTML tags balanced (152 open / 152 close)
+- 26 SFX methods present (4 new: sheep, horse, duckQuack, peopleCheer)
+- Zero bugs found
+- Zero regressions
