@@ -1,0 +1,88 @@
+{
+  "day": 19,
+  "feature": "More Scenery + Expanded Palette",
+  "phase": 2,
+  "date": "2026-04-07",
+  "bugs_to_fix": [],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Add new scenery types to constants",
+      "description": "Add flower, sheep, horse, duck, and people to SCENERY_TYPES array and SCENERY_EMOJI map",
+      "file": "index.html",
+      "changes": "Update SCENERY_TYPES and SCENERY_EMOJI constants"
+    },
+    {
+      "id": "T2",
+      "title": "Add new scenery to sidebar palette",
+      "description": "Add 5 new palette-piece entries after the water entry in the sidebar",
+      "file": "index.html",
+      "changes": "Add HTML for flower, sheep, horse, duck, people palette items"
+    },
+    {
+      "id": "T3",
+      "title": "Add new scenery to mobile drawer",
+      "description": "Mirror the sidebar additions in the mobile bottom drawer",
+      "file": "index.html",
+      "changes": "Add HTML for flower, sheep, horse, duck, people in drawer-content"
+    },
+    {
+      "id": "T4",
+      "title": "Add animal/scenery sound effects",
+      "description": "Add SFX for sheep (baa), horse (neigh), duck (quack), and people (cheer). All Web Audio API synthesized.",
+      "file": "index.html",
+      "changes": "Add SFX.sheep(), SFX.horse(), SFX.duckQuack(), SFX.peopleCheer() methods"
+    },
+    {
+      "id": "T5",
+      "title": "Expand proximity sound checks for all animals",
+      "description": "Rename/expand checkCowProximity to checkAnimalProximity. Check for cow (moo), sheep (baa), horse (neigh), duck (quack), people (cheer) when train passes within 1 cell.",
+      "file": "index.html",
+      "changes": "Modify checkCowProximity → checkAnimalProximity with multi-type support"
+    },
+    {
+      "id": "T6",
+      "title": "Add CSS animations for new scenery",
+      "description": "Flowers: gentle sway like trees but smaller. Sheep/Horse: random flip like cow. Duck on land: subtle drift. People: subtle wave animation.",
+      "file": "index.html",
+      "changes": "Add CSS keyframes and classes for new scenery types, update renderCell"
+    },
+    {
+      "id": "T7",
+      "title": "Update random generator scenery pool",
+      "description": "Include new scenery types in addRandomScenery weighted random selection",
+      "file": "index.html",
+      "changes": "Update addRandomScenery() weighted selection"
+    },
+    {
+      "id": "T8",
+      "title": "Ensure night mode compatibility",
+      "description": "All new scenery should be visible and appropriate in night mode. No special glow needed for animals/people.",
+      "file": "index.html",
+      "changes": "Verify renderCell handles new types in night mode"
+    }
+  ],
+  "acceptance_criteria": [
+    "AC1: All 5 new scenery types (flower, sheep, horse, duck, people) appear in both sidebar and mobile drawer palettes",
+    "AC2: Each new type can be dragged and placed on empty grid cells",
+    "AC3: Sheep makes a 'baa' sound when train passes within 1 cell",
+    "AC4: Horse makes a 'neigh' sound when train passes within 1 cell",
+    "AC5: Duck makes a 'quack' sound when train passes within 1 cell",
+    "AC6: People make a 'cheer' sound when train passes within 1 cell",
+    "AC7: Random generator places varied scenery including new types",
+    "AC8: All new scenery visible in both day and night modes",
+    "AC9: Flowers have gentle sway animation",
+    "AC10: Sheep and horse have random flip like cow",
+    "AC11: Palette is not cluttered — clear organization maintained",
+    "AC12: No regressions in existing scenery (tree sway, cow moo, house chimney smoke, water waves)"
+  ],
+  "testing_focus": [
+    "Place each new scenery type and verify emoji renders",
+    "Run Random → Play → verify new animal sounds fire near trains",
+    "Toggle day/night mode with new scenery on grid",
+    "Mobile drawer shows all new items with horizontal scroll",
+    "Right-click remove works on new scenery types",
+    "Save/Load preserves new scenery types",
+    "Undo/Redo works with new scenery placements"
+  ]
+}

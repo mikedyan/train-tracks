@@ -922,6 +922,46 @@ body.night-mode .cell.bridge-over-water::after {
   transform: translate(-50%, -50%) scaleX(-1) !important;
 }
 
+/* Flipped animals (sheep, horse) */
+.scenery-animal-flipped {
+  transform: translate(-50%, -50%) scaleX(-1) !important;
+}
+
+/* FLOWER SWAY ANIMATION */
+@keyframes flower-sway {
+  0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+  30% { transform: translate(-50%, -50%) rotate(2deg) scale(1.02); }
+  70% { transform: translate(-50%, -50%) rotate(-2deg) scale(0.98); }
+}
+
+.scenery-flower {
+  animation: flower-sway var(--flower-sway-duration, 2.8s) ease-in-out infinite;
+  animation-delay: var(--flower-sway-delay, 0s);
+}
+
+/* PEOPLE WAVE ANIMATION */
+@keyframes people-wave {
+  0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+  50% { transform: translate(-50%, -50%) translateY(-2px); }
+}
+
+.scenery-people {
+  animation: people-wave var(--people-wave-duration, 2.5s) ease-in-out infinite;
+  animation-delay: var(--people-wave-delay, 0s);
+}
+
+/* LAND DUCK WADDLE ANIMATION */
+@keyframes land-duck-waddle {
+  0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+  25% { transform: translate(-50%, -50%) rotate(3deg) translateX(1px); }
+  75% { transform: translate(-50%, -50%) rotate(-3deg) translateX(-1px); }
+}
+
+.scenery-land-duck {
+  animation: land-duck-waddle var(--duck-waddle-duration, 2.2s) ease-in-out infinite;
+  animation-delay: var(--duck-waddle-delay, 0s);
+}
+
 /* CHIMNEY SMOKE */
 @keyframes chimney-smoke-rise {
   0% { opacity: 0.4; transform: translate(var(--chimney-dx, 0px), 0px) scale(0.6); }
@@ -943,6 +983,15 @@ body.night-mode .cell.bridge-over-water::after {
   animation-play-state: paused !important;
 }
 .animations-paused .cell.water-cell::before {
+  animation-play-state: paused !important;
+}
+.animations-paused .scenery-flower {
+  animation-play-state: paused !important;
+}
+.animations-paused .scenery-people {
+  animation-play-state: paused !important;
+}
+.animations-paused .scenery-land-duck {
   animation-play-state: paused !important;
 }
 
@@ -1358,6 +1407,11 @@ body.night-mode .piece-badge.depleted { background: #B71C1C; color: #EF9A9A; }
     <div class="palette-piece" data-type="house"><div class="label">House</div></div>
     <div class="palette-piece" data-type="cow"><div class="label">Cow</div></div>
     <div class="palette-piece" data-type="water"><div class="label">Water</div></div>
+    <div class="palette-piece" data-type="flower"><div class="label">Flower</div></div>
+    <div class="palette-piece" data-type="sheep"><div class="label">Sheep</div></div>
+    <div class="palette-piece" data-type="horse"><div class="label">Horse</div></div>
+    <div class="palette-piece" data-type="duck-land"><div class="label">Duck</div></div>
+    <div class="palette-piece" data-type="people"><div class="label">People</div></div>
   </div>
   <!-- Mobile Bottom Drawer (shown on mobile via CSS) -->
   <div id="mobile-drawer">
@@ -1387,6 +1441,11 @@ body.night-mode .piece-badge.depleted { background: #B71C1C; color: #EF9A9A; }
       <div class="palette-piece" data-type="house"><div class="label">House</div></div>
       <div class="palette-piece" data-type="cow"><div class="label">Cow</div></div>
       <div class="palette-piece" data-type="water"><div class="label">Water</div></div>
+      <div class="palette-piece" data-type="flower"><div class="label">Flower</div></div>
+      <div class="palette-piece" data-type="sheep"><div class="label">Sheep</div></div>
+      <div class="palette-piece" data-type="horse"><div class="label">Horse</div></div>
+      <div class="palette-piece" data-type="duck-land"><div class="label">Duck</div></div>
+      <div class="palette-piece" data-type="people"><div class="label">People</div></div>
     </div>
   </div>
 
@@ -1822,6 +1881,113 @@ const SFX = {
       osc2.stop(startTime + 0.07);
     }
   },
+  sheep() {
+    // Sheep baa — nasal bleat with pitch wobble
+    if (!soundEnabled) return;
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    const mg = getMasterGain();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(320, ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(280, ctx.currentTime + 0.15);
+    osc.frequency.linearRampToValueAtTime(350, ctx.currentTime + 0.3);
+    osc.frequency.linearRampToValueAtTime(260, ctx.currentTime + 0.5);
+    gain.gain.setValueAtTime(0.04, ctx.currentTime);
+    gain.gain.setValueAtTime(0.05, ctx.currentTime + 0.15);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.55);
+    osc.connect(gain);
+    gain.connect(mg);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.55);
+    // Nasal overtone
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(640, ctx.currentTime);
+    osc2.frequency.linearRampToValueAtTime(520, ctx.currentTime + 0.4);
+    gain2.gain.setValueAtTime(0.02, ctx.currentTime);
+    gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    osc2.connect(gain2);
+    gain2.connect(mg);
+    osc2.start(ctx.currentTime);
+    osc2.stop(ctx.currentTime + 0.4);
+  },
+  horse() {
+    // Horse neigh — descending whinny
+    if (!soundEnabled) return;
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    const mg = getMasterGain();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(600, ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(800, ctx.currentTime + 0.1);
+    osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.35);
+    osc.frequency.exponentialRampToValueAtTime(250, ctx.currentTime + 0.6);
+    gain.gain.setValueAtTime(0.05, ctx.currentTime);
+    gain.gain.setValueAtTime(0.06, ctx.currentTime + 0.1);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.65);
+    osc.connect(gain);
+    gain.connect(mg);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.65);
+    // Breathy overtone
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(1200, ctx.currentTime);
+    osc2.frequency.exponentialRampToValueAtTime(500, ctx.currentTime + 0.5);
+    gain2.gain.setValueAtTime(0.02, ctx.currentTime);
+    gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+    osc2.connect(gain2);
+    gain2.connect(mg);
+    osc2.start(ctx.currentTime);
+    osc2.stop(ctx.currentTime + 0.45);
+  },
+  duckQuack() {
+    // Duck quack — short nasal honk
+    if (!soundEnabled) return;
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    const mg = getMasterGain();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(480, ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(350, ctx.currentTime + 0.08);
+    osc.frequency.linearRampToValueAtTime(420, ctx.currentTime + 0.15);
+    gain.gain.setValueAtTime(0.04, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+    osc.connect(gain);
+    gain.connect(mg);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.2);
+    // Second quack slightly delayed
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'square';
+    osc2.frequency.setValueAtTime(460, ctx.currentTime + 0.2);
+    osc2.frequency.linearRampToValueAtTime(330, ctx.currentTime + 0.28);
+    gain2.gain.setValueAtTime(0, ctx.currentTime);
+    gain2.gain.setValueAtTime(0.035, ctx.currentTime + 0.2);
+    gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+    osc2.connect(gain2);
+    gain2.connect(mg);
+    osc2.start(ctx.currentTime + 0.2);
+    osc2.stop(ctx.currentTime + 0.38);
+  },
+  peopleCheer() {
+    // People cheer — short bright burst of notes
+    if (!soundEnabled) return;
+    playNote(523, 0.08, 'sine', 0.06);
+    playNote(659, 0.08, 'sine', 0.06, 0.04);
+    playNote(784, 0.1, 'sine', 0.07, 0.08);
+    playNote(880, 0.06, 'sine', 0.04, 0.14);
+    playNoise(0.08, 0.02);
+  },
   boing(speed = 1) {
     // Comical bouncy crash — spring-like frequency sweep
     // Intensity scales with speed
@@ -2014,8 +2180,8 @@ const DELTA = { N: { r: -1, c: 0 }, S: { r: 1, c: 0 }, E: { r: 0, c: 1 }, W: { r
 const ROTATE_MAP = { N: 'E', E: 'S', S: 'W', W: 'N' };
 
 const TRACK_TYPES = ['straight', 'curve', 'tjunction', 'crossover', 'bridge', 'tunnel', 'station'];
-const SCENERY_TYPES = ['tree', 'house', 'cow', 'water'];
-const SCENERY_EMOJI = { tree: '🌲', house: '🏠', cow: '🐄', water: '💧' };
+const SCENERY_TYPES = ['tree', 'house', 'cow', 'water', 'flower', 'sheep', 'horse', 'duck-land', 'people'];
+const SCENERY_EMOJI = { tree: '🌲', house: '🏠', cow: '🐄', water: '💧', flower: '🌻', sheep: '🐑', horse: '🐴', 'duck-land': '🦆', people: '👨‍👩‍👦' };
 const CAR_TYPES = ['freight', 'passenger', 'caboose'];
 const MAX_CARS = 5;
 const MAX_TRAINS = 3;
@@ -2688,6 +2854,40 @@ function renderCell(row, col) {
       if (piece.type === 'cow') {
         if (!cell.dataset.cowFlip) cell.dataset.cowFlip = Math.random() < 0.5 ? '1' : '0';
         if (cell.dataset.cowFlip === '1') emoji.classList.add('scenery-cow-flipped');
+      }
+      // Flower sway animation
+      if (piece.type === 'flower') {
+        emoji.classList.add('scenery-flower');
+        if (!cell.dataset.flowerSeed) cell.dataset.flowerSeed = Math.random().toFixed(3);
+        const seed = parseFloat(cell.dataset.flowerSeed);
+        emoji.style.setProperty('--flower-sway-duration', (2.5 + seed * 1) + 's');
+        emoji.style.setProperty('--flower-sway-delay', (seed * 2.5) + 's');
+      }
+      // Sheep random facing direction
+      if (piece.type === 'sheep') {
+        if (!cell.dataset.sheepFlip) cell.dataset.sheepFlip = Math.random() < 0.5 ? '1' : '0';
+        if (cell.dataset.sheepFlip === '1') emoji.classList.add('scenery-animal-flipped');
+      }
+      // Horse random facing direction
+      if (piece.type === 'horse') {
+        if (!cell.dataset.horseFlip) cell.dataset.horseFlip = Math.random() < 0.5 ? '1' : '0';
+        if (cell.dataset.horseFlip === '1') emoji.classList.add('scenery-animal-flipped');
+      }
+      // Land duck waddle animation
+      if (piece.type === 'duck-land') {
+        emoji.classList.add('scenery-land-duck');
+        if (!cell.dataset.duckLandSeed) cell.dataset.duckLandSeed = Math.random().toFixed(3);
+        const seed = parseFloat(cell.dataset.duckLandSeed);
+        emoji.style.setProperty('--duck-waddle-duration', (2 + seed * 0.8) + 's');
+        emoji.style.setProperty('--duck-waddle-delay', (seed * 2) + 's');
+      }
+      // People wave animation
+      if (piece.type === 'people') {
+        emoji.classList.add('scenery-people');
+        if (!cell.dataset.peopleSeed) cell.dataset.peopleSeed = Math.random().toFixed(3);
+        const seed = parseFloat(cell.dataset.peopleSeed);
+        emoji.style.setProperty('--people-wave-duration', (2.2 + seed * 0.8) + 's');
+        emoji.style.setProperty('--people-wave-delay', (seed * 2) + 's');
       }
       cell.appendChild(emoji);
       cell.classList.add('occupied');
@@ -4528,20 +4728,27 @@ function animateFrame(timestamp) {
   }
 }
 
-function checkCowProximity(anim, trainRow, trainCol) {
+function checkAnimalProximity(anim, trainRow, trainCol) {
   const now = Date.now();
-  const cooldownMs = 3000; // 3 seconds between moos per cow
+  const cooldownMs = 3000; // 3 seconds between sounds per animal
+  const ANIMAL_SFX = {
+    'cow': () => SFX.moo(),
+    'sheep': () => SFX.sheep(),
+    'horse': () => SFX.horse(),
+    'duck-land': () => SFX.duckQuack(),
+    'people': () => SFX.peopleCheer(),
+  };
   for (let dr = -1; dr <= 1; dr++) {
     for (let dc = -1; dc <= 1; dc++) {
       const r = trainRow + dr, c = trainCol + dc;
       if (r < 0 || r >= ROWS || c < 0 || c >= COLS) continue;
       const piece = state.grid[r]?.[c];
-      if (piece && piece.type === 'cow') {
+      if (piece && ANIMAL_SFX[piece.type]) {
         const key = r + ',' + c;
         if (!anim.mooCooldowns[key] || now - anim.mooCooldowns[key] > cooldownMs) {
           anim.mooCooldowns[key] = now;
-          SFX.moo();
-          return; // Only one moo per cell transition
+          ANIMAL_SFX[piece.type]();
+          return; // Only one sound per cell transition
         }
       }
     }
@@ -4596,7 +4803,7 @@ function advanceTrainAnim(anim, timestamp) {
     anim.cellsVisited++;
 
     // Check for cows within 1 cell and moo
-    checkCowProximity(anim, nextPos.row, nextPos.col);
+    checkAnimalProximity(anim, nextPos.row, nextPos.col);
 
     if (!anim.loopCompleted && anim.cellsVisited >= 4 &&
         nextPos.row === anim.startRow && nextPos.col === anim.startCol) {
@@ -5199,7 +5406,15 @@ function addRandomScenery() {
     
     // Random scenery type (water excluded from random scatter — only via river)
     const weighted = Math.random();
-    const finalType = weighted < 0.6 ? 'tree' : (weighted < 0.8 ? 'house' : 'cow');
+    let finalType;
+    if (weighted < 0.35) finalType = 'tree';
+    else if (weighted < 0.50) finalType = 'house';
+    else if (weighted < 0.60) finalType = 'cow';
+    else if (weighted < 0.72) finalType = 'flower';
+    else if (weighted < 0.82) finalType = 'sheep';
+    else if (weighted < 0.88) finalType = 'horse';
+    else if (weighted < 0.94) finalType = 'duck-land';
+    else finalType = 'people';
     
     state.grid[row][col] = { type: finalType, rotation: 0 };
     
