@@ -1,10 +1,10 @@
 {
   "project": "Train Tracks",
-  "currentDay": 18,
+  "currentDay": 19,
   "status": "phase2_in_progress",
-  "lastRun": "2026-04-06T09:30:00-07:00",
-  "completedDays": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
-  "nextDay": 19,
+  "lastRun": "2026-04-07T09:30:00-07:00",
+  "completedDays": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+  "nextDay": 20,
   "phase": 2,
   "roadmap": "ROADMAP_PHASE2.md",
   "review": "reviews/expert-panel-day14.md",
@@ -26,7 +26,8 @@
     { "day": 15, "date": "2026-04-01", "feature": "Challenge Puzzles (Set 1)", "status": "complete" },
     { "day": 16, "date": "2026-04-03", "feature": "Puzzle Star Rating + 5 More Puzzles", "status": "complete" },
     { "day": 17, "date": "2026-04-04", "feature": "Mobile Touch Overhaul", "status": "complete" },
-    { "day": 18, "date": "2026-04-06", "feature": "Pinch-to-Zoom + Pan", "status": "complete" }
+    { "day": 18, "date": "2026-04-06", "feature": "Pinch-to-Zoom + Pan", "status": "complete" },
+    { "day": 19, "date": "2026-04-07", "feature": "More Scenery + Expanded Palette", "status": "complete" }
   ],
-  "notes": "Day 18: Zoom/pan system with viewport wrapper, CSS transform-based zoom (0.5x-2.0x), mouse wheel zoom toward cursor, pinch-to-zoom + two-finger pan for mobile, double-tap/dblclick reset, keyboard shortcuts (+/-/0), zoom indicator badge. Fixed all animation offset calculations to use offsetLeft/offsetTop for zoom-safety. 10 lessons learned."
+  "notes": "Day 19: Added 5 new scenery types (flower 🌻, sheep 🐑, horse 🐴, duck 🦆, people 👨‍👩‍👦) to both sidebar and mobile drawer palettes. Each has unique animations (flower sway, animal flip, duck waddle, people wave) and proximity sounds (baa, neigh, quack, cheer) when train passes. Refactored checkCowProximity → checkAnimalProximity with lookup table. Updated random generator with expanded scenery pool. 5 new lessons learned."
 }
