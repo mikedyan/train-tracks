@@ -925,3 +925,63 @@ Mark each test with the result after running.
 - 26 SFX methods present (4 new: sheep, horse, duckQuack, peopleCheer)
 - Zero bugs found
 - Zero regressions
+
+---
+
+## Day 20 — Terrain Biomes
+
+### Biome Visual Tests
+- [x] Spring biome: green grass, green sky (default appearance)
+- [x] Winter biome: white/ice-blue grass, cold blue sky, frosty sidebar
+- [x] Desert biome: tan/sand grass, warm sky, brown sidebar
+- [x] Autumn biome: orange-brown grass, warm orange sky, earthy sidebar
+- [x] All biomes smooth CSS transition on switch (0.5s)
+- [x] Track pieces visible in all biomes
+
+### Biome Emoji Tests
+- [x] Winter: trees show 🎄, flowers show ❄️
+- [x] Desert: trees show 🌵, flowers show 🌾
+- [x] Autumn: trees show 🍂, flowers show 🍁
+- [x] Spring: default emoji (🌲, 🌻, etc.)
+- [x] Palette updates emoji on biome change
+- [x] Ghost preview shows biome-correct emoji
+- [x] Grid cells show biome-correct emoji
+- [x] Toast messages show biome-correct emoji
+
+### Biome Water Variants
+- [x] Winter water: ice-blue frozen appearance
+- [x] Desert water: teal oasis appearance
+- [x] Autumn water: darker muted appearance
+- [x] Water wave animation still works in all biomes
+
+### Biome + Night Mode Interaction
+- [x] Night mode overrides any biome (always dark)
+- [x] Switching biome while in night mode: night stays dark
+- [x] Exiting night mode: biome colors restored
+
+### Biome Controls
+- [x] 🌸 button in controls bar, cycles biomes
+- [x] B keyboard shortcut cycles biomes
+- [x] Toast shows biome icon + name
+- [x] Biome preference persists in localStorage
+- [x] Biome restored on page load
+
+### Biome Random Generator
+- [x] Desert: no rivers generated
+- [x] Winter: rivers rare (10%)
+- [x] Spring/Autumn: rivers normal (40%)
+- [x] Scenery weights vary by biome
+
+### Regressions
+- [x] Night mode still works independently
+- [x] Save/Load unaffected (biome is global preference)
+- [x] All existing scenery animations still play
+- [x] Water placement blocking still works
+- [x] Train play/stop unaffected
+
+### Day 20 QA Results
+- JavaScript syntax validated: zero parse errors
+- HTML tags balanced (153 open / 153 close)
+- All core functions present (no duplicates)
+- Zero bugs found
+- Zero regressions

@@ -165,3 +165,11 @@
 - LESSON-123: When expanding a per-type proximity check (like cow moo), refactor into a lookup table (ANIMAL_SFX map) instead of growing an if-else chain. Scales better with more types.
 - LESSON-124: All sound-producing scenery should use the shared `anim.mooCooldowns` object for per-cell cooldowns. The key is "row,col" and works across all animal types.
 - LESSON-125: The random scenery weighted distribution should keep trees as the most common type (~35%) to maintain the forest feel. New types should fill in the remaining probability space proportionally.
+
+## Biome System Patterns (Day 20)
+- LESSON-126: Biome CSS classes must appear BEFORE night-mode in the stylesheet — night mode overrides ALL biomes, ensuring dark theme always works regardless of biome selection.
+- LESSON-127: Use a `getSceneryEmoji(type)` function as a single abstraction layer for all scenery emoji display — this makes it trivial to add biome-specific emoji overrides without modifying every call site.
+- LESSON-128: Biome is a global visual preference (like night mode), not per-layout state. Store in its own localStorage key, not in serializeState(). This avoids breaking save/load compatibility.
+- LESSON-129: When changing biomes, both `renderAllCells()` AND `rerenderPalette()` must be called to update emoji in both the grid and the sidebar/drawer palettes.
+- LESSON-130: Biome-specific random generator weights should keep trees as the dominant type (~35-40%) in all biomes for visual consistency. Vary the animal/flower mix per biome for character.
+- LESSON-131: For biome CSS, use the existing CSS custom properties + transition system. No new animation or transition properties needed since all themed elements already use `var(--grass)` etc. with 0.5s transitions.
