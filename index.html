@@ -31,6 +31,44 @@
   --star-bg: none;
 }
 
+/* BIOME THEMES — Spring is default (:root above) */
+body.biome-winter {
+  --grass: #E3EFF5;
+  --grass-dark: #CAD9E2;
+  --grass-hover: #F0F7FB;
+  --sky: #D6E8F0;
+  --sky-gradient-start: #D6E8F0;
+  --sky-gradient-end: #B8D4E3;
+  --sidebar-top: #546E7A;
+  --sidebar-bottom: #455A64;
+  --header-color: #263238;
+}
+
+body.biome-desert {
+  --grass: #D4B896;
+  --grass-dark: #C4A87A;
+  --grass-hover: #DDCAA6;
+  --sky: #F5E6C8;
+  --sky-gradient-start: #F5E6C8;
+  --sky-gradient-end: #E8D5A8;
+  --sidebar-top: #8D6E63;
+  --sidebar-bottom: #795548;
+  --header-color: #4E342E;
+}
+
+body.biome-autumn {
+  --grass: #A67B52;
+  --grass-dark: #8D6B45;
+  --grass-hover: #B88B62;
+  --sky: #F0D9B5;
+  --sky-gradient-start: #F0D9B5;
+  --sky-gradient-end: #E5C49A;
+  --sidebar-top: #6D4C41;
+  --sidebar-bottom: #5D4037;
+  --header-color: #3E2723;
+}
+
+/* Night mode overrides ALL biomes */
 body.night-mode {
   --grass: #2E4A3A;
   --grass-dark: #1E3A2A;
@@ -866,6 +904,35 @@ body.night-mode .cell.water-cell:hover {
   background: linear-gradient(135deg, #1565C0, #283593, #1565C0);
 }
 
+/* Biome water variants */
+body.biome-winter .cell.water-cell {
+  background: linear-gradient(135deg, #B3E5FC, #81D4FA, #B3E5FC);
+}
+body.biome-winter .cell.water-cell::before {
+  background:
+    radial-gradient(ellipse 18px 6px at 30% 40%, rgba(255,255,255,0.35) 0%, transparent 100%),
+    radial-gradient(ellipse 14px 5px at 65% 55%, rgba(255,255,255,0.25) 0%, transparent 100%),
+    radial-gradient(ellipse 16px 5px at 50% 75%, rgba(255,255,255,0.3) 0%, transparent 100%);
+  animation-duration: 6s;
+}
+body.biome-winter .cell.water-cell:hover {
+  background: linear-gradient(135deg, #E1F5FE, #B3E5FC, #E1F5FE);
+}
+
+body.biome-desert .cell.water-cell {
+  background: linear-gradient(135deg, #4DB6AC, #26A69A, #00897B);
+}
+body.biome-desert .cell.water-cell:hover {
+  background: linear-gradient(135deg, #80CBC4, #4DB6AC, #80CBC4);
+}
+
+body.biome-autumn .cell.water-cell {
+  background: linear-gradient(135deg, #4E97A8, #3A7A8B, #2E6A7B);
+}
+body.biome-autumn .cell.water-cell:hover {
+  background: linear-gradient(135deg, #5EA8B8, #4E97A8, #5EA8B8);
+}
+
 /* Duck on water */
 .water-duck {
   position: absolute;
@@ -1475,6 +1542,7 @@ body.night-mode .piece-badge.depleted { background: #B71C1C; color: #EF9A9A; }
       <button class="btn" onclick="openSaveModal()" style="background:#607D8B;color:white;box-shadow:0 3px 10px rgba(96,125,139,0.3);">💾 Save</button>
       <button class="btn" onclick="openShortcutsModal()" style="background:#546E7A;color:white;padding:8px 12px;" title="Keyboard shortcuts">⌨️</button>
       <button class="btn" onclick="openPuzzleModal()" style="background:#FF5722;color:white;box-shadow:0 3px 10px rgba(255,87,34,0.3);">🧩 Puzzles</button>
+      <button class="btn" id="btn-biome" onclick="cycleBiome()" style="background:#66BB6A;color:white;box-shadow:0 3px 10px rgba(102,187,106,0.3);padding:8px 12px;" title="Change terrain biome">🌸</button>
     </div>
   </div>
 </div>
@@ -1511,6 +1579,7 @@ body.night-mode .piece-badge.depleted { background: #B71C1C; color: #EF9A9A; }
     <div class="shortcut-row"><span class="shortcut-desc">Clear board</span><span class="shortcut-key">C</span></div>
     <div class="shortcut-section">Display</div>
     <div class="shortcut-row"><span class="shortcut-desc">Night mode</span><span class="shortcut-key">N</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Cycle biome</span><span class="shortcut-key">B</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Toggle sidebar</span><span class="shortcut-key">Tab</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Zoom in</span><span class="shortcut-key">+</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Zoom out</span><span class="shortcut-key">-</span></div>
@@ -2171,6 +2240,57 @@ function updateHeadlightVisibility() {
 }
 
 // ============================================================
+// BIOME SYSTEM
+// ============================================================
+function applyBiome(biome) {
+  // Remove all biome classes
+  BIOMES.forEach(b => document.body.classList.remove('biome-' + b));
+  // Apply new biome (spring = no class needed, it's the default)
+  if (biome !== 'spring') {
+    document.body.classList.add('biome-' + biome);
+  }
+  currentBiome = biome;
+  // Update button icon
+  const btn = document.getElementById('btn-biome');
+  if (btn) btn.textContent = BIOME_ICONS[biome];
+}
+
+function cycleBiome() {
+  const idx = BIOMES.indexOf(currentBiome);
+  const nextIdx = (idx + 1) % BIOMES.length;
+  const newBiome = BIOMES[nextIdx];
+  applyBiome(newBiome);
+  // Re-render all cells to update scenery emoji
+  renderAllCells();
+  // Re-render palette to show biome-appropriate emoji
+  rerenderPalette();
+  // Save preference
+  try { localStorage.setItem(BIOME_KEY, newBiome); } catch (e) {}
+  showToast(BIOME_ICONS[newBiome] + ' ' + BIOME_NAMES[newBiome] + ' biome!');
+}
+
+function restoreBiome() {
+  try {
+    const saved = localStorage.getItem(BIOME_KEY);
+    if (saved && BIOMES.includes(saved)) {
+      applyBiome(saved);
+    }
+  } catch (e) {}
+}
+
+function rerenderPalette() {
+  document.querySelectorAll('.palette-piece').forEach(el => {
+    const type = el.dataset.type;
+    // Remove old SVG/emoji content (but keep .label)
+    el.querySelectorAll('svg, div:not(.label)').forEach(ch => {
+      if (!ch.classList.contains('label')) ch.remove();
+    });
+    const svg = createPaletteSVG(type);
+    el.insertBefore(svg, el.firstChild);
+  });
+}
+
+// ============================================================
 // CONSTANTS
 // ============================================================
 const COLS = 12;
@@ -2182,6 +2302,26 @@ const ROTATE_MAP = { N: 'E', E: 'S', S: 'W', W: 'N' };
 const TRACK_TYPES = ['straight', 'curve', 'tjunction', 'crossover', 'bridge', 'tunnel', 'station'];
 const SCENERY_TYPES = ['tree', 'house', 'cow', 'water', 'flower', 'sheep', 'horse', 'duck-land', 'people'];
 const SCENERY_EMOJI = { tree: '🌲', house: '🏠', cow: '🐄', water: '💧', flower: '🌻', sheep: '🐑', horse: '🐴', 'duck-land': '🦆', people: '👨‍👩‍👦' };
+
+// BIOME SYSTEM
+const BIOMES = ['spring', 'winter', 'desert', 'autumn'];
+const BIOME_KEY = 'trainTracks_biome';
+const BIOME_ICONS = { spring: '🌸', winter: '❄️', desert: '🏜️', autumn: '🍂' };
+const BIOME_NAMES = { spring: 'Spring', winter: 'Winter', desert: 'Desert', autumn: 'Autumn' };
+const BIOME_EMOJI_OVERRIDES = {
+  winter: { tree: '🎄', flower: '❄️' },
+  desert: { tree: '🌵', flower: '🌾', water: '💧' },
+  autumn: { tree: '🍂', flower: '🍁' },
+};
+let currentBiome = 'spring';
+
+function getCurrentBiome() { return currentBiome; }
+
+function getSceneryEmoji(type) {
+  const overrides = BIOME_EMOJI_OVERRIDES[currentBiome];
+  if (overrides && overrides[type]) return overrides[type];
+  return SCENERY_EMOJI[type] || type;
+}
 const CAR_TYPES = ['freight', 'passenger', 'caboose'];
 const MAX_CARS = 5;
 const MAX_TRAINS = 3;
@@ -2763,7 +2903,7 @@ function createPaletteSVG(type) {
   }
   if (SCENERY_TYPES.includes(type)) {
     const div = document.createElement('div');
-    div.textContent = SCENERY_EMOJI[type];
+    div.textContent = getSceneryEmoji(type);
     div.style.fontSize = '32px';
     return div;
   }
@@ -2837,7 +2977,7 @@ function renderCell(row, col) {
     } else if (SCENERY_TYPES.includes(piece.type)) {
       const emoji = document.createElement('div');
       emoji.className = 'scenery-emoji';
-      emoji.textContent = SCENERY_EMOJI[piece.type];
+      emoji.textContent = getSceneryEmoji(piece.type);
       // House glow in night mode
       if (piece.type === 'house' && isNightMode()) {
         emoji.style.textShadow = '0 0 12px rgba(255, 200, 50, 0.7), 0 0 24px rgba(255, 180, 30, 0.4)';
@@ -3399,7 +3539,7 @@ function handleRemoveCell(row, col) {
   } else if (hasTrain) {
     showToast('🚂 Train removed!');
   } else if (SCENERY_TYPES.includes(piece.type)) {
-    showToast(SCENERY_EMOJI[piece.type] + ' Scenery removed!');
+    showToast(getSceneryEmoji(piece.type) + ' Scenery removed!');
   } else {
     showToast('Track removed!');
   }
@@ -3883,7 +4023,7 @@ function showGhost(type, x, y, rotation = 0, trainColor) {
     ghost.appendChild(svg);
     ghost.style.fontSize = '';
   } else if (SCENERY_TYPES.includes(type)) {
-    ghost.textContent = SCENERY_EMOJI[type];
+    ghost.textContent = getSceneryEmoji(type);
     ghost.style.fontSize = (cellSize * 0.55) + 'px';
   } else {
     const svg = createTrackSVG(type);
@@ -3957,7 +4097,7 @@ function showCellGhostPreview(row, col) {
   } else if (SCENERY_TYPES.includes(type)) {
     const emoji = document.createElement('div');
     emoji.className = 'ghost-preview-emoji';
-    emoji.textContent = SCENERY_EMOJI[type];
+    emoji.textContent = getSceneryEmoji(type);
     emoji.style.fontSize = (cellSize * 0.55) + 'px';
     cell.appendChild(emoji);
   } else {
@@ -5379,8 +5519,9 @@ function generateRiver() {
 }
 
 function addRandomScenery() {
-  // ~40% chance of a river
-  if (Math.random() < 0.4) {
+  // River chance varies by biome: desert=none, winter=10%, default=40%
+  const riverChance = currentBiome === 'desert' ? 0 : (currentBiome === 'winter' ? 0.1 : 0.4);
+  if (Math.random() < riverChance) {
     generateRiver();
   }
 
@@ -5404,17 +5545,50 @@ function addRandomScenery() {
     const { row, col } = emptyCells[idx];
     emptyCells.splice(idx, 1);
     
-    // Random scenery type (water excluded from random scatter — only via river)
+    // Biome-aware scenery weighting
     const weighted = Math.random();
     let finalType;
-    if (weighted < 0.35) finalType = 'tree';
-    else if (weighted < 0.50) finalType = 'house';
-    else if (weighted < 0.60) finalType = 'cow';
-    else if (weighted < 0.72) finalType = 'flower';
-    else if (weighted < 0.82) finalType = 'sheep';
-    else if (weighted < 0.88) finalType = 'horse';
-    else if (weighted < 0.94) finalType = 'duck-land';
-    else finalType = 'people';
+    if (currentBiome === 'winter') {
+      // Winter: more trees (snow-covered), fewer animals
+      if (weighted < 0.40) finalType = 'tree';
+      else if (weighted < 0.52) finalType = 'house';
+      else if (weighted < 0.60) finalType = 'sheep';
+      else if (weighted < 0.68) finalType = 'cow';
+      else if (weighted < 0.78) finalType = 'flower';
+      else if (weighted < 0.85) finalType = 'horse';
+      else if (weighted < 0.92) finalType = 'people';
+      else finalType = 'duck-land';
+    } else if (currentBiome === 'desert') {
+      // Desert: more trees (cacti), fewer water animals, no ducks
+      if (weighted < 0.38) finalType = 'tree';
+      else if (weighted < 0.52) finalType = 'house';
+      else if (weighted < 0.64) finalType = 'flower';
+      else if (weighted < 0.74) finalType = 'cow';
+      else if (weighted < 0.82) finalType = 'horse';
+      else if (weighted < 0.90) finalType = 'people';
+      else if (weighted < 0.95) finalType = 'sheep';
+      else finalType = 'duck-land';
+    } else if (currentBiome === 'autumn') {
+      // Autumn: lots of trees (fall colors), balanced animals
+      if (weighted < 0.40) finalType = 'tree';
+      else if (weighted < 0.52) finalType = 'house';
+      else if (weighted < 0.62) finalType = 'flower';
+      else if (weighted < 0.72) finalType = 'cow';
+      else if (weighted < 0.80) finalType = 'sheep';
+      else if (weighted < 0.86) finalType = 'horse';
+      else if (weighted < 0.93) finalType = 'duck-land';
+      else finalType = 'people';
+    } else {
+      // Spring (default)
+      if (weighted < 0.35) finalType = 'tree';
+      else if (weighted < 0.50) finalType = 'house';
+      else if (weighted < 0.60) finalType = 'cow';
+      else if (weighted < 0.72) finalType = 'flower';
+      else if (weighted < 0.82) finalType = 'sheep';
+      else if (weighted < 0.88) finalType = 'horse';
+      else if (weighted < 0.94) finalType = 'duck-land';
+      else finalType = 'people';
+    }
     
     state.grid[row][col] = { type: finalType, rotation: 0 };
     
@@ -5887,6 +6061,12 @@ function handleKeyDown(e) {
   // N: night mode
   if ((key === 'n' || key === 'N') && !e.ctrlKey && !e.metaKey) {
     toggleNightMode();
+    return;
+  }
+
+  // B: cycle biome
+  if ((key === 'b' || key === 'B') && !e.ctrlKey && !e.metaKey) {
+    cycleBiome();
     return;
   }
 
@@ -6521,6 +6701,9 @@ function init() {
 
   // Restore night mode preference
   restoreNightMode();
+
+  // Restore biome preference
+  restoreBiome();
 
   // Restore audio settings
   restoreAudioSettings();

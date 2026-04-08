@@ -1,0 +1,105 @@
+{
+  "day": 20,
+  "title": "Terrain Biomes",
+  "date": "2026-04-08",
+  "bugs_to_fix": [],
+  "summary": "Add 4 terrain biomes (Spring, Winter, Desert, Autumn) that swap ground/sky colors and scenery emoji via CSS custom properties + a simple cycling button. Biome affects random generator scenery choices. Preference persists in localStorage.",
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Add biome CSS custom property overrides",
+      "description": "Add body.biome-winter, body.biome-desert, body.biome-autumn CSS rules that override --grass, --grass-dark, --grass-hover, --sky, --sky-gradient-start, --sky-gradient-end, --sidebar-top, --sidebar-bottom, --header-color. Spring is the default (:root). Place these BEFORE body.night-mode so night mode takes priority. Also add water tile biome variants (frozen ice for winter, oasis tint for desert, murky for autumn).",
+      "file": "index.html",
+      "section": "CSS <style> block",
+      "acceptance": [
+        "body.biome-winter sets white/ice-blue grass, cold sky, frosty sidebar colors",
+        "body.biome-desert sets tan/sand grass, warm sky, warm sidebar colors",
+        "body.biome-autumn sets orange-brown grass, warm orange sky, earthy sidebar",
+        "Night mode overrides biome colors (night always dark regardless of biome)",
+        "All biome color transitions use 0.5s transition (already inherited from existing transition rules)",
+        "Winter water tiles get frozen/ice appearance",
+        "Desert water tiles get oasis/warm tint"
+      ]
+    },
+    {
+      "id": "T2",
+      "title": "Add biome state, constants, and emoji override system",
+      "description": "Add BIOMES array, BIOME_EMOJI_OVERRIDES map, BIOME_ICONS map, currentBiome state variable, getCurrentBiome() function, and getSceneryEmoji(type) function that returns biome-aware emoji. Store biome in localStorage.",
+      "file": "index.html",
+      "section": "JavaScript constants + state",
+      "acceptance": [
+        "BIOMES = ['spring', 'winter', 'desert', 'autumn']",
+        "Winter overrides: tree→🎄, flower→❄️",
+        "Desert overrides: tree→🌵, flower→🌾",
+        "Autumn overrides: tree→🍂, flower→🍁",
+        "getSceneryEmoji(type) returns correct biome-aware emoji",
+        "localStorage key 'trainTracks_biome' persists preference"
+      ]
+    },
+    {
+      "id": "T3",
+      "title": "Replace all SCENERY_EMOJI[type] with getSceneryEmoji(type)",
+      "description": "Find all places that read from SCENERY_EMOJI directly for display purposes and replace with getSceneryEmoji() call. Keep SCENERY_EMOJI as the base map.",
+      "file": "index.html",
+      "section": "Multiple locations (renderCell, createPaletteSVG, ghost rendering, etc.)",
+      "acceptance": [
+        "renderCell uses getSceneryEmoji for scenery emoji text",
+        "createPaletteSVG uses getSceneryEmoji",
+        "Ghost/drag preview uses getSceneryEmoji",
+        "Toast messages use getSceneryEmoji",
+        "Palette re-renders on biome change to show new emoji"
+      ]
+    },
+    {
+      "id": "T4",
+      "title": "Add biome cycle button to controls bar",
+      "description": "Add a button in the controls bar that cycles through biomes. Shows current biome icon. On click: advance to next biome, apply CSS class, re-render all cells and palette, save preference.",
+      "file": "index.html",
+      "section": "HTML controls div + JS",
+      "acceptance": [
+        "Button shows current biome icon (🌸 Spring, ❄️ Winter, 🏜️ Desert, 🍂 Autumn)",
+        "Click cycles to next biome with smooth CSS transition",
+        "All cells re-render with new scenery emoji",
+        "Palette pieces re-render with new emoji",
+        "Toast shows biome name on switch",
+        "Keyboard shortcut 'B' toggles biome"
+      ]
+    },
+    {
+      "id": "T5",
+      "title": "Biome-aware random generator",
+      "description": "Modify addRandomScenery() and generateRiver() to respect current biome. Winter: lower river chance (10%). Desert: no river at all. Adjust scenery weights per biome.",
+      "file": "index.html",
+      "section": "generateRandomTrack / addRandomScenery",
+      "acceptance": [
+        "Desert biome: no river generated",
+        "Winter biome: river chance reduced to 10% (frozen rivers less common)",
+        "Scenery weights shift per biome (e.g., more trees in autumn)",
+        "Random generator output looks appropriate for each biome"
+      ]
+    },
+    {
+      "id": "T6",
+      "title": "Restore biome on init + keyboard shortcut",
+      "description": "On init(), restore biome from localStorage and apply CSS class. Add 'B' keyboard shortcut for biome cycling. Add biome to keyboard shortcuts overlay. Also add biome button to mobile drawer or ensure it's accessible on mobile.",
+      "file": "index.html",
+      "section": "init() + handleKeyDown + shortcuts modal",
+      "acceptance": [
+        "Biome persists across page refreshes",
+        "B key cycles biomes (not during play or modal)",
+        "Shortcuts overlay shows B = Biome",
+        "Biome button visible and functional on mobile"
+      ]
+    }
+  ],
+  "testing_focus": [
+    "All 4 biomes look visually distinct and appealing",
+    "Night mode works correctly with each biome (night takes priority)",
+    "Track pieces remain clearly visible in all biomes",
+    "Water tiles have appropriate appearance per biome",
+    "Random generator respects biome (no rivers in desert, etc.)",
+    "Biome preference persists across refreshes",
+    "Palette emoji match current biome",
+    "No regressions in existing functionality"
+  ]
+}
