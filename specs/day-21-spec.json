@@ -1,0 +1,62 @@
+{
+  "day": 21,
+  "feature": "Tutorial Overlay",
+  "date": "2026-04-09",
+  "bugs": [],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Tutorial CSS styles",
+      "description": "Add all CSS for the tutorial overlay: semi-transparent backdrop, speech bubble with step content, animated arrows, pulse highlights on target elements, step indicator dots, skip/next buttons, responsive mobile styles. The overlay should NOT fully block the UI — use pointer-events:none on the backdrop with pointer-events:auto on interactive elements.",
+      "file": "index.html",
+      "section": "CSS (after locked-cell styles)"
+    },
+    {
+      "id": "T2",
+      "title": "Tutorial HTML structure",
+      "description": "Add tutorial overlay div with step content containers, navigation buttons (Skip, Next, Done), step indicator dots. Add a ❓ help button in the controls bar to re-trigger the tutorial.",
+      "file": "index.html",
+      "section": "HTML (controls bar + before </body>)"
+    },
+    {
+      "id": "T3",
+      "title": "Tutorial JavaScript system",
+      "description": "Implement: TUTORIAL_KEY localStorage constant, tutorial state (active, currentStep), showTutorial() to display overlay, renderTutorialStep(n) to show each of the 3 steps with appropriate positioning/highlighting, nextTutorialStep() to advance, skipTutorial()/completeTutorial() to dismiss and save to localStorage, triggerHelp() to re-open. Steps: (1) highlight palette + animated arrow toward grid + 'Drag a track piece!', (2) highlight a grid cell area + rotation arrow animation + 'Click to rotate!', (3) highlight play button with pulse + 'Press ▶ to go!'. Each step positions a spotlight/highlight ring around the target element.",
+      "file": "index.html",
+      "section": "JS (before init)"
+    },
+    {
+      "id": "T4",
+      "title": "Init integration",
+      "description": "In init(), after all restoration: check localStorage for TUTORIAL_KEY. If not found (first visit), call showTutorial(). The tutorial should show AFTER the initial toast, not override it.",
+      "file": "index.html",
+      "section": "JS (init function)"
+    }
+  ],
+  "acceptance_criteria": [
+    "AC1: Tutorial shows automatically on first visit (no TUTORIAL_KEY in localStorage)",
+    "AC2: Tutorial has 3 clear, animated steps with visual highlights on target elements",
+    "AC3: Step 1 highlights palette area with arrow animation pointing to grid",
+    "AC4: Step 2 shows rotation concept with arrow animation on grid area",
+    "AC5: Step 3 highlights play button with pulse animation",
+    "AC6: Skip button visible on every step, dismisses tutorial immediately",
+    "AC7: Next button advances steps; final step shows Done button",
+    "AC8: Tutorial never shows again after completion or skip (localStorage persisted)",
+    "AC9: ❓ help button in controls bar re-triggers tutorial on click",
+    "AC10: Tutorial completion saved to localStorage as TUTORIAL_KEY",
+    "AC11: Works on both desktop and mobile layouts",
+    "AC12: Semi-transparent overlay does not fully block underlying UI visually",
+    "AC13: Step indicator dots show current position (1/3, 2/3, 3/3)",
+    "AC14: Keyboard shortcut H opens help/tutorial (added to shortcuts modal)"
+  ],
+  "testing_focus": [
+    "Verify first-visit detection works (clear localStorage, reload)",
+    "Verify tutorial doesn't show on subsequent visits",
+    "Verify ❓ button re-triggers tutorial after completion",
+    "Verify all 3 steps display correctly with animations",
+    "Verify Skip works at every step",
+    "Verify mobile layout positions correctly",
+    "Verify no JS errors during tutorial flow",
+    "Verify tutorial doesn't interfere with existing features"
+  ]
+}
