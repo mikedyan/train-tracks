@@ -1,8 +1,8 @@
 {
   "project": "Train Tracks",
-  "currentDay": 20,
+  "currentDay": 21,
   "status": "phase2_in_progress",
-  "lastRun": "2026-04-08T09:30:00-07:00",
+  "lastRun": "2026-04-09T09:30:00-07:00",
   "completedDays": [
     1,
     2,
@@ -23,9 +23,10 @@
     17,
     18,
     19,
-    20
+    20,
+    21
   ],
-  "nextDay": 21,
+  "nextDay": 22,
   "phase": 2,
   "roadmap": "ROADMAP_PHASE2.md",
   "review": "reviews/expert-panel-day14.md",
@@ -149,7 +150,13 @@
       "date": "2026-04-08",
       "feature": "Terrain Biomes",
       "status": "complete"
+    },
+    {
+      "day": 21,
+      "date": "2026-04-09",
+      "feature": "Tutorial Overlay",
+      "status": "complete"
     }
   ],
-  "notes": "Day 20: Added 4 terrain biomes (Spring, Winter, Desert, Autumn) with CSS custom property overrides, biome-specific emoji (winter \ud83c\udf84/\u2744\ufe0f, desert \ud83c\udf35/\ud83c\udf3e, autumn \ud83c\udf42/\ud83c\udf41), water tile variants per biome, biome-aware random generator (no rivers in desert, rare in winter), cycle button + B keyboard shortcut, localStorage persistence. Night mode always overrides biome. 6 new lessons learned."
+  "notes": "Day 21: Added 3-step animated tutorial overlay for first-time visitors. Steps: (1) Drag a Track Piece — highlights palette/drawer, (2) Click to Rotate — highlights grid, (3) Press Play — highlights play button with pulse. Includes spotlight cutout, bouncing arrows, step dots, Skip/Next/Done navigation. Persists to localStorage. Re-triggerable via ❓ button or H keyboard shortcut. Escape dismisses. Night mode + mobile responsive. 6 new lessons learned."
 }
