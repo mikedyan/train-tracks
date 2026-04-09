@@ -173,3 +173,11 @@
 - LESSON-129: When changing biomes, both `renderAllCells()` AND `rerenderPalette()` must be called to update emoji in both the grid and the sidebar/drawer palettes.
 - LESSON-130: Biome-specific random generator weights should keep trees as the dominant type (~35-40%) in all biomes for visual consistency. Vary the animal/flower mix per biome for character.
 - LESSON-131: For biome CSS, use the existing CSS custom properties + transition system. No new animation or transition properties needed since all themed elements already use `var(--grass)` etc. with 0.5s transitions.
+
+## Tutorial Overlay Patterns (Day 21)
+- LESSON-132: Use box-shadow: 0 0 0 3000px rgba() on a positioned spotlight element to create a dark overlay with a cutout — simpler and more compatible than clip-path approaches.
+- LESSON-133: Tutorial overlay z-index (400) must be higher than all other modals (300) and toast (200). Spotlight z-index (399) is just below overlay so the bubble sits on top.
+- LESSON-134: Escape key handler must check highest z-index layer first — tutorial before puzzle/save/shortcuts modals.
+- LESSON-135: First-visit tutorial should show with a delay (800ms) to avoid competing with initial toast and let the UI settle visually.
+- LESSON-136: Mobile tutorial uses mobileTargetSelector to highlight the bottom drawer instead of the hidden sidebar — check isMobileLayout() for target selection.
+- LESSON-137: Re-trigger pop animation on step change by resetting animation property to 'none', forcing reflow with offsetHeight, then clearing it.

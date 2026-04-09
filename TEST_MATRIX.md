@@ -985,3 +985,53 @@ Mark each test with the result after running.
 - All core functions present (no duplicates)
 - Zero bugs found
 - Zero regressions
+
+---
+
+## Day 21 — Tutorial Overlay
+
+### First Visit Detection
+- [ ] Clear localStorage (`localStorage.removeItem('trainTracks_tutorialDone')`) and reload
+- [ ] Tutorial overlay appears after ~800ms
+- [ ] On second visit (with saved state), tutorial does NOT appear
+
+### Tutorial Steps
+- [ ] Step 1: Shows "Drag a Track Piece!" with 🛤️ emoji
+- [ ] Step 1: Spotlight highlights sidebar (desktop) or drawer (mobile)
+- [ ] Step 1: Animated arrow points right from sidebar
+- [ ] Step 2: Shows "Click to Rotate!" with 🔄 emoji
+- [ ] Step 2: Spotlight highlights grid viewport
+- [ ] Step 2: Animated arrow points down
+- [ ] Step 3: Shows "Press ▶ to Go!" with 🚂 emoji
+- [ ] Step 3: Spotlight highlights Play button with pulse animation
+- [ ] Step 3: Button text changes to "Got it! ✅"
+
+### Navigation
+- [ ] Next button advances through all 3 steps
+- [ ] Skip button dismisses tutorial on any step
+- [ ] Escape key dismisses tutorial
+- [ ] Step indicator dots show current position (1/3, 2/3, 3/3)
+- [ ] Backdrop click does NOT dismiss (intentional)
+
+### Re-trigger
+- [ ] ❓ help button visible in controls bar
+- [ ] Clicking ❓ opens tutorial from step 1
+- [ ] H keyboard shortcut opens tutorial
+
+### Persistence
+- [ ] After completing tutorial, `localStorage.getItem('trainTracks_tutorialDone')` returns '1'
+- [ ] Tutorial does not show on subsequent page loads
+
+### Visual Quality
+- [ ] Pop animation on bubble when step changes
+- [ ] Emoji bounces continuously
+- [ ] Spotlight has green border with dark surround
+- [ ] Arrow bounces in correct direction
+- [ ] Night mode: bubble background is dark, text is light
+- [ ] Mobile: bubble fills width properly
+
+### Non-interference
+- [ ] Can still open Save, Shortcuts, Puzzle modals after tutorial
+- [ ] Drag-and-drop still works after tutorial
+- [ ] Keyboard shortcuts still work after tutorial
+- [ ] Playing trains still works after tutorial
