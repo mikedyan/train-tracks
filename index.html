@@ -6109,6 +6109,7 @@ function handleKeyDown(e) {
 
   // Escape: close modals, deselect tool
   if (e.key === 'Escape') {
+    if (tutorialState.active) { completeTutorial(); return; }
     if (document.getElementById('puzzle-overlay').classList.contains('open')) { closePuzzleModal(); return; }
     if (document.getElementById('shortcuts-overlay').classList.contains('open')) {
       closeShortcutsModal();
