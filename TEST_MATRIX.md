@@ -1035,3 +1035,55 @@ Mark each test with the result after running.
 - [ ] Drag-and-drop still works after tutorial
 - [ ] Keyboard shortcuts still work after tutorial
 - [ ] Playing trains still works after tutorial
+
+---
+
+## Day 22: Screenshot & Download
+
+### Screenshot Button
+- [ ] 📸 button visible in controls bar
+- [ ] Button has correct indigo styling
+- [ ] Button opens screenshot modal on click
+
+### Screenshot Preview
+- [ ] Modal opens with canvas preview of current grid
+- [ ] Preview shows grass background (correct biome color)
+- [ ] Preview shows track pieces (straight, curve, T-junction, crossover, bridge, tunnel, station)
+- [ ] Preview shows rotated pieces correctly
+- [ ] Preview shows scenery emojis
+- [ ] Preview shows water cells with blue fill
+- [ ] Preview shows train markers (colored circles)
+- [ ] Preview shows connection dots (green/red)
+- [ ] No UI chrome visible (no sidebar, controls, buttons)
+
+### Download
+- [ ] Download button saves PNG file
+- [ ] File named train-tracks-YYYY-MM-DD.png
+- [ ] Toast shows "📸 Saved!"
+- [ ] Downloaded image is high resolution (4x scale)
+
+### Clipboard Copy
+- [ ] Copy button copies PNG to clipboard
+- [ ] Toast shows "📋 Copied!"
+- [ ] Graceful fallback if clipboard API unavailable
+
+### Theme Support
+- [ ] Screenshot correct in day mode (green grass)
+- [ ] Screenshot correct in night mode (dark grass)
+- [ ] Screenshot correct in winter biome (white ground)
+- [ ] Screenshot correct in desert biome (tan ground)
+- [ ] Screenshot correct in autumn biome (orange ground)
+
+### Keyboard Shortcut
+- [ ] P key opens screenshot modal
+- [ ] P doesn't fire during play
+- [ ] P doesn't fire when typing in inputs
+- [ ] P doesn't fire when other modals are open
+- [ ] P listed in shortcuts modal
+
+### Modal Behavior
+- [ ] Escape closes screenshot modal
+- [ ] Click outside closes screenshot modal
+- [ ] Close button (✕) closes modal
+- [ ] Other keyboard shortcuts blocked while modal is open
+- [ ] Modal doesn't interfere with save/puzzle/shortcuts modals

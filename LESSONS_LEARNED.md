@@ -181,3 +181,12 @@
 - LESSON-135: First-visit tutorial should show with a delay (800ms) to avoid competing with initial toast and let the UI settle visually.
 - LESSON-136: Mobile tutorial uses mobileTargetSelector to highlight the bottom drawer instead of the hidden sidebar — check isMobileLayout() for target selection.
 - LESSON-137: Re-trigger pop animation on step change by resetting animation property to 'none', forcing reflow with offsetHeight, then clearing it.
+
+## Screenshot Canvas Patterns (Day 22)
+- LESSON-138: For screenshots, use programmatic canvas rendering (not DOM capture) to produce clean output without UI chrome. Read CSS custom properties via `getComputedStyle()` for theme-awareness.
+- LESSON-139: Use canvas transform (translate + rotate + translate-back) to render rotated track pieces. This mirrors the SVG rotation approach used in the DOM.
+- LESSON-140: Scale factor of 4x produces crisp screenshots even on retina displays. Canvas dimensions: COLS * 60 * 4 by ROWS * 60 * 4.
+- LESSON-141: When adding new modals, ALWAYS add them to: (1) Escape key handler chain, (2) modal guard that blocks keyboard shortcuts, and (3) click-outside-to-close handler. These are three separate insertion points and easy to miss.
+- LESSON-142: For download, use `canvas.toBlob()` → `URL.createObjectURL()` → anchor click → `URL.revokeObjectURL()`. Don't use `toDataURL()` which has memory issues with large canvases.
+- LESSON-143: Clipboard write requires `ClipboardItem` API — not universally supported. Always provide a download fallback and graceful error handling.
+- LESSON-144: When running multiple Python text replacement scripts in sequence, later scripts may overwrite earlier changes if they read the file fresh. Always verify all changes are in the final file.
