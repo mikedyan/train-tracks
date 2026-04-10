@@ -6527,6 +6527,10 @@ function handleKeyDown(e) {
       closeSaveModal();
       return;
     }
+    if (document.getElementById('screenshot-overlay').classList.contains('open')) {
+      closeScreenshotModal();
+      return;
+    }
     clearSelectedTool();
     return;
   }
@@ -6534,6 +6538,7 @@ function handleKeyDown(e) {
   // Don't fire other shortcuts when modals are open
   if (document.getElementById('save-overlay').classList.contains('open')) return;
   if (document.getElementById('shortcuts-overlay').classList.contains('open')) return;
+  if (document.getElementById('screenshot-overlay').classList.contains('open')) return;
 
   const key = e.key;
 
@@ -6611,6 +6616,12 @@ function handleKeyDown(e) {
   // H: show tutorial
   if ((key === 'h' || key === 'H') && !e.ctrlKey && !e.metaKey) {
     showTutorial();
+    return;
+  }
+
+  // P: screenshot
+  if ((key === 'p' || key === 'P') && !e.ctrlKey && !e.metaKey) {
+    openScreenshotModal();
     return;
   }
 
