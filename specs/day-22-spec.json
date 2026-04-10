@@ -1,0 +1,105 @@
+{
+  "day": 22,
+  "feature": "Screenshot & Download",
+  "description": "Add a screenshot button that captures the grid (without UI chrome) as a PNG, plus a clipboard copy option. Uses canvas rendering to recreate the grid visually.",
+  "bugs": [],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Add Screenshot CSS styles",
+      "description": "Add CSS for screenshot button, screenshot modal overlay with download and copy buttons, and toast confirmations.",
+      "file": "index.html",
+      "section": "CSS (<style> block)",
+      "details": "Add styles for #screenshot-overlay modal with a preview canvas, download/copy/close buttons. Style should be consistent with the save modal."
+    },
+    {
+      "id": "T2",
+      "title": "Add Screenshot button to controls bar",
+      "description": "Add a 📸 button in the controls bar (after the biome button, before the help button).",
+      "file": "index.html",
+      "section": "HTML controls div",
+      "details": "Button: <button class='btn' id='btn-screenshot' onclick='openScreenshotModal()' style='...' title='Take screenshot'>📸</button>"
+    },
+    {
+      "id": "T3",
+      "title": "Add Screenshot modal HTML",
+      "description": "Add a modal overlay with canvas preview, download button, and clipboard copy button.",
+      "file": "index.html",
+      "section": "HTML after puzzle overlay",
+      "details": "Modal with id='screenshot-overlay', contains a canvas for preview, a download button, a copy button, and a close button."
+    },
+    {
+      "id": "T4",
+      "title": "Implement renderScreenshotCanvas() function",
+      "description": "Render the grid to a canvas without UI chrome. Must include: grass background, track SVGs, scenery emojis, trains, water tiles with color, bridge styling, tunnel visuals, switch levers, connection dots. Use larger canvas (COLS * 60 x ROWS * 60) for crisp output.",
+      "file": "index.html",
+      "section": "JavaScript (after renderThumbnail)",
+      "details": "Creates a full-resolution canvas that draws: (1) grass background respecting biome/night mode, (2) water cells as solid blue fills, (3) track pieces by drawing path representations, (4) scenery as text emojis via fillText, (5) train markers as colored circles. The approach should use the existing renderThumbnail() pattern but at higher resolution with more detail."
+    },
+    {
+      "id": "T5",
+      "title": "Implement openScreenshotModal() function",
+      "description": "Opens a modal showing a preview of the captured screenshot with download and copy options.",
+      "file": "index.html",
+      "section": "JavaScript",
+      "details": "Calls renderScreenshotCanvas() to get a canvas, displays it in the modal preview area, wires up download and copy buttons."
+    },
+    {
+      "id": "T6",
+      "title": "Implement downloadScreenshot() function",
+      "description": "Downloads the screenshot canvas as a PNG file named train-tracks-YYYY-MM-DD.png.",
+      "file": "index.html",
+      "section": "JavaScript",
+      "details": "Uses canvas.toBlob() -> URL.createObjectURL() -> anchor click pattern for clean download."
+    },
+    {
+      "id": "T7",
+      "title": "Implement copyScreenshot() function",
+      "description": "Copies the screenshot to clipboard using navigator.clipboard.write() with ClipboardItem.",
+      "file": "index.html",
+      "section": "JavaScript",
+      "details": "Uses canvas.toBlob() -> new ClipboardItem -> navigator.clipboard.write(). Falls back to toast error if clipboard API unavailable."
+    },
+    {
+      "id": "T8",
+      "title": "Add keyboard shortcut P for screenshot",
+      "description": "Add P key as keyboard shortcut for screenshot (only when not playing).",
+      "file": "index.html",
+      "section": "JavaScript (handleKeyDown)",
+      "details": "Add after the H/tutorial shortcut block. Also add to shortcuts modal HTML and mobile drawer."
+    },
+    {
+      "id": "T9",
+      "title": "Add screenshot button to mobile drawer",
+      "description": "Ensure screenshot is accessible on mobile via the bottom drawer controls area.",
+      "file": "index.html",
+      "section": "HTML mobile-drawer div",
+      "details": "Add screenshot button to mobile controls section if exists."
+    }
+  ],
+  "acceptance_criteria": [
+    "AC1: 📸 button visible in controls bar",
+    "AC2: Clicking 📸 opens modal with canvas preview of current grid",
+    "AC3: Preview shows all visual elements: tracks, scenery, trains, water, biome colors",
+    "AC4: Download button saves PNG file named train-tracks-YYYY-MM-DD.png",
+    "AC5: Copy button copies PNG to clipboard (navigator.clipboard.write)",
+    "AC6: Toast confirmation shows '📸 Saved!' on download, '📋 Copied!' on copy",
+    "AC7: No UI chrome in the screenshot (no sidebar, controls, or buttons)",
+    "AC8: Works in both day and night modes (correct background colors)",
+    "AC9: Works across biomes (correct grass/sky colors)",
+    "AC10: P keyboard shortcut opens screenshot modal",
+    "AC11: Escape closes the screenshot modal",
+    "AC12: Modal can be closed by clicking outside it"
+  ],
+  "testing_focus": [
+    "Verify screenshot captures grid content correctly",
+    "Test in night mode — should use dark colors",
+    "Test with different biomes",
+    "Test with complex layout (water, bridges, tunnels, trains, scenery)",
+    "Test clipboard copy in supported browsers",
+    "Test download filename format",
+    "Test that P shortcut works and doesn't fire during play",
+    "Test that modal closes on Escape and outside click",
+    "Verify no regressions in existing controls"
+  ]
+}

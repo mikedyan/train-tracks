@@ -1554,6 +1554,83 @@ body.night-mode .tutorial-actions .btn-tutorial-skip:hover { color: #B0BEC5; }
   #tutorial-bubble .tutorial-title { font-size: 17px; }
   #tutorial-bubble .tutorial-desc { font-size: 13px; }
 }
+
+/* SCREENSHOT MODAL */
+#screenshot-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 300;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(3px);
+}
+#screenshot-overlay.open { display: flex; }
+
+#screenshot-modal {
+  background: #FFF;
+  border-radius: 16px;
+  padding: 24px;
+  width: 520px;
+  max-width: 94vw;
+  max-height: 90vh;
+  overflow: auto;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+  position: relative;
+  text-align: center;
+}
+
+#screenshot-modal h2 {
+  font-size: 20px;
+  color: #3E2723;
+  margin-bottom: 16px;
+}
+
+#screenshot-modal .close-btn {
+  position: absolute;
+  top: 12px; right: 14px;
+  background: none; border: none;
+  font-size: 22px; cursor: pointer;
+  color: #999;
+  line-height: 1;
+}
+#screenshot-modal .close-btn:hover { color: #333; }
+
+#screenshot-preview {
+  width: 100%;
+  max-width: 480px;
+  border-radius: 10px;
+  border: 2px solid #E0E0E0;
+  margin-bottom: 16px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.screenshot-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.screenshot-actions .btn {
+  padding: 10px 22px;
+  font-size: 15px;
+}
+
+.btn-download-screenshot {
+  background: #4CAF50;
+  color: white;
+  box-shadow: 0 3px 10px rgba(76,175,80,0.3);
+}
+
+.btn-copy-screenshot {
+  background: #2196F3;
+  color: white;
+  box-shadow: 0 3px 10px rgba(33,150,243,0.3);
+}
 </style>
 </head>
 <body>
@@ -1653,6 +1730,7 @@ body.night-mode .tutorial-actions .btn-tutorial-skip:hover { color: #B0BEC5; }
       <button class="btn" onclick="openShortcutsModal()" style="background:#546E7A;color:white;padding:8px 12px;" title="Keyboard shortcuts">⌨️</button>
       <button class="btn" onclick="openPuzzleModal()" style="background:#FF5722;color:white;box-shadow:0 3px 10px rgba(255,87,34,0.3);">🧩 Puzzles</button>
       <button class="btn" id="btn-biome" onclick="cycleBiome()" style="background:#66BB6A;color:white;box-shadow:0 3px 10px rgba(102,187,106,0.3);padding:8px 12px;" title="Change terrain biome">🌸</button>
+      <button class="btn" id="btn-screenshot" onclick="openScreenshotModal()" style="background:#5C6BC0;color:white;box-shadow:0 3px 10px rgba(92,107,192,0.3);padding:8px 12px;" title="Take screenshot">📸</button>
       <button class="btn" id="btn-help" onclick="showTutorial()" style="background:#78909C;color:white;padding:8px 12px;" title="How to play">❓</button>
     </div>
   </div>
@@ -1692,6 +1770,7 @@ body.night-mode .tutorial-actions .btn-tutorial-skip:hover { color: #B0BEC5; }
     <div class="shortcut-row"><span class="shortcut-desc">Night mode</span><span class="shortcut-key">N</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Cycle biome</span><span class="shortcut-key">B</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Show tutorial</span><span class="shortcut-key">H</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Screenshot</span><span class="shortcut-key">P</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Toggle sidebar</span><span class="shortcut-key">Tab</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Zoom in</span><span class="shortcut-key">+</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Zoom out</span><span class="shortcut-key">-</span></div>
@@ -1716,6 +1795,19 @@ body.night-mode .tutorial-actions .btn-tutorial-skip:hover { color: #B0BEC5; }
     <button class="close-btn" onclick="closePuzzleModal()">✕</button>
     <h2>🧩 Challenge Puzzles</h2>
     <div id="puzzle-list"></div>
+  </div>
+</div>
+
+<!-- Screenshot Modal -->
+<div id="screenshot-overlay" onclick="closeScreenshotModalOutside(event)">
+  <div id="screenshot-modal">
+    <button class="close-btn" onclick="closeScreenshotModal()">✕</button>
+    <h2>📸 Screenshot</h2>
+    <canvas id="screenshot-preview"></canvas>
+    <div class="screenshot-actions">
+      <button class="btn btn-download-screenshot" onclick="downloadScreenshot()">💾 Download</button>
+      <button class="btn btn-copy-screenshot" onclick="copyScreenshot()">📋 Copy</button>
+    </div>
   </div>
 </div>
 
@@ -5988,6 +6080,322 @@ function closeSaveModalOutside(e) {
   if (e.target === document.getElementById('save-overlay')) {
     closeSaveModal();
   }
+}
+
+
+// ============================================================
+// SCREENSHOT SYSTEM
+// ============================================================
+let screenshotCanvas = null;
+
+function renderScreenshotCanvas() {
+  const scale = 4; // 4x resolution for crisp screenshots
+  const cw = 60 * scale;
+  const ch = 60 * scale;
+  const gap = 1 * scale;
+  const totalW = COLS * cw + (COLS - 1) * gap;
+  const totalH = ROWS * ch + (ROWS - 1) * gap;
+  
+  const canvas = document.createElement('canvas');
+  canvas.width = totalW;
+  canvas.height = totalH;
+  const ctx = canvas.getContext('2d');
+  
+  // Get computed colors for current theme
+  const computedStyle = getComputedStyle(document.documentElement);
+  const grassColor = computedStyle.getPropertyValue('--grass').trim();
+  const grassDarkColor = computedStyle.getPropertyValue('--grass-dark').trim();
+  const night = isNightMode();
+  
+  // Background (gap color = grass-dark)
+  ctx.fillStyle = grassDarkColor;
+  ctx.fillRect(0, 0, totalW, totalH);
+  
+  // Render each cell
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const x = c * (cw + gap);
+      const y = r * (ch + gap);
+      const piece = state.grid[r][c];
+      
+      // Cell background
+      if (piece && piece.type === 'water') {
+        if (night) {
+          ctx.fillStyle = '#0D47A1';
+        } else {
+          ctx.fillStyle = '#0288D1';
+        }
+        ctx.fillRect(x, y, cw, ch);
+        // Wave lines
+        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        ctx.lineWidth = 1 * scale;
+        for (let w = 0; w < 3; w++) {
+          ctx.beginPath();
+          const wy = y + ch * (0.25 + w * 0.25);
+          ctx.moveTo(x + cw * 0.1, wy);
+          ctx.quadraticCurveTo(x + cw * 0.3, wy - 4 * scale, x + cw * 0.5, wy);
+          ctx.quadraticCurveTo(x + cw * 0.7, wy + 4 * scale, x + cw * 0.9, wy);
+          ctx.stroke();
+        }
+      } else {
+        ctx.fillStyle = grassColor;
+        ctx.fillRect(x, y, cw, ch);
+      }
+      
+      if (!piece) continue;
+      
+      if (piece.type === 'water') {
+        continue;
+      }
+      
+      if (SCENERY_TYPES.includes(piece.type)) {
+        const emoji = getSceneryEmoji(piece.type);
+        ctx.font = (cw * 0.55) + 'px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(emoji, x + cw / 2, y + ch / 2);
+        continue;
+      }
+      
+      // Track piece rendering
+      const cx = x + cw / 2;
+      const cy = y + ch / 2;
+      const trackColor = '#5D4037';
+      const bedColor = '#A1887F';
+      const trackW = cw * 0.14;
+      const bedW = cw * 0.2;
+      
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(piece.rotation * Math.PI / 180);
+      ctx.translate(-cx, -cy);
+      
+      switch (piece.type) {
+        case 'straight':
+        case 'tunnel':
+          ctx.fillStyle = bedColor;
+          ctx.fillRect(cx - bedW / 2, y, bedW, ch);
+          ctx.fillStyle = trackColor;
+          ctx.fillRect(cx - trackW / 2, y, trackW, ch);
+          ctx.fillStyle = '#8D6E63';
+          for (let t = 0; t < 4; t++) {
+            const ty = y + ch * (0.15 + t * 0.22);
+            ctx.fillRect(cx - bedW * 0.65, ty, bedW * 1.3, 3 * scale);
+          }
+          if (piece.type === 'tunnel') {
+            ctx.fillStyle = night ? '#3E5045' : '#7B8D72';
+            ctx.beginPath();
+            ctx.moveTo(x + cw * 0.05, y + ch);
+            ctx.quadraticCurveTo(cx, y - ch * 0.1, x + cw * 0.95, y + ch);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillStyle = '#1A1A1A';
+            ctx.beginPath();
+            ctx.ellipse(cx, y + ch * 0.55, cw * 0.18, ch * 0.3, 0, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          break;
+          
+        case 'curve':
+          ctx.strokeStyle = bedColor;
+          ctx.lineWidth = bedW;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.arc(x + cw, y, cw * 0.5, Math.PI * 0.5, Math.PI, false);
+          ctx.stroke();
+          ctx.strokeStyle = trackColor;
+          ctx.lineWidth = trackW;
+          ctx.beginPath();
+          ctx.arc(x + cw, y, cw * 0.5, Math.PI * 0.5, Math.PI, false);
+          ctx.stroke();
+          break;
+          
+        case 'tjunction':
+          ctx.fillStyle = bedColor;
+          ctx.fillRect(cx - bedW / 2, y, bedW, ch);
+          ctx.fillStyle = trackColor;
+          ctx.fillRect(cx - trackW / 2, y, trackW, ch);
+          ctx.fillStyle = bedColor;
+          ctx.fillRect(cx, cy - bedW / 2, cw / 2, bedW);
+          ctx.fillStyle = trackColor;
+          ctx.fillRect(cx, cy - trackW / 2, cw / 2, trackW);
+          ctx.fillStyle = '#FFAB40';
+          ctx.beginPath();
+          ctx.arc(cx, cy, 5 * scale, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+          
+        case 'crossover':
+          ctx.fillStyle = bedColor;
+          ctx.fillRect(cx - bedW / 2, y, bedW, ch);
+          ctx.fillStyle = trackColor;
+          ctx.fillRect(cx - trackW / 2, y, trackW, ch);
+          ctx.fillStyle = bedColor;
+          ctx.fillRect(x, cy - bedW / 2, cw, bedW);
+          ctx.fillStyle = trackColor;
+          ctx.fillRect(x, cy - trackW / 2, cw, trackW);
+          ctx.fillStyle = '#FFAB40';
+          ctx.beginPath();
+          ctx.arc(cx, cy, 4 * scale, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+          
+        case 'bridge':
+          ctx.fillStyle = bedColor;
+          ctx.fillRect(x, cy - bedW / 2, cw, bedW);
+          ctx.fillStyle = trackColor;
+          ctx.fillRect(x, cy - trackW / 2, cw, trackW);
+          ctx.fillStyle = '#D7CCC8';
+          ctx.fillRect(cx - bedW * 0.7, y + ch * 0.27, bedW * 1.4, ch * 0.46);
+          ctx.fillStyle = bedColor;
+          ctx.fillRect(cx - bedW / 2, y, bedW, ch * 0.3);
+          ctx.fillRect(cx - bedW / 2, y + ch * 0.7, bedW, ch * 0.3);
+          ctx.fillStyle = trackColor;
+          ctx.fillRect(cx - trackW / 2, y, trackW, ch * 0.3);
+          ctx.fillRect(cx - trackW / 2, y + ch * 0.7, trackW, ch * 0.3);
+          ctx.fillStyle = '#BCAAA4';
+          ctx.fillRect(cx - bedW * 0.5, y + ch * 0.27, bedW, ch * 0.46);
+          ctx.fillStyle = trackColor;
+          ctx.fillRect(cx - trackW / 2, y + ch * 0.27, trackW, ch * 0.46);
+          break;
+          
+        case 'station':
+          ctx.fillStyle = bedColor;
+          ctx.fillRect(cx - bedW / 2, y, bedW, ch);
+          ctx.fillStyle = trackColor;
+          ctx.fillRect(cx - trackW / 2, y, trackW, ch);
+          ctx.fillStyle = '#E0E0E0';
+          ctx.fillRect(cx + cw * 0.08, y + ch * 0.1, cw * 0.35, ch * 0.8);
+          ctx.fillStyle = '#BDBDBD';
+          ctx.fillRect(cx + cw * 0.08, y + ch * 0.1, cw * 0.35, 3 * scale);
+          ctx.fillStyle = '#8D6E63';
+          ctx.fillRect(cx + cw * 0.05, y + ch * 0.05, cw * 0.4, 5 * scale);
+          break;
+      }
+      
+      ctx.restore();
+    }
+  }
+  
+  // Draw trains
+  const trainColorMap = { red: '#E53935', blue: '#1E88E5', green: '#43A047' };
+  for (const train of state.trains) {
+    const tx = train.col * (cw + gap) + cw / 2;
+    const ty = train.row * (ch + gap) + ch / 2;
+    const trainR = cw * 0.28;
+    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    ctx.beginPath();
+    ctx.arc(tx + 2 * scale, ty + 2 * scale, trainR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = trainColorMap[train.color] || '#E53935';
+    ctx.beginPath();
+    ctx.arc(tx, ty, trainR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.beginPath();
+    ctx.arc(tx - trainR * 0.2, ty - trainR * 0.2, trainR * 0.35, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.font = (cw * 0.35) + 'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('\uD83D\uDE82', tx, ty);
+  }
+  
+  // Draw connection dots
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const piece = state.grid[r][c];
+      if (!piece || SCENERY_TYPES.includes(piece.type) || piece.type === 'water') continue;
+      const conns = getConnections(piece.type, piece.rotation);
+      const cellX = c * (cw + gap);
+      const cellY = r * (ch + gap);
+      const dotR = 3 * scale;
+      for (const dir of conns) {
+        const connected = neighborConnected(r, c, dir);
+        ctx.fillStyle = connected ? '#76FF03' : '#FF5252';
+        ctx.globalAlpha = connected ? 0.9 : 0.6;
+        let dx, dy;
+        switch (dir) {
+          case 'N': dx = cellX + cw / 2; dy = cellY - gap / 2; break;
+          case 'S': dx = cellX + cw / 2; dy = cellY + ch + gap / 2; break;
+          case 'E': dx = cellX + cw + gap / 2; dy = cellY + ch / 2; break;
+          case 'W': dx = cellX - gap / 2; dy = cellY + ch / 2; break;
+        }
+        ctx.beginPath();
+        ctx.arc(dx, dy, dotR, 0, Math.PI * 2);
+        ctx.fill();
+        if (connected) {
+          ctx.globalAlpha = 0.3;
+          ctx.beginPath();
+          ctx.arc(dx, dy, dotR * 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.globalAlpha = 1;
+    }
+  }
+  
+  return canvas;
+}
+
+function openScreenshotModal() {
+  screenshotCanvas = renderScreenshotCanvas();
+  const preview = document.getElementById('screenshot-preview');
+  const previewCtx = preview.getContext('2d');
+  preview.width = screenshotCanvas.width;
+  preview.height = screenshotCanvas.height;
+  previewCtx.drawImage(screenshotCanvas, 0, 0);
+  document.getElementById('screenshot-overlay').classList.add('open');
+  SFX.place();
+}
+
+function closeScreenshotModal() {
+  document.getElementById('screenshot-overlay').classList.remove('open');
+  screenshotCanvas = null;
+}
+
+function closeScreenshotModalOutside(e) {
+  if (e.target === document.getElementById('screenshot-overlay')) {
+    closeScreenshotModal();
+  }
+}
+
+function downloadScreenshot() {
+  if (!screenshotCanvas) return;
+  screenshotCanvas.toBlob(function(blob) {
+    if (!blob) { showToast('Screenshot failed!'); return; }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const now = new Date();
+    const dateStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+    a.download = 'train-tracks-' + dateStr + '.png';
+    a.href = url;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    SFX.place();
+    showToast('\uD83D\uDCF8 Saved!');
+  }, 'image/png');
+}
+
+function copyScreenshot() {
+  if (!screenshotCanvas) return;
+  screenshotCanvas.toBlob(function(blob) {
+    if (!blob) { showToast('Copy failed!'); return; }
+    try {
+      navigator.clipboard.write([
+        new ClipboardItem({ 'image/png': blob })
+      ]).then(function() {
+        SFX.place();
+        showToast('\uD83D\uDCCB Copied!');
+      }).catch(function() {
+        showToast('Copy failed \u2014 try Download instead');
+      });
+    } catch (e) {
+      showToast('Clipboard not supported \u2014 try Download');
+    }
+  }, 'image/png');
 }
 
 // ============================================================
