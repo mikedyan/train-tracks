@@ -190,3 +190,11 @@
 - LESSON-142: For download, use `canvas.toBlob()` → `URL.createObjectURL()` → anchor click → `URL.revokeObjectURL()`. Don't use `toDataURL()` which has memory issues with large canvases.
 - LESSON-143: Clipboard write requires `ClipboardItem` API — not universally supported. Always provide a download fallback and graceful error handling.
 - LESSON-144: When running multiple Python text replacement scripts in sequence, later scripts may overwrite earlier changes if they read the file fresh. Always verify all changes are in the final file.
+
+## Share Link Patterns (Day 23)
+- LESSON-145: Use 1 byte per cell (type << 2 | rotIdx) for grid encoding — simpler than bit-packing and still compact enough (< 200 chars base64 for full grid). Premature optimization isn't needed when URL length is already well under limit.
+- LESSON-146: Base64url encoding (RFC 4648 §5) avoids URL encoding issues: replace + with -, / with _, strip trailing =. Always decode by reversing these substitutions + re-adding padding.
+- LESSON-147: Hash detection must run BEFORE autoLoad in init() — share links take priority over saved state. Use history.replaceState to clear the hash after loading to prevent re-loading on refresh.
+- LESSON-148: Always provide a fallback clipboard method (document.execCommand('copy') via temporary input) since navigator.clipboard.writeText requires secure context and may not be available in all browsers.
+- LESSON-149: When encoding variable-length data (trains with varying car counts), use count-prefixed format (trainCount, then per-train: row, col, color, carCount, ...cars) rather than fixed-size records.
+- LESSON-150: The type map (SHARE_TYPE_MAP / SHARE_TYPE_REVERSE) must cover ALL piece types including scenery. If a new type is added to SCENERY_TYPES or TRACK_TYPES, the share link type map must be updated too.

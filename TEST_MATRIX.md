@@ -1087,3 +1087,56 @@ Mark each test with the result after running.
 - [ ] Close button (✕) closes modal
 - [ ] Other keyboard shortcuts blocked while modal is open
 - [ ] Modal doesn't interfere with save/puzzle/shortcuts modals
+
+---
+
+## Day 23 — Share Link
+
+### Encoding / Decoding
+- [ ] Empty grid produces valid encoded string
+- [ ] All 7 track types encode/decode correctly (straight, curve, tjunction, crossover, bridge, tunnel, station)
+- [ ] All 9 scenery types encode/decode correctly (tree, house, cow, water, flower, sheep, horse, duck-land, people)
+- [ ] All 4 rotations (0, 90, 180, 270) encode/decode correctly
+- [ ] Multiple trains with different colors encode/decode correctly
+- [ ] Train cars encode/decode correctly (freight, passenger, caboose)
+- [ ] Switch states encode/decode correctly
+- [ ] Empty grid with no trains/switches encodes correctly
+- [ ] Complex full layout roundtrips perfectly
+
+### Share Button UI
+- [ ] 🔗 button visible in controls bar
+- [ ] Button styled consistently (teal #26A69A)
+- [ ] Visible in day mode
+- [ ] Visible in night mode
+- [ ] Accessible on mobile layout
+
+### Copy to Clipboard
+- [ ] Click copies URL to clipboard
+- [ ] Toast shows "🔗 Link copied!"
+- [ ] URL contains #s= prefix
+- [ ] URL is under 500 chars for typical layout
+- [ ] Fallback copy method works if clipboard API fails
+
+### Share Link Loading
+- [ ] Share link loads layout in new browser/incognito
+- [ ] Grid state matches original exactly
+- [ ] Train positions and colors restored
+- [ ] Switch states restored
+- [ ] Hash cleared from URL after loading (history.replaceState)
+- [ ] Toast shows "📂 Loaded shared layout!"
+- [ ] Regular page load (no hash) still auto-restores from localStorage
+- [ ] Loading shared layout doesn't overwrite save slots
+- [ ] Invalid hash handled gracefully (no crash)
+- [ ] Wrong version number handled gracefully
+- [ ] Too-short hash handled gracefully
+- [ ] Corrupt base64 handled gracefully
+
+### Puzzle Mode Guard
+- [ ] Share button shows "Exit puzzle first!" toast during puzzle mode
+
+### Keyboard Shortcut
+- [ ] L key copies share link
+- [ ] L doesn't fire during play
+- [ ] L doesn't fire when typing in inputs
+- [ ] L doesn't fire when modals are open
+- [ ] L listed in shortcuts modal
