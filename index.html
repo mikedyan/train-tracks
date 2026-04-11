@@ -1730,6 +1730,7 @@ body.night-mode .tutorial-actions .btn-tutorial-skip:hover { color: #B0BEC5; }
       <button class="btn" onclick="openShortcutsModal()" style="background:#546E7A;color:white;padding:8px 12px;" title="Keyboard shortcuts">⌨️</button>
       <button class="btn" onclick="openPuzzleModal()" style="background:#FF5722;color:white;box-shadow:0 3px 10px rgba(255,87,34,0.3);">🧩 Puzzles</button>
       <button class="btn" id="btn-biome" onclick="cycleBiome()" style="background:#66BB6A;color:white;box-shadow:0 3px 10px rgba(102,187,106,0.3);padding:8px 12px;" title="Change terrain biome">🌸</button>
+      <button class="btn" id="btn-share" onclick="copyShareLink()" style="background:#26A69A;color:white;box-shadow:0 3px 10px rgba(38,166,154,0.3);padding:8px 12px;" title="Copy share link">🔗</button>
       <button class="btn" id="btn-screenshot" onclick="openScreenshotModal()" style="background:#5C6BC0;color:white;box-shadow:0 3px 10px rgba(92,107,192,0.3);padding:8px 12px;" title="Take screenshot">📸</button>
       <button class="btn" id="btn-help" onclick="showTutorial()" style="background:#78909C;color:white;padding:8px 12px;" title="How to play">❓</button>
     </div>
@@ -1771,6 +1772,7 @@ body.night-mode .tutorial-actions .btn-tutorial-skip:hover { color: #B0BEC5; }
     <div class="shortcut-row"><span class="shortcut-desc">Cycle biome</span><span class="shortcut-key">B</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Show tutorial</span><span class="shortcut-key">H</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Screenshot</span><span class="shortcut-key">P</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Copy share link</span><span class="shortcut-key">L</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Toggle sidebar</span><span class="shortcut-key">Tab</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Zoom in</span><span class="shortcut-key">+</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Zoom out</span><span class="shortcut-key">-</span></div>
@@ -6399,6 +6401,213 @@ function copyScreenshot() {
 }
 
 // ============================================================
+// SHARE LINK — Compact URL encoding of grid state
+// ============================================================
+
+// Type mapping: 0=empty, 1-7=track types, 8-16=scenery types
+const SHARE_TYPE_MAP = {
+  'straight': 1, 'curve': 2, 'tjunction': 3, 'crossover': 4,
+  'bridge': 5, 'tunnel': 6, 'station': 7,
+  'tree': 8, 'house': 9, 'cow': 10, 'water': 11,
+  'flower': 12, 'sheep': 13, 'horse': 14, 'duck-land': 15, 'people': 16
+};
+const SHARE_TYPE_REVERSE = {};
+for (const [k, v] of Object.entries(SHARE_TYPE_MAP)) SHARE_TYPE_REVERSE[v] = k;
+
+// Rotation mapping: 0->0, 90->1, 180->2, 270->3
+function rotToIdx(rot) { return Math.round(((rot % 360) + 360) % 360 / 90); }
+function idxToRot(idx) { return (idx & 3) * 90; }
+
+// Base64url encode/decode (no padding)
+function b64urlEncode(bytes) {
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function b64urlDecode(str) {
+  str = str.replace(/-/g, '+').replace(/_/g, '/');
+  while (str.length % 4) str += '=';
+  const binary = atob(str);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+function encodeGridState() {
+  // Pack grid: each cell = 5 bits type + 2 bits rotation = 7 bits (use full byte per cell for simplicity)
+  // Format: version(1 byte) + grid(ROWS*COLS bytes) + trainCount(1 byte) + trains(4 bytes each) + switchCount(1 byte) + switches(3 bytes each)
+  const cells = [];
+  
+  // Version byte
+  cells.push(1);
+  
+  // Grid: 1 byte per cell (5 bits type, 2 bits rotation, 1 bit unused)
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const piece = state.grid[r][c];
+      if (!piece) {
+        cells.push(0);
+      } else {
+        const typeId = SHARE_TYPE_MAP[piece.type] || 0;
+        const rotIdx = rotToIdx(piece.rotation || 0);
+        cells.push((typeId << 2) | rotIdx);
+      }
+    }
+  }
+  
+  // Trains: count + [row, col, colorIdx, carCount, ...carTypes]
+  const colorToIdx = { red: 0, blue: 1, green: 2 };
+  const carTypeToIdx = { freight: 0, passenger: 1, caboose: 2 };
+  cells.push(state.trains.length);
+  for (const train of state.trains) {
+    cells.push(train.row);
+    cells.push(train.col);
+    cells.push(colorToIdx[train.color] || 0);
+    const cars = train.cars || [];
+    cells.push(cars.length);
+    for (const car of cars) {
+      cells.push(carTypeToIdx[car.type] || 0);
+    }
+  }
+  
+  // Switch states
+  const switchEntries = Object.entries(state.switchStates);
+  cells.push(switchEntries.length);
+  for (const [key, val] of switchEntries) {
+    const [sr, sc] = key.split(',').map(Number);
+    cells.push(sr);
+    cells.push(sc);
+    cells.push(val ? 1 : 0);
+  }
+  
+  return b64urlEncode(new Uint8Array(cells));
+}
+
+function decodeGridState(hash) {
+  try {
+    const bytes = b64urlDecode(hash);
+    let idx = 0;
+    
+    // Version check
+    const version = bytes[idx++];
+    if (version !== 1) return false;
+    
+    // Need at least version + grid bytes
+    if (bytes.length < 1 + ROWS * COLS) return false;
+    
+    // Decode grid
+    const newGrid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        const b = bytes[idx++];
+        if (b === 0) continue; // empty cell
+        const typeId = b >> 2;
+        const rotIdx = b & 3;
+        const type = SHARE_TYPE_REVERSE[typeId];
+        if (!type) continue; // unknown type, skip
+        newGrid[r][c] = { type: type, rotation: idxToRot(rotIdx) };
+      }
+    }
+    
+    // Decode trains
+    const newTrains = [];
+    const idxToColor = ['red', 'blue', 'green'];
+    const idxToCarType = ['freight', 'passenger', 'caboose'];
+    if (idx < bytes.length) {
+      const trainCount = bytes[idx++];
+      for (let t = 0; t < trainCount && idx < bytes.length; t++) {
+        const row = bytes[idx++];
+        const col = bytes[idx++];
+        const colorIdx = bytes[idx++];
+        const carCount = (idx < bytes.length) ? bytes[idx++] : 0;
+        const cars = [];
+        for (let ci = 0; ci < carCount && idx < bytes.length; ci++) {
+          cars.push({ type: idxToCarType[bytes[idx++]] || 'freight' });
+        }
+        if (row < ROWS && col < COLS) {
+          newTrains.push({ row: row, col: col, color: idxToColor[colorIdx] || 'red', cars: cars });
+        }
+      }
+    }
+    
+    // Decode switch states
+    const newSwitchStates = {};
+    if (idx < bytes.length) {
+      const switchCount = bytes[idx++];
+      for (let s = 0; s < switchCount && idx + 2 < bytes.length; s++) {
+        const sr = bytes[idx++];
+        const sc = bytes[idx++];
+        const sv = bytes[idx++];
+        if (sv) newSwitchStates[sr + ',' + sc] = true;
+      }
+    }
+    
+    // Apply state
+    state.grid = newGrid;
+    state.trains = newTrains;
+    state.switchStates = newSwitchStates;
+    state.undoStack = [];
+    state.redoStack = [];
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function copyShareLink() {
+  if (puzzleState.active) { showToast('🧩 Exit puzzle first!'); return; }
+  const hash = encodeGridState();
+  const url = window.location.origin + window.location.pathname + '#s=' + hash;
+  
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(function() {
+      SFX.place();
+      showToast('🔗 Link copied!');
+    }).catch(function() {
+      fallbackCopyShareLink(url);
+    });
+  } else {
+    fallbackCopyShareLink(url);
+  }
+}
+
+function fallbackCopyShareLink(url) {
+  // Fallback: create temporary input
+  const input = document.createElement('input');
+  input.value = url;
+  input.style.position = 'fixed';
+  input.style.opacity = '0';
+  document.body.appendChild(input);
+  input.select();
+  try {
+    document.execCommand('copy');
+    SFX.place();
+    showToast('🔗 Link copied!');
+  } catch (e) {
+    showToast('Could not copy link');
+  }
+  document.body.removeChild(input);
+}
+
+function loadFromShareHash() {
+  const hash = window.location.hash;
+  if (!hash || !hash.startsWith('#s=')) return false;
+  const data = hash.substring(3);
+  if (!data) return false;
+  
+  const success = decodeGridState(data);
+  if (success) {
+    // Clear hash from URL to prevent re-loading on refresh
+    try {
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+    } catch (e) { /* ignore */ }
+    return true;
+  }
+  return false;
+}
+
+// ============================================================
 // SIZING
 // ============================================================
 function isMobileLayout() {
@@ -6622,6 +6831,12 @@ function handleKeyDown(e) {
   // P: screenshot
   if ((key === 'p' || key === 'P') && !e.ctrlKey && !e.metaKey) {
     openScreenshotModal();
+    return;
+  }
+
+  // L: share link
+  if ((key === 'l' || key === 'L') && !e.ctrlKey && !e.metaKey) {
+    copyShareLink();
     return;
   }
 
@@ -7437,12 +7652,17 @@ function init() {
   // Restore audio settings
   restoreAudioSettings();
 
-  // Restore saved state before first render
-  const restored = autoLoad();
+  // Check for share link hash FIRST (takes priority over autosave)
+  let sharedLayout = loadFromShareHash();
+
+  // Restore saved state before first render (skip if shared layout loaded)
+  const restored = sharedLayout ? true : autoLoad();
 
   renderAllCells();
 
-  if (restored) {
+  if (sharedLayout) {
+    showToast('📂 Loaded shared layout!');
+  } else if (restored) {
     showToast('Welcome back! 🚂');
   }
 

@@ -1,0 +1,90 @@
+{
+  "day": 23,
+  "title": "Share Link",
+  "date": "2026-04-11",
+  "feature": "Encode grid state into a compact URL hash that can be shared. Decode on page load to restore layouts from links.",
+  "bugs": [],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Grid State Encoding",
+      "description": "Create encodeGridState() that converts the grid into a compact binary representation. Each cell gets 6 bits: 4 bits for type (0=empty, 1-7=track types, 8-16=scenery types) and 2 bits for rotation (0-3). Pack bits into bytes, Base64 encode with URL-safe alphabet (base64url). Handle trains separately with row,col,color. Handle switch states.",
+      "file": "index.html",
+      "acceptance": [
+        "Empty grid produces a valid (short) encoded string",
+        "All track types encoded correctly (straight, curve, tjunction, crossover, bridge, tunnel, station)",
+        "All scenery types encoded correctly (tree, house, cow, water, flower, sheep, horse, duck-land, people)",
+        "Rotation values 0/90/180/270 map to 2-bit values 0/1/2/3",
+        "Train positions and colors encoded",
+        "Switch states encoded"
+      ]
+    },
+    {
+      "id": "T2",
+      "title": "Grid State Decoding",
+      "description": "Create decodeGridState(hash) that reverses the encoding. Parse the base64url string back into grid state, train positions, and switch states. Validate the data before applying (correct dimensions, valid types). Fall back gracefully on invalid/corrupt data.",
+      "file": "index.html",
+      "acceptance": [
+        "Decoding an encoded state produces identical grid",
+        "Invalid/corrupt hash data handled gracefully (no crash, shows toast)",
+        "Old page loads without hash work normally (no regression)",
+        "Missing fields default correctly (no trains, no switches)"
+      ]
+    },
+    {
+      "id": "T3",
+      "title": "Share Link Button in UI",
+      "description": "Add a 🔗 Share button in the controls bar (next to 📸 Screenshot). On click: encode current state, build URL with hash, copy to clipboard, show toast. Use navigator.clipboard.writeText() with fallback.",
+      "file": "index.html",
+      "acceptance": [
+        "🔗 button visible in controls bar",
+        "Click copies URL to clipboard",
+        "Toast shows '🔗 Link copied!'",
+        "URL hash is readable (not excessively long for a typical layout)",
+        "Button disabled or hidden during puzzle mode"
+      ]
+    },
+    {
+      "id": "T4",
+      "title": "Hash Detection on Page Load",
+      "description": "On init(), check window.location.hash. If present and starts with expected prefix, decode and load the layout instead of auto-save. Show a toast: '📂 Loaded shared layout!' Then clear the hash from URL bar (using history.replaceState) to prevent re-loading on refresh.",
+      "file": "index.html",
+      "acceptance": [
+        "Share link loads layout in new browser/incognito",
+        "Regular page loads (no hash) still auto-restore from localStorage",
+        "Hash is cleared from URL after loading so refresh uses auto-save",
+        "Loading a shared layout doesn't overwrite existing save slots"
+      ]
+    },
+    {
+      "id": "T5",
+      "title": "Keyboard Shortcut + Shortcuts Modal Update",
+      "description": "Add 'L' keyboard shortcut to trigger share link copy. Add the shortcut to the shortcuts modal HTML.",
+      "file": "index.html",
+      "acceptance": [
+        "L key copies share link (same as clicking button)",
+        "Shortcuts modal shows the new L shortcut",
+        "L shortcut blocked during play, in modals, in inputs"
+      ]
+    },
+    {
+      "id": "T6",
+      "title": "CSS for Share Button",
+      "description": "Style the share button consistently with other control buttons. No new modal needed — just a button click action.",
+      "file": "index.html",
+      "acceptance": [
+        "Button styled consistently with screenshot/save buttons",
+        "Works in both day and night modes",
+        "Visible on mobile layout"
+      ]
+    }
+  ],
+  "testingFocus": [
+    "Encode → Decode roundtrip with complex layouts (all track types, scenery, multiple trains, switches)",
+    "URL length for typical 12x8 grid (should be well under 500 chars)",
+    "Share link works in incognito (different browser context)",
+    "Normal page load without hash still works (auto-restore)",
+    "Mobile layout: button accessible in controls bar",
+    "Puzzle mode: share button disabled/hidden"
+  ]
+}
