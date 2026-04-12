@@ -198,3 +198,11 @@
 - LESSON-148: Always provide a fallback clipboard method (document.execCommand('copy') via temporary input) since navigator.clipboard.writeText requires secure context and may not be available in all browsers.
 - LESSON-149: When encoding variable-length data (trains with varying car counts), use count-prefixed format (trainCount, then per-train: row, col, color, carCount, ...cars) rather than fixed-size records.
 - LESSON-150: The type map (SHARE_TYPE_MAP / SHARE_TYPE_REVERSE) must cover ALL piece types including scenery. If a new type is added to SCENERY_TYPES or TRACK_TYPES, the share link type map must be updated too.
+
+## Train Customization Patterns (Day 24)
+- LESSON-151: Use `pointerdown` with `stopPropagation` on color selector dots to prevent parent palette drag handlers from firing. This is critical for small interactive elements inside draggable containers.
+- LESSON-152: Color selector dots must be preserved across `rerenderPalette()` and window resize — exclude `.color-selector` and `.color-dot` from querySelectorAll cleanup selectors.
+- LESSON-153: When adding new train colors, update ALL color maps in parallel: TRAIN_COLORS, TRAIN_COLOR_ORDER, colorToIdx (share encode), idxToColor (share decode), trainColorMap (thumbnail), trainColorMap (screenshot). Missing any one creates a silent bug.
+- LESSON-154: MAX_TRAINS should match the number of available colors to avoid confusing UX where a color exists in the palette but can't be placed.
+- LESSON-155: Color dot `active` state uses CSS class toggle — simpler than tracking state separately. The dot's `data-color` attribute provides the lookup key.
+- LESSON-156: Yellow train needs high-contrast detail colors (#F57F17) to remain visible in both day and night modes. Light body colors require darker accents.

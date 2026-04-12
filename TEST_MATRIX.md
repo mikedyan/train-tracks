@@ -1140,3 +1140,18 @@ Mark each test with the result after running.
 - [ ] L doesn't fire when typing in inputs
 - [ ] L doesn't fire when modals are open
 - [ ] L listed in shortcuts modal
+
+## Day 24 — Train Customization
+- [ ] Place all 5 train colors on tracks
+- [ ] Click color dot to change palette train color
+- [ ] Verify SVG and label update when changing color
+- [ ] Place multiple trains of different colors
+- [ ] Verify MAX_TRAINS = 5 enforcement
+- [ ] Save and load layout with yellow/purple trains
+- [ ] Share link with yellow/purple trains — encode and decode
+- [ ] Verify colors visible in night mode
+- [ ] Verify screenshot captures all 5 colors
+- [ ] Verify thumbnail shows all 5 colors
+- [ ] Change biome — color dots survive
+- [ ] Resize window — color dots survive
+- [ ] Mobile drawer shows yellow/purple palette items
