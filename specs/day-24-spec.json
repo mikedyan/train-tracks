@@ -1,0 +1,61 @@
+{
+  "day": 24,
+  "feature": "Train Customization",
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Add Yellow and Purple train colors to TRAIN_COLORS",
+      "description": "Add yellow and purple color definitions to TRAIN_COLORS constant (body, hood, cab, cabDark, detail, cowcatcher, running). Update TRAIN_COLOR_ORDER to include all 5 colors.",
+      "file": "index.html",
+      "acceptance": "TRAIN_COLORS has 5 entries. TRAIN_COLOR_ORDER lists all 5."
+    },
+    {
+      "id": 2,
+      "title": "Add CSS for yellow/purple palette trains + color selector dots",
+      "description": "Add .palette-train-yellow and .palette-train-purple CSS classes. Add .color-selector container and .color-dot styles for 5 small colored circles below each palette train.",
+      "file": "index.html",
+      "acceptance": "Yellow/purple palette items have distinct backgrounds. Color dots appear below each palette train."
+    },
+    {
+      "id": 3,
+      "title": "Implement palette color cycling and dot selection",
+      "description": "Click palette train to cycle through 5 colors. Color dots allow direct color selection via click. setPaletteTrainColor updates data-type, CSS class, SVG, label, and dot active state. initPaletteColorDots creates dots for all palette train items (sidebar + drawer).",
+      "file": "index.html",
+      "acceptance": "Clicking palette train cycles color. Clicking dot jumps to that color. Both sidebar and drawer sync."
+    },
+    {
+      "id": 4,
+      "title": "Update share link encoding for 5 colors",
+      "description": "Expand colorToIdx and idxToColor in encodeGridState/decodeGridState to support yellow (3) and purple (4). Fallback to red for unknown indices.",
+      "file": "index.html",
+      "acceptance": "Share links with yellow/purple trains encode and decode correctly."
+    },
+    {
+      "id": 5,
+      "title": "Update thumbnail and screenshot color maps",
+      "description": "Add yellow (#FDD835) and purple (#7E57C2) to trainColorMap in renderThumbnail and renderScreenshotCanvas.",
+      "file": "index.html",
+      "acceptance": "Yellow/purple trains render in save thumbnails and screenshots."
+    },
+    {
+      "id": 6,
+      "title": "Preserve color-selector during re-renders",
+      "description": "Update rerenderPalette() and the resize handler to exclude .color-selector and .color-dot divs from cleanup. Call initPaletteColorDots() in init() after palette SVGs are rendered.",
+      "file": "index.html",
+      "acceptance": "Color dots persist across biome changes, window resizes, and re-renders."
+    }
+  ],
+  "bugs": [],
+  "testing_focus": [
+    "Place all 5 train colors and verify SVG renders correctly",
+    "Cycle through all colors via palette click",
+    "Select colors via color dots",
+    "Verify max 3 trains still enforced with 5 colors",
+    "Verify color persists in save/load",
+    "Verify share link works with yellow/purple trains",
+    "Verify colors visible in both day and night modes",
+    "Verify screenshot captures all 5 colors correctly",
+    "Verify mobile drawer trains have same color dot functionality",
+    "Verify color dots survive biome change and window resize"
+  ]
+}

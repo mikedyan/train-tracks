@@ -211,6 +211,45 @@ html, body {
 .palette-train-red { background: rgba(229,57,53,0.2) !important; border-color: rgba(229,57,53,0.5); }
 .palette-train-blue { background: rgba(30,136,229,0.2) !important; border-color: rgba(30,136,229,0.5); }
 .palette-train-green { background: rgba(67,160,71,0.2) !important; border-color: rgba(67,160,71,0.5); }
+.palette-train-yellow { background: rgba(253,216,53,0.2) !important; border-color: rgba(253,216,53,0.5); }
+.palette-train-purple { background: rgba(126,87,194,0.2) !important; border-color: rgba(126,87,194,0.5); }
+
+.color-selector {
+  display: flex;
+  gap: 3px;
+  justify-content: center;
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  pointer-events: auto;
+}
+
+.color-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.5);
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.color-dot:hover {
+  transform: scale(1.3);
+}
+
+.color-dot.active {
+  border-color: #FFF;
+  transform: scale(1.2);
+  box-shadow: 0 0 4px rgba(255,255,255,0.6);
+}
+
+.color-dot[data-color="red"] { background: #E53935; }
+.color-dot[data-color="blue"] { background: #1E88E5; }
+.color-dot[data-color="green"] { background: #43A047; }
+.color-dot[data-color="yellow"] { background: #FDD835; }
+.color-dot[data-color="purple"] { background: #7E57C2; }
 
 .palette-car {
   background: rgba(139,195,74,0.2) !important;
@@ -1650,6 +1689,8 @@ body.night-mode .tutorial-actions .btn-tutorial-skip:hover { color: #B0BEC5; }
     <div class="palette-piece palette-train palette-train-red" data-type="train-red"><div class="label">Red</div></div>
     <div class="palette-piece palette-train palette-train-blue" data-type="train-blue"><div class="label">Blue</div></div>
     <div class="palette-piece palette-train palette-train-green" data-type="train-green"><div class="label">Green</div></div>
+    <div class="palette-piece palette-train palette-train-yellow" data-type="train-yellow"><div class="label">Yellow</div></div>
+    <div class="palette-piece palette-train palette-train-purple" data-type="train-purple"><div class="label">Purple</div></div>
     <div class="palette-divider"></div>
     <h2>Cars</h2>
     <div class="palette-piece palette-car" data-type="freight"><div class="label">Freight</div></div>
@@ -1684,6 +1725,8 @@ body.night-mode .tutorial-actions .btn-tutorial-skip:hover { color: #B0BEC5; }
       <div class="palette-piece palette-train palette-train-red" data-type="train-red"><div class="label">Red</div></div>
       <div class="palette-piece palette-train palette-train-blue" data-type="train-blue"><div class="label">Blue</div></div>
       <div class="palette-piece palette-train palette-train-green" data-type="train-green"><div class="label">Green</div></div>
+      <div class="palette-piece palette-train palette-train-yellow" data-type="train-yellow"><div class="label">Yellow</div></div>
+      <div class="palette-piece palette-train palette-train-purple" data-type="train-purple"><div class="label">Purple</div></div>
       <div class="palette-divider"></div>
       <span class="drawer-section-label">Cars</span>
       <div class="palette-piece palette-car" data-type="freight"><div class="label">Freight</div></div>
@@ -2503,9 +2546,9 @@ function restoreBiome() {
 function rerenderPalette() {
   document.querySelectorAll('.palette-piece').forEach(el => {
     const type = el.dataset.type;
-    // Remove old SVG/emoji content (but keep .label)
-    el.querySelectorAll('svg, div:not(.label)').forEach(ch => {
-      if (!ch.classList.contains('label')) ch.remove();
+    // Remove old SVG/emoji content (but keep .label and .color-selector)
+    el.querySelectorAll('svg, div:not(.label):not(.color-selector):not(.color-dot)').forEach(ch => {
+      if (!ch.classList.contains('label') && !ch.classList.contains('color-selector') && !ch.classList.contains('color-dot')) ch.remove();
     });
     const svg = createPaletteSVG(type);
     el.insertBefore(svg, el.firstChild);
@@ -2546,13 +2589,15 @@ function getSceneryEmoji(type) {
 }
 const CAR_TYPES = ['freight', 'passenger', 'caboose'];
 const MAX_CARS = 5;
-const MAX_TRAINS = 3;
+const MAX_TRAINS = 5;
 const TRAIN_COLORS = {
   red: { body: '#E53935', hood: '#C62828', cab: '#D32F2F', cabDark: '#B71C1C', detail: '#B71C1C', cowcatcher: '#FF8F00', running: '#FF8F00' },
   blue: { body: '#1E88E5', hood: '#1565C0', cab: '#1976D2', cabDark: '#0D47A1', detail: '#0D47A1', cowcatcher: '#42A5F5', running: '#42A5F5' },
   green: { body: '#43A047', hood: '#2E7D32', cab: '#388E3C', cabDark: '#1B5E20', detail: '#1B5E20', cowcatcher: '#66BB6A', running: '#66BB6A' },
+  yellow: { body: '#FDD835', hood: '#F9A825', cab: '#FBC02D', cabDark: '#F57F17', detail: '#F57F17', cowcatcher: '#FFD54F', running: '#FFD54F' },
+  purple: { body: '#7E57C2', hood: '#5E35B1', cab: '#673AB7', cabDark: '#4527A0', detail: '#4527A0', cowcatcher: '#B39DDB', running: '#B39DDB' },
 };
-const TRAIN_COLOR_ORDER = ['red', 'blue', 'green'];
+const TRAIN_COLOR_ORDER = ['red', 'blue', 'green', 'yellow', 'purple'];
 
 // Base connections at rotation 0
 const BASE_CONNECTIONS = {
@@ -5931,7 +5976,7 @@ function renderThumbnail(canvas, gridData, trainsData) {
   }
 
   // Train markers: colored dots for each train
-  const trainColorMap = { red: '#E53935', blue: '#1E88E5', green: '#43A047' };
+  const trainColorMap = { red: '#E53935', blue: '#1E88E5', green: '#43A047', yellow: '#FDD835', purple: '#7E57C2' };
   if (Array.isArray(trainsData)) {
     for (const train of trainsData) {
       ctx.fillStyle = trainColorMap[train.color] || '#E53935';
@@ -6280,7 +6325,7 @@ function renderScreenshotCanvas() {
   }
   
   // Draw trains
-  const trainColorMap = { red: '#E53935', blue: '#1E88E5', green: '#43A047' };
+  const trainColorMap = { red: '#E53935', blue: '#1E88E5', green: '#43A047', yellow: '#FDD835', purple: '#7E57C2' };
   for (const train of state.trains) {
     const tx = train.col * (cw + gap) + cw / 2;
     const ty = train.row * (ch + gap) + ch / 2;
@@ -6457,7 +6502,7 @@ function encodeGridState() {
   }
   
   // Trains: count + [row, col, colorIdx, carCount, ...carTypes]
-  const colorToIdx = { red: 0, blue: 1, green: 2 };
+  const colorToIdx = { red: 0, blue: 1, green: 2, yellow: 3, purple: 4 };
   const carTypeToIdx = { freight: 0, passenger: 1, caboose: 2 };
   cells.push(state.trains.length);
   for (const train of state.trains) {
@@ -6512,7 +6557,7 @@ function decodeGridState(hash) {
     
     // Decode trains
     const newTrains = [];
-    const idxToColor = ['red', 'blue', 'green'];
+    const idxToColor = ['red', 'blue', 'green', 'yellow', 'purple'];
     const idxToCarType = ['freight', 'passenger', 'caboose'];
     if (idx < bytes.length) {
       const trainCount = bytes[idx++];
@@ -7639,6 +7684,76 @@ function onTutorialOverlayClick(e) {
   }
 }
 
+
+// ============================================================
+// PALETTE TRAIN COLOR CYCLING + COLOR DOTS
+// ============================================================
+function initPaletteColorDots() {
+  document.querySelectorAll('.palette-piece.palette-train').forEach(el => {
+    // Remove existing dots
+    el.querySelectorAll('.color-selector').forEach(d => d.remove());
+    
+    const selector = document.createElement('div');
+    selector.className = 'color-selector';
+    
+    const currentColor = getTrainColor(el.dataset.type);
+    
+    TRAIN_COLOR_ORDER.forEach(color => {
+      const dot = document.createElement('div');
+      dot.className = 'color-dot' + (color === currentColor ? ' active' : '');
+      dot.dataset.color = color;
+      dot.title = color.charAt(0).toUpperCase() + color.slice(1);
+      
+      dot.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        setPaletteTrainColor(el, color);
+      });
+      
+      selector.appendChild(dot);
+    });
+    
+    el.appendChild(selector);
+  });
+}
+
+function setPaletteTrainColor(paletteEl, newColor) {
+  const oldType = paletteEl.dataset.type;
+  const oldColor = getTrainColor(oldType);
+  if (oldColor === newColor) return;
+  
+  const newType = 'train-' + newColor;
+  paletteEl.dataset.type = newType;
+  
+  // Update CSS class
+  TRAIN_COLOR_ORDER.forEach(c => paletteEl.classList.remove('palette-train-' + c));
+  paletteEl.classList.add('palette-train-' + newColor);
+  
+  // Update label
+  const label = paletteEl.querySelector('.label');
+  if (label) label.textContent = newColor.charAt(0).toUpperCase() + newColor.slice(1);
+  
+  // Update SVG
+  paletteEl.querySelectorAll('svg').forEach(s => s.remove());
+  const svg = createPaletteSVG(newType);
+  const labelEl = paletteEl.querySelector('.label');
+  paletteEl.insertBefore(svg, labelEl);
+  
+  // Update active dot
+  paletteEl.querySelectorAll('.color-dot').forEach(d => {
+    d.classList.toggle('active', d.dataset.color === newColor);
+  });
+  
+  SFX.rotate();
+}
+
+function cyclePaletteTrainColor(paletteEl) {
+  const currentColor = getTrainColor(paletteEl.dataset.type);
+  const idx = TRAIN_COLOR_ORDER.indexOf(currentColor);
+  const nextIdx = (idx + 1) % TRAIN_COLOR_ORDER.length;
+  setPaletteTrainColor(paletteEl, TRAIN_COLOR_ORDER[nextIdx]);
+}
+
 function init() {
   calculateSize();
   initGrid();
@@ -7673,6 +7788,9 @@ function init() {
     el.insertBefore(svg, el.firstChild);
   });
 
+  // Initialize color selector dots on palette trains
+  initPaletteColorDots();
+
   initDragAndDrop();
 
   // Zoom/pan
@@ -7693,12 +7811,13 @@ function init() {
     // Re-render palette
     document.querySelectorAll('.palette-piece').forEach(el => {
       const type = el.dataset.type;
-      el.querySelectorAll('svg, div:not(.label)').forEach(ch => {
-        if (!ch.classList.contains('label')) ch.remove();
+      el.querySelectorAll('svg, div:not(.label):not(.color-selector):not(.color-dot)').forEach(ch => {
+        if (!ch.classList.contains('label') && !ch.classList.contains('color-selector') && !ch.classList.contains('color-dot')) ch.remove();
       });
       const svg = createPaletteSVG(type);
       el.insertBefore(svg, el.firstChild);
     });
+    initPaletteColorDots();
   });
 
   if (!restored) {
