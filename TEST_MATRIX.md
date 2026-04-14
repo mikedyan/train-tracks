@@ -1155,3 +1155,46 @@ Mark each test with the result after running.
 - [ ] Change biome — color dots survive
 - [ ] Resize window — color dots survive
 - [ ] Mobile drawer shows yellow/purple palette items
+
+## Day 25: Passenger Delivery
+
+### Toggle
+- [ ] 🧑 button visible in controls bar
+- [ ] Click toggles between enabled (green) and disabled (brown)
+- [ ] Preference saved to localStorage
+- [ ] Restored on page reload
+
+### Passenger Spawn
+- [ ] Passengers appear at stations during play (when enabled)
+- [ ] Max 3 passengers per station
+- [ ] Passengers spawn every ~10 seconds
+- [ ] Passengers show idle bounce animation
+- [ ] No passengers spawn when disabled
+
+### Pickup & Delivery
+- [ ] Train picks up passengers at station (boarding animation)
+- [ ] Boarding sound plays (ascending ding)
+- [ ] Train delivers passengers at next different station
+- [ ] Delivery sound plays (mini-fanfare)
+- [ ] Mini confetti burst at delivery station
+- [ ] Toast shows number of passengers boarded/delivered
+- [ ] Counter updates on delivery
+
+### HUD
+- [ ] Delivery counter shows "🧑 Delivered: N" during play
+- [ ] High score shows "🏆 Best: M" when > 0
+- [ ] HUD hidden when passengers disabled
+- [ ] HUD hidden when not playing
+- [ ] Night mode styling applies to HUD
+
+### Multiple Trains
+- [ ] Each train tracks its own passengers
+- [ ] Train A delivering doesn't affect Train B's onboard count
+- [ ] Both trains can pick up from same station
+
+### Edge Cases
+- [ ] Single station: pickup but no delivery (correct)
+- [ ] Stop play: passenger state resets cleanly
+- [ ] Save/load: passenger state not persisted (session-only)
+- [ ] Share links still work correctly
+- [ ] Random track + play with passengers works

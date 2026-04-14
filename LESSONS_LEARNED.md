@@ -206,3 +206,11 @@
 - LESSON-154: MAX_TRAINS should match the number of available colors to avoid confusing UX where a color exists in the palette but can't be placed.
 - LESSON-155: Color dot `active` state uses CSS class toggle — simpler than tracking state separately. The dot's `data-color` attribute provides the lookup key.
 - LESSON-156: Yellow train needs high-contrast detail colors (#F57F17) to remain visible in both day and night modes. Light body colors require darker accents.
+
+## Passenger Delivery Patterns (Day 25)
+- LESSON-157: Session-only state (like passenger delivery) should NOT persist to save/load or share links. Reset on stopPlay to keep things clean.
+- LESSON-158: Use `lastPickupTrain` per station to prevent delivering passengers at the same station they were picked up from. This prevents trivial 0-distance deliveries.
+- LESSON-159: Gate all new feature code behind an `enabled` flag so the feature is truly togglable with zero side effects when off.
+- LESSON-160: When hooking into advanceTrainAnim for station events, replace the toast-only path conditionally (`if enabled → feature; else → original toast`) to avoid double-toasting.
+- LESSON-161: Mini confetti reuses the existing `.confetti-particle` CSS class — no need for new keyframes when the visual style is the same.
+- LESSON-162: Passenger emoji positions use `right`/`top` percentages relative to the cell, keeping them near the station platform regardless of cell size or zoom level.
