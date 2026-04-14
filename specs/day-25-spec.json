@@ -1,0 +1,105 @@
+{
+  "day": 25,
+  "feature": "Passenger Delivery",
+  "description": "Stations generate tiny passengers on a timer. Trains pick up passengers at stations and deliver them to the next station. A delivery counter tracks deliveries. The feature is togglable so sandbox play remains uninterrupted.",
+  "bugs_to_fix": [],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Passenger state and toggle",
+      "description": "Add passenger delivery state: enabled flag (togglable), per-station passenger arrays (max 3), total delivered counter, high score in localStorage. Add a toggle button (🧑 Passengers) in the controls bar.",
+      "changes": [
+        "Add CSS for passenger toggle button, passenger emoji display at stations, and delivery counter HUD",
+        "Add passengerState object in JS: { enabled, stations (keyed by 'row,col' -> count), onboard (keyed by train color -> count), delivered, highScore }",
+        "Add localStorage key 'trainTracks_passengers' for high score",
+        "Add toggle button that enables/disables the system, saved to localStorage"
+      ]
+    },
+    {
+      "id": "T2",
+      "title": "Passenger spawn at stations",
+      "description": "During play, stations generate passengers on a 10-second timer. Max 3 per station. Tiny emoji rendered near station platform.",
+      "changes": [
+        "Add passengerSpawnInterval that runs during play",
+        "Each tick, iterate station cells and add a passenger if < 3",
+        "Render passenger emoji (🧑) positioned near station platform area",
+        "Clean up passengers when play stops"
+      ]
+    },
+    {
+      "id": "T3",
+      "title": "Train picks up passengers at station",
+      "description": "When a train arrives at a station cell during animation, pick up waiting passengers. Play boarding sound. Show boarding visual feedback.",
+      "changes": [
+        "In advanceTrainAnim when entering a station cell: check if passengers waiting",
+        "Transfer passengers from station to train's onboard count",
+        "Play boarding SFX (cheerful ascending 'ding')",
+        "Show toast '🧑 Passengers boarding!' and brief visual pulse on station"
+      ]
+    },
+    {
+      "id": "T4",
+      "title": "Train delivers passengers at next station",
+      "description": "When a train with onboard passengers arrives at a different station, deliver them. Play disembark sound, show confetti, increment counter.",
+      "changes": [
+        "In advanceTrainAnim when entering a station cell: if train has onboard passengers, deliver them",
+        "Increment delivered counter",
+        "Play disembark SFX (bright celebration)",
+        "Mini confetti burst at station",
+        "Show toast '🧑 N passengers delivered!'",
+        "Update counter HUD display",
+        "Check if new high score, save to localStorage"
+      ]
+    },
+    {
+      "id": "T5",
+      "title": "Delivery counter HUD",
+      "description": "Show a small counter in the controls area displaying current deliveries and high score when passenger mode is active.",
+      "changes": [
+        "Add #passenger-hud element shown when passenger mode enabled and playing",
+        "Display: '🧑 Delivered: N' and optional 'Best: M' if high score exists",
+        "Update on each delivery",
+        "Hide when not playing or passenger mode disabled"
+      ]
+    },
+    {
+      "id": "T6",
+      "title": "Sound effects for boarding and delivery",
+      "description": "Add SFX.passengerBoard (cheerful ding-ding) and SFX.passengerDeliver (triumphant mini-fanfare).",
+      "changes": [
+        "Add SFX.passengerBoard: quick ascending dings",
+        "Add SFX.passengerDeliver: brief celebration fanfare + confetti particles"
+      ]
+    },
+    {
+      "id": "T7",
+      "title": "Share link and save/load compatibility",
+      "description": "Passenger state is session-only (not saved with layout). Ensure no regression in share link encoding/decoding.",
+      "changes": [
+        "Passenger delivery state resets on play stop — does not persist to save/load or share links",
+        "No changes to share link encoding needed"
+      ]
+    }
+  ],
+  "acceptance_criteria": [
+    "AC1: Toggle button '🧑' in controls enables/disables passenger mode",
+    "AC2: Passengers (emoji 🧑) appear at stations every ~10s during play when enabled, max 3 per station",
+    "AC3: Train picks up passengers when arriving at station (boarding sound plays)",
+    "AC4: Train delivers passengers at next station (delivery sound + mini confetti)",
+    "AC5: Delivery counter shows '🧑 Delivered: N' during play when enabled",
+    "AC6: High score saved to localStorage",
+    "AC7: Feature can be toggled off for pure sandbox play",
+    "AC8: No regression in existing play/stop/crash/loop behavior",
+    "AC9: Works in both day and night modes",
+    "AC10: Works with multiple trains independently (each train tracks its own passengers)"
+  ],
+  "testing_focus": [
+    "Toggle passenger mode on/off during non-play state",
+    "Play with passengers enabled — watch passenger spawn, pickup, delivery cycle",
+    "Multiple trains each picking up at different stations",
+    "Stop play and verify passenger state resets cleanly",
+    "Night mode appearance of passenger emojis",
+    "Save/load doesn't break with passenger state active",
+    "Random track generation + play with passengers enabled"
+  ]
+}

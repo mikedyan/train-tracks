@@ -1594,6 +1594,59 @@ body.night-mode .tutorial-actions .btn-tutorial-skip:hover { color: #B0BEC5; }
   #tutorial-bubble .tutorial-desc { font-size: 13px; }
 }
 
+/* PASSENGER DELIVERY SYSTEM */
+#passenger-hud {
+  display: none;
+  position: fixed;
+  top: 8px;
+  right: 12px;
+  z-index: 80;
+  background: rgba(255,255,255,0.92);
+  border-radius: 12px;
+  padding: 6px 14px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.12);
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'Nunito', sans-serif;
+  color: #3E2723;
+  backdrop-filter: blur(4px);
+  gap: 8px;
+  align-items: center;
+}
+#passenger-hud.active { display: flex; }
+body.night-mode #passenger-hud {
+  background: rgba(38,50,56,0.92);
+  color: #ECEFF1;
+}
+#passenger-hud .passenger-count { font-size: 14px; }
+#passenger-hud .passenger-best { font-size: 11px; color: #9E9E9E; }
+body.night-mode #passenger-hud .passenger-best { color: #78909C; }
+
+.station-passenger {
+  position: absolute;
+  font-size: calc(var(--cell-size) * 0.22);
+  pointer-events: none;
+  z-index: 5;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.2));
+  animation: passenger-idle 1.5s ease-in-out infinite;
+}
+@keyframes passenger-idle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+@keyframes passenger-board {
+  0% { opacity: 1; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0; transform: translate(-15px, -10px) scale(0.3); }
+}
+.station-passenger.boarding { animation: passenger-board 0.4s ease-in forwards; }
+@keyframes passenger-arrive {
+  0% { opacity: 0; transform: translate(-10px, -8px) scale(0.3); }
+  100% { opacity: 1; transform: translate(0, 0) scale(1); }
+}
+.station-passenger.arriving { animation: passenger-arrive 0.4s ease-out forwards; }
+.btn-passengers { background: #8D6E63; color: white; box-shadow: 0 3px 10px rgba(141,110,99,0.3); }
+.btn-passengers.enabled { background: #43A047; box-shadow: 0 3px 10px rgba(67,160,71,0.4); }
+
 /* SCREENSHOT MODAL */
 #screenshot-overlay {
   position: fixed;
@@ -1776,6 +1829,7 @@ body.night-mode .tutorial-actions .btn-tutorial-skip:hover { color: #B0BEC5; }
       <button class="btn" id="btn-share" onclick="copyShareLink()" style="background:#26A69A;color:white;box-shadow:0 3px 10px rgba(38,166,154,0.3);padding:8px 12px;" title="Copy share link">🔗</button>
       <button class="btn" id="btn-screenshot" onclick="openScreenshotModal()" style="background:#5C6BC0;color:white;box-shadow:0 3px 10px rgba(92,107,192,0.3);padding:8px 12px;" title="Take screenshot">📸</button>
       <button class="btn" id="btn-help" onclick="showTutorial()" style="background:#78909C;color:white;padding:8px 12px;" title="How to play">❓</button>
+      <button class="btn btn-passengers" id="btn-passengers" onclick="togglePassengers()" style="padding:8px 12px;" title="Toggle passenger delivery">🧑</button>
     </div>
   </div>
 </div>
@@ -1832,6 +1886,12 @@ body.night-mode .tutorial-actions .btn-tutorial-skip:hover { color: #B0BEC5; }
   <div class="puzzle-pieces" id="puzzle-hud-pieces"></div>
   <button class="btn-check-puzzle" onclick="checkPuzzleSolution()">✅ Check</button>
   <button class="btn-back-sandbox" onclick="exitPuzzle()">🏖️ Sandbox</button>
+</div>
+
+<!-- Passenger Delivery HUD -->
+<div id="passenger-hud">
+  <span class="passenger-count" id="passenger-count">🧑 Delivered: 0</span>
+  <span class="passenger-best" id="passenger-best"></span>
 </div>
 
 <!-- Puzzle Select Modal -->
@@ -2362,6 +2422,22 @@ const SFX = {
     if (speed > 1.5) {
       playNoise(0.15, vol * 0.3);
     }
+  },
+  passengerBoard() {
+    // Cheerful boarding ding-ding
+    if (!soundEnabled) return;
+    playNote(880, 0.08, 'sine', 0.08);
+    playNote(1047, 0.08, 'sine', 0.08, 0.09);
+    playNote(1319, 0.1, 'sine', 0.1, 0.18);
+  },
+  passengerDeliver() {
+    // Triumphant mini-fanfare for delivery
+    if (!soundEnabled) return;
+    playNote(659, 0.1, 'sine', 0.1);
+    playNote(784, 0.1, 'sine', 0.1, 0.08);
+    playNote(1047, 0.12, 'sine', 0.12, 0.16);
+    playNote(1319, 0.15, 'sine', 0.14, 0.26);
+    playNote(1568, 0.2, 'sine', 0.08, 0.34);
   }
 };
 
@@ -5105,6 +5181,8 @@ function startPlay() {
   setTimeout(startChugLoop, 500);
   setTimeout(startSmokeLoop, 300);
   updateHeadlightVisibility();
+  // Start passenger delivery system if enabled
+  startPassengerSystem();
   requestAnimationFrame(animateFrame);
 }
 
@@ -5224,7 +5302,12 @@ function advanceTrainAnim(anim, timestamp) {
 
     if (nextPiece.type === 'station') {
       SFX.station();
-      showToast('🚉 Toot toot!');
+      // Handle passenger pickup/delivery
+      if (passengerState.enabled) {
+        handleTrainAtStation(anim, nextPos.row, nextPos.col);
+      } else {
+        showToast('🚉 Toot toot!');
+      }
     }
 
     // Crossing bell at crossover pieces (with cooldown)
@@ -5456,6 +5539,8 @@ function stopPlay() {
   if (tunnelReverbGain) tunnelReverbGain.gain.value = 0;
   // Clean up crash particles
   document.querySelectorAll('.crash-star, .crash-dust').forEach(el => el.remove());
+  // Stop passenger system
+  resetPassengerState();
   state.playing = false;
   document.getElementById('app').classList.remove('playing');
   document.getElementById('btn-play').innerHTML = '▶️ Play';
@@ -7686,6 +7771,233 @@ function onTutorialOverlayClick(e) {
 
 
 // ============================================================
+// PASSENGER DELIVERY SYSTEM
+// ============================================================
+const PASSENGER_KEY = 'trainTracks_passengers';
+const PASSENGER_ENABLED_KEY = 'trainTracks_passengersEnabled';
+const MAX_PASSENGERS_PER_STATION = 3;
+const PASSENGER_SPAWN_INTERVAL_MS = 10000; // 10 seconds
+const PASSENGER_EMOJI = ['🧑', '👩', '👨', '🧒', '👧'];
+
+let passengerState = {
+  enabled: false,
+  stations: {},    // "row,col" -> { count, lastPickupTrain }
+  onboard: {},     // trainColor -> count
+  delivered: 0,
+  highScore: 0,
+};
+let passengerSpawnTimer = null;
+
+function loadPassengerSettings() {
+  try {
+    const saved = localStorage.getItem(PASSENGER_ENABLED_KEY);
+    if (saved === '1') passengerState.enabled = true;
+    const hs = localStorage.getItem(PASSENGER_KEY);
+    if (hs) passengerState.highScore = parseInt(hs) || 0;
+  } catch (e) {}
+  updatePassengerButton();
+}
+
+function togglePassengers() {
+  passengerState.enabled = !passengerState.enabled;
+  try { localStorage.setItem(PASSENGER_ENABLED_KEY, passengerState.enabled ? '1' : '0'); } catch (e) {}
+  updatePassengerButton();
+  if (passengerState.enabled) {
+    showToast('🧑 Passengers enabled!');
+  } else {
+    showToast('🧑 Passengers disabled');
+    // Hide HUD if not playing
+    document.getElementById('passenger-hud').classList.remove('active');
+  }
+}
+
+function updatePassengerButton() {
+  const btn = document.getElementById('btn-passengers');
+  if (!btn) return;
+  btn.classList.toggle('enabled', passengerState.enabled);
+  btn.title = passengerState.enabled ? 'Passengers ON — click to disable' : 'Passengers OFF — click to enable';
+}
+
+function resetPassengerState() {
+  passengerState.stations = {};
+  passengerState.onboard = {};
+  passengerState.delivered = 0;
+  stopPassengerSpawn();
+  cleanupStationPassengers();
+  document.getElementById('passenger-hud').classList.remove('active');
+}
+
+function startPassengerSystem() {
+  if (!passengerState.enabled) return;
+  resetPassengerState();
+  // Scan grid for stations
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const piece = state.grid[r][c];
+      if (piece && piece.type === 'station') {
+        passengerState.stations[r + ',' + c] = { count: 0, lastPickupTrain: null };
+      }
+    }
+  }
+  // Start spawning
+  startPassengerSpawn();
+  // Show HUD
+  updatePassengerHUD();
+  document.getElementById('passenger-hud').classList.add('active');
+}
+
+function startPassengerSpawn() {
+  stopPassengerSpawn();
+  // Spawn one immediately at a random station
+  spawnPassengers();
+  passengerSpawnTimer = setInterval(spawnPassengers, PASSENGER_SPAWN_INTERVAL_MS);
+}
+
+function stopPassengerSpawn() {
+  if (passengerSpawnTimer) { clearInterval(passengerSpawnTimer); passengerSpawnTimer = null; }
+}
+
+function spawnPassengers() {
+  if (!state.playing || !passengerState.enabled) return;
+  const stationKeys = Object.keys(passengerState.stations);
+  for (const key of stationKeys) {
+    const station = passengerState.stations[key];
+    if (!station) continue;
+    if (station.count < MAX_PASSENGERS_PER_STATION) {
+      // Random chance per station per tick (70% chance)
+      if (Math.random() < 0.7) {
+        station.count++;
+        renderStationPassengers(key);
+      }
+    }
+  }
+}
+
+function renderStationPassengers(stationKey) {
+  const [r, c] = stationKey.split(',').map(Number);
+  const cell = getCellEl(r, c);
+  if (!cell) return;
+  // Remove existing passenger emojis
+  cell.querySelectorAll('.station-passenger').forEach(el => el.remove());
+  const station = passengerState.stations[stationKey];
+  if (!station || station.count <= 0) return;
+
+  // Position passengers near the platform area (right side of station)
+  const positions = [
+    { right: '8%', top: '20%' },
+    { right: '4%', top: '45%' },
+    { right: '12%', top: '68%' },
+  ];
+  for (let i = 0; i < station.count; i++) {
+    const emoji = document.createElement('div');
+    emoji.className = 'station-passenger';
+    emoji.textContent = PASSENGER_EMOJI[i % PASSENGER_EMOJI.length];
+    const pos = positions[i] || positions[0];
+    emoji.style.right = pos.right;
+    emoji.style.top = pos.top;
+    emoji.style.animationDelay = (i * 0.3) + 's';
+    cell.appendChild(emoji);
+  }
+}
+
+function cleanupStationPassengers() {
+  document.querySelectorAll('.station-passenger').forEach(el => el.remove());
+}
+
+function handleTrainAtStation(anim, row, col) {
+  if (!passengerState.enabled || !state.playing) return;
+  const key = row + ',' + col;
+  const station = passengerState.stations[key];
+  if (!station) return;
+  const trainColor = anim.color;
+
+  // Check if train has onboard passengers to deliver
+  const onboard = passengerState.onboard[trainColor] || 0;
+  if (onboard > 0 && station.lastPickupTrain !== trainColor) {
+    // Deliver passengers
+    const delivered = onboard;
+    passengerState.onboard[trainColor] = 0;
+    passengerState.delivered += delivered;
+
+    // Check high score
+    if (passengerState.delivered > passengerState.highScore) {
+      passengerState.highScore = passengerState.delivered;
+      try { localStorage.setItem(PASSENGER_KEY, String(passengerState.highScore)); } catch (e) {}
+    }
+
+    SFX.passengerDeliver();
+    showToast('🧑 ' + delivered + ' passenger' + (delivered > 1 ? 's' : '') + ' delivered!');
+    updatePassengerHUD();
+
+    // Mini confetti at station
+    triggerMiniConfetti(row, col);
+    return; // Don't board and deliver in same visit
+  }
+
+  // Pick up waiting passengers
+  if (station.count > 0) {
+    const boarding = station.count;
+    station.count = 0;
+    station.lastPickupTrain = trainColor;
+    passengerState.onboard[trainColor] = (passengerState.onboard[trainColor] || 0) + boarding;
+
+    SFX.passengerBoard();
+
+    // Animate boarding: add boarding class to existing passenger emojis
+    const cell = getCellEl(row, col);
+    if (cell) {
+      const pEls = cell.querySelectorAll('.station-passenger');
+      pEls.forEach(el => el.classList.add('boarding'));
+      setTimeout(() => {
+        pEls.forEach(el => el.remove());
+      }, 450);
+    }
+
+    showToast('🧑 ' + boarding + ' passenger' + (boarding > 1 ? 's' : '') + ' aboard!');
+  }
+}
+
+function triggerMiniConfetti(row, col) {
+  const grid = document.getElementById('grid');
+  const offX = grid ? grid.offsetLeft : 0;
+  const offY = grid ? grid.offsetTop : 0;
+  const cx = col * (cellSize + 1) + cellSize / 2 + offX;
+  const cy = row * (cellSize + 1) + cellSize / 2 + offY;
+  const container = document.getElementById('grid-container');
+  const colors = ['#FF5252', '#FFAB40', '#FFEB3B', '#69F0AE', '#40C4FF', '#E040FB'];
+  const numP = 12;
+  for (let i = 0; i < numP; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-particle';
+    const size = 4 + Math.random() * 3;
+    p.style.width = size + 'px';
+    p.style.height = size + 'px';
+    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+    const angle = (Math.PI * 2 * i) / numP + (Math.random() - 0.5) * 0.5;
+    const dist = 30 + Math.random() * 40;
+    p.style.setProperty('--confetti-dx', (Math.cos(angle) * dist) + 'px');
+    p.style.setProperty('--confetti-dy', (Math.sin(angle) * dist) + 'px');
+    p.style.left = cx + 'px';
+    p.style.top = cy + 'px';
+    container.appendChild(p);
+    setTimeout(() => { if (p.parentNode) p.remove(); }, 1300);
+  }
+}
+
+function updatePassengerHUD() {
+  const countEl = document.getElementById('passenger-count');
+  const bestEl = document.getElementById('passenger-best');
+  if (countEl) countEl.textContent = '🧑 Delivered: ' + passengerState.delivered;
+  if (bestEl) {
+    if (passengerState.highScore > 0) {
+      bestEl.textContent = '🏆 Best: ' + passengerState.highScore;
+    } else {
+      bestEl.textContent = '';
+    }
+  }
+}
+
+// ============================================================
 // PALETTE TRAIN COLOR CYCLING + COLOR DOTS
 // ============================================================
 function initPaletteColorDots() {
@@ -7825,7 +8137,7 @@ function init() {
   }
 
   loadPuzzleProgress();
-
+  loadPassengerSettings();
 
   // Tutorial: show on first visit (after a brief delay so UI settles)
   if (!isTutorialDone() && !restored) {
