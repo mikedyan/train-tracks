@@ -1647,6 +1647,82 @@ body.night-mode #passenger-hud .passenger-best { color: #78909C; }
 .btn-passengers { background: #8D6E63; color: white; box-shadow: 0 3px 10px rgba(141,110,99,0.3); }
 .btn-passengers.enabled { background: #43A047; box-shadow: 0 3px 10px rgba(67,160,71,0.4); }
 
+/* PROGRESSION & UNLOCKS */
+.palette-piece.palette-locked {
+  opacity: 0.35;
+  filter: grayscale(0.8);
+  cursor: not-allowed !important;
+  position: relative;
+}
+.palette-piece.palette-locked::after {
+  content: '\1F512';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 11px;
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0.9;
+}
+.palette-piece.palette-locked:hover {
+  transform: none !important;
+  background: rgba(255,255,255,0.1) !important;
+}
+.palette-piece.palette-locked:active {
+  cursor: not-allowed !important;
+}
+
+/* Stats Modal */
+#stats-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 300;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(3px);
+}
+#stats-overlay.open { display: flex; }
+#stats-modal {
+  background: #FFF;
+  border-radius: 16px;
+  padding: 24px;
+  width: 440px;
+  max-width: 92vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+  position: relative;
+}
+body.night-mode #stats-modal { background: #263238; color: #ECEFF1; }
+#stats-modal h2 { font-size: 20px; color: #3E2723; margin-bottom: 16px; text-align: center; }
+body.night-mode #stats-modal h2 { color: #ECEFF1; }
+#stats-modal .close-btn { position: absolute; top: 12px; right: 14px; background: none; border: none; font-size: 22px; cursor: pointer; color: #999; line-height: 1; }
+#stats-modal .close-btn:hover { color: #333; }
+.stats-section { margin-bottom: 18px; }
+.stats-section h3 { font-size: 15px; color: #5D4037; margin-bottom: 10px; }
+body.night-mode .stats-section h3 { color: #B0BEC5; }
+.stat-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid rgba(0,0,0,0.06); font-size: 13px; }
+body.night-mode .stat-row { border-bottom-color: rgba(255,255,255,0.08); }
+.stat-label { color: #546E7A; }
+body.night-mode .stat-label { color: #90A4AE; }
+.stat-value { font-weight: 700; color: #3E2723; font-size: 15px; }
+body.night-mode .stat-value { color: #ECEFF1; }
+.milestone-row { background: #F5F5F5; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
+body.night-mode .milestone-row { background: #37474F; }
+.milestone-row.done { background: #E8F5E9; }
+body.night-mode .milestone-row.done { background: #1B5E20; }
+.milestone-header { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+.milestone-progress-text { font-size: 12px; color: #9E9E9E; font-weight: 600; }
+body.night-mode .milestone-progress-text { color: #78909C; }
+.milestone-bar { height: 6px; background: #E0E0E0; border-radius: 3px; overflow: hidden; }
+body.night-mode .milestone-bar { background: #455A64; }
+.milestone-fill { height: 100%; background: linear-gradient(90deg, #66BB6A, #43A047); border-radius: 3px; transition: width 0.3s ease; }
+.milestone-row.done .milestone-fill { background: linear-gradient(90deg, #4CAF50, #2E7D32); }
+.milestone-unlocks { font-size: 11px; color: #9E9E9E; margin-top: 4px; }
+body.night-mode .milestone-unlocks { color: #78909C; }
+
 /* SCREENSHOT MODAL */
 #screenshot-overlay {
   position: fixed;
@@ -1830,6 +1906,7 @@ body.night-mode #passenger-hud .passenger-best { color: #78909C; }
       <button class="btn" id="btn-screenshot" onclick="openScreenshotModal()" style="background:#5C6BC0;color:white;box-shadow:0 3px 10px rgba(92,107,192,0.3);padding:8px 12px;" title="Take screenshot">📸</button>
       <button class="btn" id="btn-help" onclick="showTutorial()" style="background:#78909C;color:white;padding:8px 12px;" title="How to play">❓</button>
       <button class="btn btn-passengers" id="btn-passengers" onclick="togglePassengers()" style="padding:8px 12px;" title="Toggle passenger delivery">🧑</button>
+      <button class="btn" id="btn-stats" onclick="openStatsModal()" style="background:#6D4C41;color:white;box-shadow:0 3px 10px rgba(109,76,65,0.3);padding:8px 12px;" title="Stats & Milestones">📊</button>
     </div>
   </div>
 </div>
@@ -1913,6 +1990,15 @@ body.night-mode #passenger-hud .passenger-best { color: #78909C; }
       <button class="btn btn-download-screenshot" onclick="downloadScreenshot()">💾 Download</button>
       <button class="btn btn-copy-screenshot" onclick="copyScreenshot()">📋 Copy</button>
     </div>
+  </div>
+</div>
+
+<!-- Stats & Milestones Modal -->
+<div id="stats-overlay" onclick="closeStatsModalOutside(event)">
+  <div id="stats-modal">
+    <button class="close-btn" onclick="closeStatsModal()">✕</button>
+    <h2>📊 Stats & Milestones</h2>
+    <div id="stats-content"></div>
   </div>
 </div>
 
@@ -3717,9 +3803,11 @@ function placePiece(row, col, type, rotation = 0) {
   if (SCENERY_TYPES.includes(type)) {
     SFX.placeScenery();
     hapticPlace();
+    incrementStat('sceneryPlaced');
   } else {
     SFX.place();
     hapticPlace();
+    incrementStat('tracksPlaced');
   }
   renderCell(row, col);
   // Update neighbors' dots + bridge-over-water class
@@ -3917,6 +4005,18 @@ function initDragAndDrop() {
   // Palette pieces
   document.querySelectorAll('.palette-piece').forEach(el => {
     el.addEventListener('pointerdown', onPaletteDown);
+    // Long-press to unlock all (800ms)
+    let unlockTimer = null;
+    el.addEventListener('pointerdown', () => {
+      if (el.classList.contains('palette-locked') && !allUnlocked) {
+        unlockTimer = setTimeout(() => {
+          unlockEverything();
+          unlockTimer = null;
+        }, 800);
+      }
+    });
+    el.addEventListener('pointerup', () => { if (unlockTimer) { clearTimeout(unlockTimer); unlockTimer = null; } });
+    el.addEventListener('pointerleave', () => { if (unlockTimer) { clearTimeout(unlockTimer); unlockTimer = null; } });
   });
 
   // Grid cells
@@ -3976,6 +4076,18 @@ function onPaletteDown(e) {
   e.preventDefault();
   clearSelectedTool();
   const type = e.currentTarget.dataset.type;
+
+  // Block locked pieces (unless in puzzle mode)
+  if (!isPieceUnlocked(type)) {
+    const milestone = MILESTONES.find(m => m.unlocks.includes(type));
+    if (milestone) {
+      const current = gameStats[milestone.statKey] || 0;
+      showToast('🔒 ' + milestone.desc + ' (' + current + '/' + milestone.threshold + ')');
+    } else {
+      showToast('🔒 Locked!');
+    }
+    return;
+  }
 
   dragInfo = {
     type: type,
@@ -4812,6 +4924,7 @@ function cleanupChimneySmoke() {
 function triggerLoopCelebration(anim) {
   if (!anim || !anim.trainEl) return;
 
+  incrementStat('loopsCompleted');
   SFX.celebrate();
   showToast('🎉 Full Loop!');
 
@@ -4871,6 +4984,7 @@ function triggerCrashSequence(anim) {
   // Prevent re-entry
   if (anim.crashing) return;
   anim.crashing = true;
+  incrementStat('crashCount');
 
   const speed = parseFloat(document.getElementById('speed-slider').value) || 1;
   const trainEl = anim.trainEl;
@@ -5176,6 +5290,9 @@ function startPlay() {
 
     animStates.push(anim);
   }
+
+  // Track stats
+  incrementStat('trainsRun', validTrains.length);
 
   SFX.whistle();
   setTimeout(startChugLoop, 500);
@@ -6858,6 +6975,10 @@ function handleKeyDown(e) {
   if (e.key === 'Escape') {
     if (tutorialState.active) { completeTutorial(); return; }
     if (document.getElementById('puzzle-overlay').classList.contains('open')) { closePuzzleModal(); return; }
+    if (document.getElementById('stats-overlay').classList.contains('open')) {
+      closeStatsModal();
+      return;
+    }
     if (document.getElementById('shortcuts-overlay').classList.contains('open')) {
       closeShortcutsModal();
       return;
@@ -6878,6 +6999,7 @@ function handleKeyDown(e) {
   if (document.getElementById('save-overlay').classList.contains('open')) return;
   if (document.getElementById('shortcuts-overlay').classList.contains('open')) return;
   if (document.getElementById('screenshot-overlay').classList.contains('open')) return;
+  if (document.getElementById('stats-overlay').classList.contains('open')) return;
 
   const key = e.key;
 
@@ -6994,7 +7116,16 @@ function handleKeyDown(e) {
 
   // 1-7: quick select track type
   if (TOOL_KEY_MAP[key]) {
-    selectTool(TOOL_KEY_MAP[key]);
+    const toolType = TOOL_KEY_MAP[key];
+    if (!isPieceUnlocked(toolType)) {
+      const milestone = MILESTONES.find(m => m.unlocks.includes(toolType));
+      if (milestone) {
+        const current = gameStats[milestone.statKey] || 0;
+        showToast('🔒 ' + milestone.desc + ' (' + current + '/' + milestone.threshold + ')');
+      }
+      return;
+    }
+    selectTool(toolType);
     return;
   }
 }
@@ -7320,6 +7451,8 @@ function loadPuzzle(id) {
   }
   updatePuzzleHUD();
   document.getElementById('puzzle-hud').classList.add('active');
+  // Unlock all palette pieces for puzzle mode
+  document.querySelectorAll('.palette-piece.palette-locked').forEach(el => el.classList.remove('palette-locked'));
   showToast('\ud83e\udde9 ' + puzzle.name + ' \u2014 ' + puzzle.hint);
 }
 
@@ -7422,6 +7555,7 @@ function checkPuzzleSolution() {
       puzzleState.completed[puzzleState.puzzleId] = { stars: stars };
       savePuzzleProgress();
     }
+    incrementStat('puzzlesSolved');
     const starStr = '\u2b50'.repeat(stars);
     showToast('\ud83c\udf89 Puzzle Complete! ' + starStr + ' (' + playerPieces + ' pieces)');
     SFX.celebrate();
@@ -7467,6 +7601,7 @@ function exitPuzzle() {
   }
   state.undoStack = []; state.redoStack = [];
   renderAllCells();
+  refreshPaletteLocks();
   showToast('\ud83c\udfd6\ufe0f Back to sandbox!');
 }
 
@@ -7918,6 +8053,7 @@ function handleTrainAtStation(anim, row, col) {
     const delivered = onboard;
     passengerState.onboard[trainColor] = 0;
     passengerState.delivered += delivered;
+    incrementStat('passengersDelivered', delivered);
 
     // Check high score
     if (passengerState.delivered > passengerState.highScore) {
@@ -7998,6 +8134,224 @@ function updatePassengerHUD() {
 }
 
 // ============================================================
+// ============================================================
+// PROGRESSION & UNLOCKS SYSTEM
+// ============================================================
+const STATS_KEY = 'trainTracks_stats';
+const UNLOCKS_KEY = 'trainTracks_unlocks';
+
+let gameStats = {
+  tracksPlaced: 0,
+  sceneryPlaced: 0,
+  trainsRun: 0,
+  loopsCompleted: 0,
+  puzzlesSolved: 0,
+  passengersDelivered: 0,
+  crashCount: 0,
+};
+
+// Default unlocked pieces for new players
+const DEFAULT_UNLOCKED = ['straight', 'curve', 'tree', 'house', 'cow', 'train-red'];
+
+// Milestone definitions: { id, name, emoji, statKey, threshold, unlocks[] }
+const MILESTONES = [
+  { id: 'builder', name: 'Builder', emoji: '🔨', statKey: 'tracksPlaced', threshold: 10, unlocks: ['tjunction'], desc: 'Place 10 tracks' },
+  { id: 'architect', name: 'Architect', emoji: '📐', statKey: 'tracksPlaced', threshold: 25, unlocks: ['crossover'], desc: 'Place 25 tracks' },
+  { id: 'engineer', name: 'Engineer', emoji: '🏗️', statKey: 'tracksPlaced', threshold: 50, unlocks: ['bridge'], desc: 'Place 50 tracks' },
+  { id: 'miner', name: 'Miner', emoji: '⛏️', statKey: 'tracksPlaced', threshold: 75, unlocks: ['tunnel'], desc: 'Place 75 tracks' },
+  { id: 'conductor', name: 'Conductor', emoji: '🚂', statKey: 'trainsRun', threshold: 3, unlocks: ['station', 'freight', 'passenger', 'caboose'], desc: 'Run 3 trains' },
+  { id: 'master', name: 'Loop Master', emoji: '🔁', statKey: 'loopsCompleted', threshold: 1, unlocks: ['train-blue', 'train-green'], desc: 'Complete 1 loop' },
+  { id: 'naturalist', name: 'Naturalist', emoji: '🌿', statKey: 'sceneryPlaced', threshold: 15, unlocks: ['water', 'flower', 'sheep'], desc: 'Place 15 scenery' },
+  { id: 'explorer', name: 'Explorer', emoji: '🧩', statKey: 'puzzlesSolved', threshold: 1, unlocks: ['horse', 'duck-land', 'people'], desc: 'Solve 1 puzzle' },
+  { id: 'rainbow', name: 'Rainbow Fleet', emoji: '🌈', statKey: 'passengersDelivered', threshold: 10, unlocks: ['train-yellow', 'train-purple'], desc: 'Deliver 10 passengers' },
+];
+
+let unlockedPieces = new Set(DEFAULT_UNLOCKED);
+let allUnlocked = false; // override flag
+
+function loadGameStats() {
+  try {
+    const saved = localStorage.getItem(STATS_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      for (const key of Object.keys(gameStats)) {
+        if (typeof parsed[key] === 'number') gameStats[key] = parsed[key];
+      }
+    }
+  } catch (e) {}
+}
+
+function saveGameStats() {
+  try { localStorage.setItem(STATS_KEY, JSON.stringify(gameStats)); } catch (e) {}
+}
+
+function loadUnlockState() {
+  try {
+    const saved = localStorage.getItem(UNLOCKS_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed.allUnlocked) {
+        allUnlocked = true;
+        return;
+      }
+      if (Array.isArray(parsed.pieces)) {
+        unlockedPieces = new Set(parsed.pieces);
+      }
+    }
+  } catch (e) {}
+}
+
+function saveUnlockState() {
+  try {
+    if (allUnlocked) {
+      localStorage.setItem(UNLOCKS_KEY, JSON.stringify({ allUnlocked: true }));
+    } else {
+      localStorage.setItem(UNLOCKS_KEY, JSON.stringify({ pieces: Array.from(unlockedPieces) }));
+    }
+  } catch (e) {}
+}
+
+function isPieceUnlocked(type) {
+  if (allUnlocked) return true;
+  if (puzzleState.active) return true; // All pieces available in puzzles
+  return unlockedPieces.has(type);
+}
+
+function checkAndUnlockMilestones() {
+  if (allUnlocked) return;
+  let newUnlocks = [];
+  for (const m of MILESTONES) {
+    const currentVal = gameStats[m.statKey] || 0;
+    if (currentVal >= m.threshold) {
+      for (const piece of m.unlocks) {
+        if (!unlockedPieces.has(piece)) {
+          unlockedPieces.add(piece);
+          newUnlocks.push(piece);
+        }
+      }
+    }
+  }
+  if (newUnlocks.length > 0) {
+    saveUnlockState();
+    refreshPaletteLocks();
+    // Show unlock toasts with stagger
+    newUnlocks.forEach((piece, i) => {
+      setTimeout(() => {
+        const name = piece.replace('train-', '').replace('duck-land', 'Duck');
+        const displayName = name.charAt(0).toUpperCase() + name.slice(1);
+        showToast('🎉 Unlocked: ' + displayName + '!');
+        SFX.celebrate();
+      }, i * 1500);
+    });
+  }
+}
+
+function incrementStat(key, amount) {
+  if (!gameStats.hasOwnProperty(key)) return;
+  gameStats[key] += (amount || 1);
+  saveGameStats();
+  checkAndUnlockMilestones();
+}
+
+function unlockEverything() {
+  allUnlocked = true;
+  saveUnlockState();
+  refreshPaletteLocks();
+  showToast('🔓 Everything unlocked!');
+  SFX.celebrate();
+}
+
+function refreshPaletteLocks() {
+  document.querySelectorAll('.palette-piece').forEach(el => {
+    const type = el.dataset.type;
+    if (!type) return;
+    const locked = !isPieceUnlocked(type);
+    el.classList.toggle('palette-locked', locked);
+  });
+}
+
+// Check if returning player has existing data — auto-unlock everything
+function checkReturningPlayer() {
+  if (allUnlocked) return;
+  try {
+    const hasSaves = localStorage.getItem('trainTracks_autosave') ||
+                     localStorage.getItem('trainTracks_slot_1') ||
+                     localStorage.getItem('trainTracks_slot_2') ||
+                     localStorage.getItem('trainTracks_slot_3');
+    const hasPuzzles = localStorage.getItem('trainTracks_puzzles');
+    // If player has saves or puzzle completions but no stats, they're a returning player
+    if ((hasSaves || hasPuzzles) && gameStats.tracksPlaced === 0) {
+      allUnlocked = true;
+      saveUnlockState();
+    }
+  } catch (e) {}
+}
+
+// ============================================================
+// STATS MODAL
+// ============================================================
+function openStatsModal() {
+  renderStatsContent();
+  document.getElementById('stats-overlay').classList.add('open');
+}
+
+function closeStatsModal() {
+  document.getElementById('stats-overlay').classList.remove('open');
+}
+
+function closeStatsModalOutside(e) {
+  if (e.target === document.getElementById('stats-overlay')) closeStatsModal();
+}
+
+function renderStatsContent() {
+  const container = document.getElementById('stats-content');
+  if (!container) return;
+
+  const statLabels = {
+    tracksPlaced: { label: '🛤️ Tracks Placed', val: gameStats.tracksPlaced },
+    sceneryPlaced: { label: '🌲 Scenery Placed', val: gameStats.sceneryPlaced },
+    trainsRun: { label: '🚂 Trains Run', val: gameStats.trainsRun },
+    loopsCompleted: { label: '🔁 Loops Completed', val: gameStats.loopsCompleted },
+    puzzlesSolved: { label: '🧩 Puzzles Solved', val: gameStats.puzzlesSolved },
+    passengersDelivered: { label: '🧑 Passengers Delivered', val: gameStats.passengersDelivered },
+    crashCount: { label: '💥 Crashes', val: gameStats.crashCount },
+  };
+
+  let html = '<div class="stats-section"><h3>📈 Play Stats</h3>';
+  for (const [key, info] of Object.entries(statLabels)) {
+    html += '<div class="stat-row"><span class="stat-label">' + info.label + '</span><span class="stat-value">' + info.val + '</span></div>';
+  }
+  html += '</div>';
+
+  html += '<div class="stats-section"><h3>🏆 Milestones</h3>';
+  for (const m of MILESTONES) {
+    const currentVal = gameStats[m.statKey] || 0;
+    const done = allUnlocked || currentVal >= m.threshold;
+    const pct = done ? 100 : Math.min(100, Math.floor((currentVal / m.threshold) * 100));
+    const unlockNames = m.unlocks.map(p => {
+      const n = p.replace('train-', '').replace('duck-land', 'Duck');
+      return n.charAt(0).toUpperCase() + n.slice(1);
+    }).join(', ');
+    html += '<div class="milestone-row' + (done ? ' done' : '') + '">';
+    html += '<div class="milestone-header"><span>' + m.emoji + ' ' + m.name + (done ? ' ✅' : '') + '</span>';
+    html += '<span class="milestone-progress-text">' + Math.min(currentVal, m.threshold) + '/' + m.threshold + '</span></div>';
+    html += '<div class="milestone-bar"><div class="milestone-fill" style="width:' + pct + '%"></div></div>';
+    html += '<div class="milestone-unlocks">Unlocks: ' + unlockNames + '</div>';
+    html += '</div>';
+  }
+  html += '</div>';
+
+  if (!allUnlocked) {
+    html += '<div style="text-align:center;margin-top:12px;">';
+    html += '<button class="btn" onclick="unlockEverything();renderStatsContent();" style="background:#FF9800;color:white;padding:10px 24px;font-size:14px;box-shadow:0 3px 10px rgba(255,152,0,0.3);">🔓 Unlock Everything</button>';
+    html += '</div>';
+  } else {
+    html += '<div style="text-align:center;color:#4CAF50;font-weight:700;font-size:14px;margin-top:8px;">🔓 All pieces unlocked!</div>';
+  }
+
+  container.innerHTML = html;
+}
+
 // PALETTE TRAIN COLOR CYCLING + COLOR DOTS
 // ============================================================
 function initPaletteColorDots() {
@@ -8138,6 +8492,13 @@ function init() {
 
   loadPuzzleProgress();
   loadPassengerSettings();
+
+  // Progression system
+  loadGameStats();
+  loadUnlockState();
+  checkReturningPlayer();
+  checkAndUnlockMilestones();
+  refreshPaletteLocks();
 
   // Tutorial: show on first visit (after a brief delay so UI settles)
   if (!isTutorialDone() && !restored) {

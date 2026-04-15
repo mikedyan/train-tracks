@@ -1,0 +1,98 @@
+{
+  "day": 26,
+  "feature": "Progression & Unlocks",
+  "date": "2026-04-15",
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Stats tracking system",
+      "description": "Track cumulative play stats: tracksPlaced, sceneryPlaced, trainsRun, loopsCompleted, puzzlesSolved, passengersDelivered, crashCount. Persist in localStorage.",
+      "files": ["index.html"],
+      "acceptance": [
+        "All 7 stats track accurately across sessions",
+        "Stats persist via localStorage key 'trainTracks_stats'",
+        "Retroactive unlock: existing saves auto-unlock everything"
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Milestone definitions",
+      "description": "9 milestone tiers that unlock pieces progressively: Builder (10 tracks→tjunction), Architect (25→crossover), Engineer (50→bridge), Miner (75→tunnel), Conductor (3 rides→station), Choo Choo Master (1 loop→train cars), Naturalist (15 scenery→water/flower/sheep), Explorer (1 puzzle→horse/duck/people), Rainbow Fleet (10 passengers→extra train colors).",
+      "files": ["index.html"],
+      "acceptance": [
+        "9 milestones with correct thresholds",
+        "Default unlocked: straight, curve, tree, house, cow, train-red",
+        "Each milestone unlocks correct pieces"
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Locked palette items",
+      "description": "Palette pieces not yet unlocked appear grayed out with lock icon. Clicking shows requirement toast. Long-press (800ms) on any locked item triggers unlock-all.",
+      "files": ["index.html"],
+      "acceptance": [
+        "Locked items visually distinct (grayed, lock icon)",
+        "Can't drag locked items from palette",
+        "Click shows requirement toast with progress",
+        "Long-press triggers unlock-all",
+        "Both sidebar and mobile drawer respect locks"
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Stats & Milestones modal",
+      "description": "New 📊 button opens modal showing all play stats and milestone progress bars. Includes 'Unlock Everything' button.",
+      "files": ["index.html"],
+      "acceptance": [
+        "Stats modal shows all 7 stats",
+        "Milestones show progress bars with current/threshold",
+        "Completed milestones show checkmark",
+        "Unlock Everything button works",
+        "Modal follows night mode theming",
+        "Escape key closes modal"
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Unlock notification",
+      "description": "When a milestone threshold is reached, show toast: '🎉 Unlocked: [piece name]!' and refresh palette.",
+      "files": ["index.html"],
+      "acceptance": [
+        "Toast appears on unlock",
+        "Palette updates immediately (locked class removed)",
+        "Multiple unlocks from one milestone show individual toasts"
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Puzzle mode bypass",
+      "description": "All pieces available in puzzle mode regardless of unlock status. Stats still tracked during puzzles.",
+      "files": ["index.html"],
+      "acceptance": [
+        "Puzzle palette shows all pieces unlocked",
+        "Sandbox palette respects locks after exiting puzzle"
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Random generator + keyboard bypass",
+      "description": "Random generator uses all piece types regardless of locks. Keyboard quick-select (1-7) respects locks.",
+      "files": ["index.html"],
+      "acceptance": [
+        "Random generator creates varied layouts with all piece types",
+        "Keyboard shortcuts for locked pieces show requirement toast"
+      ]
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "New player experience: only basic pieces available",
+    "Returning player: everything auto-unlocked",
+    "Stat increments fire correctly for each action",
+    "Milestone notifications appear at correct thresholds",
+    "Long-press unlock-all works on mobile and desktop",
+    "Puzzle mode ignores locks completely",
+    "Stats modal displays correctly in day and night modes",
+    "No duplicate code blocks or syntax errors"
+  ]
+}
