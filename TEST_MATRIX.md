@@ -1198,3 +1198,54 @@ Mark each test with the result after running.
 - [ ] Save/load: passenger state not persisted (session-only)
 - [ ] Share links still work correctly
 - [ ] Random track + play with passengers works
+
+## Day 26: Progression & Unlocks
+
+### Stats Tracking
+- [ ] Place a track piece → tracksPlaced increments
+- [ ] Place a scenery item → sceneryPlaced increments
+- [ ] Press Play with train → trainsRun increments
+- [ ] Complete a loop → loopsCompleted increments
+- [ ] Solve a puzzle → puzzlesSolved increments
+- [ ] Deliver passengers → passengersDelivered increments
+- [ ] Crash a train → crashCount increments
+- [ ] Refresh page → all stats persist
+
+### Milestone Unlocks
+- [ ] New player sees only straight, curve, tree, house, cow, train-red unlocked
+- [ ] Place 10 tracks → T-junction unlocks with toast
+- [ ] Place 25 tracks → Crossover unlocks
+- [ ] Place 50 tracks → Bridge unlocks
+- [ ] Place 75 tracks → Tunnel unlocks
+- [ ] Run 3 trains → Station + freight/passenger/caboose unlock
+- [ ] Complete 1 loop → Blue + Green trains unlock
+- [ ] Place 15 scenery → Water, Flower, Sheep unlock
+- [ ] Solve 1 puzzle → Horse, Duck, People unlock
+- [ ] Deliver 10 passengers → Yellow + Purple trains unlock
+
+### Locked Palette
+- [ ] Locked items appear grayed out with lock icon
+- [ ] Clicking locked item shows requirement toast with progress
+- [ ] Can't drag locked items from palette
+- [ ] Long-press (800ms) on locked item unlocks everything
+- [ ] Both sidebar and mobile drawer show locks
+
+### Stats Modal
+- [ ] 📊 button opens stats modal
+- [ ] All 7 stats display correctly
+- [ ] 9 milestones show progress bars
+- [ ] Completed milestones show ✅
+- [ ] "Unlock Everything" button works
+- [ ] Night mode: modal themed correctly
+- [ ] Escape closes modal
+
+### Puzzle Mode Bypass
+- [ ] Enter puzzle → all palette pieces unlocked
+- [ ] Exit puzzle → sandbox locks restored
+
+### Returning Player
+- [ ] Player with existing saves but no stats → everything auto-unlocked
+
+### Keyboard Shortcuts
+- [ ] Press 1-7 for locked piece → shows requirement toast
+- [ ] Press 1-7 for unlocked piece → works normally

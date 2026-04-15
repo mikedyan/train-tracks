@@ -214,3 +214,12 @@
 - LESSON-160: When hooking into advanceTrainAnim for station events, replace the toast-only path conditionally (`if enabled → feature; else → original toast`) to avoid double-toasting.
 - LESSON-161: Mini confetti reuses the existing `.confetti-particle` CSS class — no need for new keyframes when the visual style is the same.
 - LESSON-162: Passenger emoji positions use `right`/`top` percentages relative to the cell, keeping them near the station platform regardless of cell size or zoom level.
+
+## Progression & Unlock Patterns (Day 26)
+- LESSON-163: Use a separate `allUnlocked` boolean flag for the unlock-all override — simpler than adding every piece to unlockedPieces set, and makes save/restore trivial.
+- LESSON-164: Auto-detect returning players (have saves but no stats) and auto-unlock everything to avoid frustrating existing users with a new gating system.
+- LESSON-165: Gate palette drags in `onPaletteDown` early (before dragInfo is set) to prevent locked pieces from entering the drag system at all.
+- LESSON-166: Milestone unlock toasts should be staggered (1.5s apart) when multiple unlock at once — prevents toast overwrite where only the last one is visible.
+- LESSON-167: `isPieceUnlocked` should return true during puzzle mode (`puzzleState.active`) so players can use all pieces. Also remove lock CSS in `loadPuzzle` and restore in `exitPuzzle`.
+- LESSON-168: Stats increment points must be chosen carefully: `tracksPlaced` increments in `placePiece` (covers drag, keyboard, and puzzle), not in `onPointerUp` which only covers drag.
+- LESSON-169: Long-press unlock-all needs both `pointerup` and `pointerleave` cleanup to handle the case where the user drags off the element before releasing.
