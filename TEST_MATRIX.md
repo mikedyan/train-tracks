@@ -1249,3 +1249,58 @@ Mark each test with the result after running.
 ### Keyboard Shortcuts
 - [ ] Press 1-7 for locked piece → shows requirement toast
 - [ ] Press 1-7 for unlocked piece → works normally
+
+---
+
+## Day 27 — Ambient Background Music
+
+### Music Engine
+- [ ] 🎵 button visible in controls bar (between volume slider and night mode)
+- [ ] Music defaults to OFF on first visit (button grayed out, opacity 0.6)
+- [ ] Click 🎵 → music starts playing, button turns purple
+- [ ] Music has music-box/bell-like timbre (pentatonic scale)
+- [ ] 16-bar melody loops without abrupt restart
+- [ ] Rests in melody provide breathing room
+- [ ] No audio glitches, clicks, or pops
+
+### Volume Controls
+- [ ] Music volume slider appears when music is enabled
+- [ ] Music volume slider hidden when music is disabled
+- [ ] Moving music volume slider changes music volume in real-time
+- [ ] Music volume is independent of SFX volume slider
+- [ ] SFX (placement, chug, etc.) unaffected by music volume changes
+- [ ] Master mute (🔇) silences both music and SFX
+- [ ] Master unmute restores music playback
+
+### Play State Variation
+- [ ] Idle state: gentle tempo (~100 BPM)
+- [ ] Press Play → tempo increases (~120 BPM)
+- [ ] Press Stop → tempo returns to gentle (~100 BPM)
+- [ ] Tempo transition is smooth (no audio glitch)
+
+### Night Mode Variation
+- [ ] Toggle night mode → music slows down (~80 BPM) and gets softer
+- [ ] Night mode + play state: moderate tempo (~95 BPM)
+- [ ] Day mode: back to normal tempo
+- [ ] Lower octave notes in night mode (lullaby feel)
+
+### Persistence
+- [ ] Enable music, refresh page → music state remembered
+- [ ] Returning with music enabled → starts on first click/keypress
+- [ ] Adjust music volume, refresh → volume restored
+- [ ] Disable music, refresh → stays disabled
+
+### Keyboard Shortcuts
+- [ ] Press M → toggles music on/off
+- [ ] M shortcut appears in shortcuts modal (Display section)
+- [ ] M shortcut doesn't fire when typing in inputs
+
+### Tab Visibility
+- [ ] Switch to another tab → music pauses
+- [ ] Return to tab → music resumes (if enabled)
+
+### Integration
+- [ ] Music doesn't interfere with train sounds
+- [ ] Music doesn't interfere with placement sounds
+- [ ] Music doesn't interfere with animal sounds
+- [ ] Performance: no frame drops with music playing

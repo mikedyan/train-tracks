@@ -223,3 +223,12 @@
 - LESSON-167: `isPieceUnlocked` should return true during puzzle mode (`puzzleState.active`) so players can use all pieces. Also remove lock CSS in `loadPuzzle` and restore in `exitPuzzle`.
 - LESSON-168: Stats increment points must be chosen carefully: `tracksPlaced` increments in `placePiece` (covers drag, keyboard, and puzzle), not in `onPointerUp` which only covers drag.
 - LESSON-169: Long-press unlock-all needs both `pointerup` and `pointerleave` cleanup to handle the case where the user drags off the element before releasing.
+
+## Ambient Music Patterns (Day 27)
+- LESSON-170: Use look-ahead scheduling (schedule next bar 0.5s before current bar ends) with recursive setTimeout for gapless music playback. setInterval can't handle dynamic tempo changes.
+- LESSON-171: Route music through its own GainNode → masterGainNode chain. This gives independent music volume while still respecting the global master mute/volume.
+- LESSON-172: Music-box timbre: sine wave (fundamental) + triangle wave at 2x frequency (sparkle harmonic, quieter at 0.3x volume). Fast attack (10ms linear ramp) + exponential decay creates bell-like envelope.
+- LESSON-173: Default music OFF and require explicit user action to start. Browser autoplay policies block audio without user gesture. For returning users, listen for first pointerdown/keydown with `{ once: true }` to auto-start.
+- LESSON-174: Pentatonic scale (C, D, E, G, A) avoids dissonance — any note combination sounds pleasant. Ideal for ambient background music that shouldn't distract.
+- LESSON-175: Tempo changes work naturally with bar-level scheduling: `getMusicTempo()` is called fresh for each new bar, so state changes (play/idle, day/night) smoothly take effect at the next bar boundary without any explicit transition logic.
+- LESSON-176: Pause music on `visibilitychange` (tab hidden) to avoid background CPU usage and prevent audio surprises when user returns. Resume on visible if still enabled.
