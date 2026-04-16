@@ -1897,6 +1897,8 @@ body.night-mode .milestone-unlocks { color: #78909C; }
       </div>
       <button class="btn" id="btn-mute" onclick="toggleMute()" style="background:#78909C;color:white;padding:8px 12px;">🔊</button>
       <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.8" oninput="onVolumeChange(event)" style="width:50px;accent-color:#78909C;" title="Volume">
+      <button class="btn" id="btn-music" onclick="toggleMusic()" style="background:#78909C;color:white;padding:8px 12px;opacity:0.6;" title="Toggle background music">🎵</button>
+      <input type="range" id="music-volume-slider" min="0" max="1" step="0.05" value="0.5" oninput="onMusicVolumeChange(event)" style="width:40px;accent-color:#AB47BC;display:none;" title="Music Volume">
       <button class="btn btn-night" id="btn-night" onclick="toggleNightMode()" style="padding:8px 12px;">☀️</button>
       <button class="btn" onclick="openSaveModal()" style="background:#607D8B;color:white;box-shadow:0 3px 10px rgba(96,125,139,0.3);">💾 Save</button>
       <button class="btn" onclick="openShortcutsModal()" style="background:#546E7A;color:white;padding:8px 12px;" title="Keyboard shortcuts">⌨️</button>
@@ -1944,6 +1946,7 @@ body.night-mode .milestone-unlocks { color: #78909C; }
     <div class="shortcut-section">Display</div>
     <div class="shortcut-row"><span class="shortcut-desc">Night mode</span><span class="shortcut-key">N</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Cycle biome</span><span class="shortcut-key">B</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Toggle music</span><span class="shortcut-key">M</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Show tutorial</span><span class="shortcut-key">H</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Screenshot</span><span class="shortcut-key">P</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Copy share link</span><span class="shortcut-key">L</span></div>
@@ -2033,6 +2036,250 @@ let volumeLevel = 0.8;
 let soundState = 'full'; // 'full' | 'low' | 'mute'
 const VOLUME_KEY = 'trainTracks_volume';
 const SOUND_STATE_KEY = 'trainTracks_soundState';
+
+// MUSIC ENGINE — Ambient Background Music (Web Audio API)
+// ============================================================
+const MUSIC_ENABLED_KEY = 'trainTracks_musicEnabled';
+const MUSIC_VOLUME_KEY = 'trainTracks_musicVolume';
+let musicEnabled = false;
+let musicVolume = 0.5;
+let musicGainNode = null;
+let musicSchedulerId = null;
+let musicNextNoteTime = 0;
+let musicBarIndex = 0;
+let musicNoteIndex = 0;
+let musicIsPlaying = false;
+
+// Pentatonic scale: C5, D5, E5, G5, A5 (music-box feel)
+const PENTA_FREQS = [523.25, 587.33, 659.25, 783.99, 880.00];
+// Lower octave for night mode: C4, D4, E4, G4, A4
+const PENTA_LOW = [261.63, 293.66, 329.63, 392.00, 440.00];
+
+// 16-bar melody patterns (index into PENTA_FREQS, -1 = rest)
+// Each bar has 4 beats (quarter notes at tempo BPM)
+const MELODY_BARS = [
+  // Theme A (bars 0-3) — gentle ascending
+  [0, 2, 4, 3],
+  [2, 4, 3, -1],
+  [1, 3, 2, 0],
+  [4, 3, -1, 2],
+  // Theme B (bars 4-7) — playful variation
+  [3, 4, 2, 1],
+  [0, -1, 2, 4],
+  [3, 1, 0, 2],
+  [4, -1, 3, -1],
+  // Theme A' (bars 8-11) — subtle variation of theme A
+  [0, 2, 4, -1],
+  [2, 3, 4, 3],
+  [1, 0, 2, 3],
+  [4, 2, -1, 0],
+  // Theme C (bars 12-15) — resolution
+  [3, 2, 4, 3],
+  [1, -1, 0, 2],
+  [4, 3, 2, 0],
+  [0, -1, -1, -1]
+];
+
+// Durations per note in beats (some variation for rhythm interest)
+const RHYTHM_BARS = [
+  [1, 1, 1, 1],
+  [1, 1, 0.5, 1.5],
+  [1, 1, 1, 1],
+  [0.5, 1.5, 1, 1],
+  [1, 0.5, 0.5, 2],
+  [1, 1, 1, 1],
+  [0.5, 0.5, 1, 2],
+  [1, 1, 1, 1],
+  [1, 1, 0.5, 1.5],
+  [1, 0.5, 0.5, 2],
+  [1, 1, 1, 1],
+  [0.5, 1.5, 1, 1],
+  [1, 1, 1, 1],
+  [1, 1, 0.5, 1.5],
+  [0.5, 0.5, 1, 2],
+  [2, 1, 0.5, 0.5]
+];
+
+function getMusicTempo() {
+  const isNight = document.body.classList.contains('night-mode');
+  const isPlaying = state.playing;
+  if (isNight && isPlaying) return 95;
+  if (isNight) return 80;
+  if (isPlaying) return 120;
+  return 100;
+}
+
+function getMusicNoteVolume() {
+  const isNight = document.body.classList.contains('night-mode');
+  return isNight ? 0.06 : 0.09;
+}
+
+function ensureMusicGain() {
+  if (!musicGainNode) {
+    const ctx = getAudioCtx();
+    musicGainNode = ctx.createGain();
+    musicGainNode.gain.value = musicVolume;
+    musicGainNode.connect(getMasterGain());
+  }
+  return musicGainNode;
+}
+
+function playMusicNote(freq, startTime, duration) {
+  const ctx = getAudioCtx();
+  const gain = ensureMusicGain();
+  const noteVol = getMusicNoteVolume();
+
+  // Music-box timbre: sine + triangle with fast attack, medium decay
+  const osc1 = ctx.createOscillator();
+  const osc2 = ctx.createOscillator();
+  const noteGain = ctx.createGain();
+
+  osc1.type = 'sine';
+  osc1.frequency.value = freq;
+  osc2.type = 'triangle';
+  osc2.frequency.value = freq * 2; // octave harmonic for sparkle
+
+  const envDuration = Math.min(duration * 0.8, 0.6);
+  noteGain.gain.setValueAtTime(0, startTime);
+  noteGain.gain.linearRampToValueAtTime(noteVol, startTime + 0.01); // fast attack
+  noteGain.gain.setValueAtTime(noteVol, startTime + 0.01);
+  noteGain.gain.exponentialRampToValueAtTime(0.001, startTime + envDuration);
+
+  const osc2Gain = ctx.createGain();
+  osc2Gain.gain.value = 0.3; // triangle is quieter (sparkle layer)
+
+  osc1.connect(noteGain);
+  osc2.connect(osc2Gain);
+  osc2Gain.connect(noteGain);
+  noteGain.connect(gain);
+
+  osc1.start(startTime);
+  osc1.stop(startTime + envDuration + 0.05);
+  osc2.start(startTime);
+  osc2.stop(startTime + envDuration + 0.05);
+}
+
+function scheduleMusicBar() {
+  if (!musicIsPlaying || !musicEnabled) return;
+
+  const ctx = getAudioCtx();
+  const tempo = getMusicTempo();
+  const beatDuration = 60.0 / tempo;
+  const isNight = document.body.classList.contains('night-mode');
+  const freqs = isNight ? PENTA_LOW : PENTA_FREQS;
+
+  const bar = MELODY_BARS[musicBarIndex % MELODY_BARS.length];
+  const rhythm = RHYTHM_BARS[musicBarIndex % RHYTHM_BARS.length];
+
+  let noteTime = musicNextNoteTime;
+  for (let i = 0; i < bar.length; i++) {
+    const noteIdx = bar[i];
+    const beats = rhythm[i];
+    const noteDur = beats * beatDuration;
+
+    if (noteIdx >= 0 && noteIdx < freqs.length) {
+      playMusicNote(freqs[noteIdx], noteTime, noteDur);
+    }
+    noteTime += noteDur;
+  }
+
+  // Schedule next bar
+  const barDuration = rhythm.reduce((a, b) => a + b, 0) * beatDuration;
+  musicNextNoteTime += barDuration;
+  musicBarIndex++;
+
+  // Look ahead: schedule next bar when we're within 0.5s
+  const lookAhead = 0.5;
+  const scheduleDelay = (musicNextNoteTime - ctx.currentTime - lookAhead) * 1000;
+  musicSchedulerId = setTimeout(scheduleMusicBar, Math.max(scheduleDelay, 50));
+}
+
+function startMusicLoop() {
+  if (musicIsPlaying) return;
+  if (!musicEnabled) return;
+  musicIsPlaying = true;
+  const ctx = getAudioCtx();
+  musicNextNoteTime = ctx.currentTime + 0.1;
+  musicBarIndex = 0;
+  ensureMusicGain();
+  musicGainNode.gain.value = musicVolume;
+  scheduleMusicBar();
+}
+
+function stopMusicLoop() {
+  musicIsPlaying = false;
+  if (musicSchedulerId) {
+    clearTimeout(musicSchedulerId);
+    musicSchedulerId = null;
+  }
+}
+
+function toggleMusic() {
+  musicEnabled = !musicEnabled;
+  const btn = document.getElementById('btn-music');
+  if (musicEnabled) {
+    btn.style.opacity = '1';
+    btn.style.background = '#AB47BC';
+    const slider = document.getElementById('music-volume-slider');
+    if (slider) slider.style.display = '';
+    startMusicLoop();
+  } else {
+    btn.style.opacity = '0.6';
+    btn.style.background = '#78909C';
+    const slider = document.getElementById('music-volume-slider');
+    if (slider) slider.style.display = 'none';
+    stopMusicLoop();
+  }
+  try { localStorage.setItem(MUSIC_ENABLED_KEY, musicEnabled ? '1' : '0'); } catch (e) {}
+}
+
+function onMusicVolumeChange(e) {
+  musicVolume = parseFloat(e.target.value);
+  if (musicGainNode) musicGainNode.gain.value = musicVolume;
+  try { localStorage.setItem(MUSIC_VOLUME_KEY, String(musicVolume)); } catch (e) {}
+}
+
+function restoreMusicSettings() {
+  try {
+    const savedEnabled = localStorage.getItem(MUSIC_ENABLED_KEY);
+    const savedVol = localStorage.getItem(MUSIC_VOLUME_KEY);
+    if (savedVol !== null) musicVolume = parseFloat(savedVol);
+    if (savedEnabled === '1') musicEnabled = true;
+  } catch (e) {}
+  const btn = document.getElementById('btn-music');
+  const slider = document.getElementById('music-volume-slider');
+  if (btn) {
+    if (musicEnabled) {
+      btn.style.opacity = '1';
+      btn.style.background = '#AB47BC';
+    } else {
+      btn.style.opacity = '0.6';
+      btn.style.background = '#78909C';
+    }
+  }
+  if (slider) {
+    slider.value = musicVolume;
+    slider.style.display = musicEnabled ? '' : 'none';
+  }
+}
+
+// Called when play state or night mode changes to update music tempo
+function updateMusicTempo() {
+  // The tempo change will naturally apply on the next scheduled bar
+  // since getMusicTempo() is called fresh each time
+}
+
+// Start music after first user interaction (if enabled from previous session)
+let musicAutoStartPending = false;
+function musicAutoStartOnInteraction() {
+  if (!musicAutoStartPending) return;
+  musicAutoStartPending = false;
+  document.removeEventListener('pointerdown', musicAutoStartOnInteraction);
+  document.removeEventListener('keydown', musicAutoStartOnInteraction);
+  if (musicEnabled && !musicIsPlaying) {
+    startMusicLoop();
+  }
+}
 
 function getAudioCtx() {
   if (!audioCtx) {
@@ -2639,6 +2886,8 @@ function toggleNightMode() {
   // Update headlight visibility
   updateHeadlightVisibility();
   try { localStorage.setItem(NIGHT_MODE_KEY, night ? '1' : '0'); } catch (e) {}
+  // Update music tempo for night mode change
+  updateMusicTempo();
 }
 
 function restoreNightMode() {
@@ -5174,6 +5423,9 @@ function startPlay() {
   document.getElementById('btn-play').innerHTML = '⏹️ Stop';
   document.getElementById('btn-play').className = 'btn btn-stop';
 
+  // Update music tempo for play state
+  updateMusicTempo();
+
   // Remove static train SVGs and car displays
   document.querySelectorAll('.train-svg, .train-emoji, .car-svg, .car-count-badge').forEach(el => el.remove());
 
@@ -5659,6 +5911,9 @@ function stopPlay() {
   // Stop passenger system
   resetPassengerState();
   state.playing = false;
+
+  // Update music tempo for idle state
+  updateMusicTempo();
   document.getElementById('app').classList.remove('playing');
   document.getElementById('btn-play').innerHTML = '▶️ Play';
   document.getElementById('btn-play').className = 'btn btn-play';
@@ -7073,6 +7328,11 @@ function handleKeyDown(e) {
     return;
   }
 
+  // M: toggle music
+  if ((key === 'm' || key === 'M') && !e.ctrlKey && !e.metaKey) {
+    toggleMusic();
+    return;
+  }
 
   // H: show tutorial
   if ((key === 'h' || key === 'H') && !e.ctrlKey && !e.metaKey) {
@@ -8433,6 +8693,14 @@ function init() {
   // Restore audio settings
   restoreAudioSettings();
 
+  // Restore music settings (starts paused, waits for user interaction)
+  restoreMusicSettings();
+  if (musicEnabled) {
+    musicAutoStartPending = true;
+    document.addEventListener('pointerdown', musicAutoStartOnInteraction, { once: true });
+    document.addEventListener('keydown', musicAutoStartOnInteraction, { once: true });
+  }
+
   // Check for share link hash FIRST (takes priority over autosave)
   let sharedLayout = loadFromShareHash();
 
@@ -8514,9 +8782,11 @@ function init() {
     if (document.hidden) {
       if (grid) grid.classList.add('animations-paused');
       stopChimneyLoop();
+      stopMusicLoop();
     } else {
       if (grid) grid.classList.remove('animations-paused');
       startChimneyLoop();
+      if (musicEnabled) startMusicLoop();
     }
   });
 }

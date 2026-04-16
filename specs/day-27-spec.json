@@ -1,0 +1,92 @@
+{
+  "day": 27,
+  "feature": "Ambient Background Music",
+  "date": "2026-04-16",
+  "bugs_to_fix": [],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Music synthesis engine — pentatonic music-box melody",
+      "description": "Create a Web Audio API music engine that synthesizes a gentle, looping toy-train melody. Use pentatonic scale (C5, D5, E5, G5, A5) with music-box timbre (combination of sine + triangle oscillators with fast attack and medium decay). 16-bar loop with varied rhythm patterns. The melody should feel like a toy music box — gentle, child-friendly, not annoying on repeat.",
+      "file": "index.html",
+      "acceptance_criteria": [
+        "Music synthesized entirely via Web Audio API (no external files)",
+        "Uses pentatonic scale for pleasant, non-dissonant sound",
+        "Music-box timbre (sparkly, bell-like tone)",
+        "16-bar loop that doesn't feel monotonously repetitive",
+        "Melody is gentle and suitable for toddlers"
+      ]
+    },
+    {
+      "id": "T2",
+      "title": "Separate music volume control",
+      "description": "Add a dedicated music volume slider independent of SFX. Add a music toggle button (🎵) in the controls bar. Music has its own GainNode routed through masterGainNode so the master mute still works. Separate localStorage key for music volume and enabled state.",
+      "file": "index.html",
+      "acceptance_criteria": [
+        "Music volume slider independent of SFX volume",
+        "🎵 button toggles music on/off",
+        "Master mute (🔇) still silences music",
+        "Music volume preference saved to localStorage",
+        "Music enabled state saved to localStorage"
+      ]
+    },
+    {
+      "id": "T3",
+      "title": "Play state variation — more upbeat during play",
+      "description": "When trains are playing, shift to a slightly more upbeat variation: faster tempo and slightly higher volume. When idle (not playing), use a slower, gentler variation. Transition smoothly between states.",
+      "file": "index.html",
+      "acceptance_criteria": [
+        "Idle tempo is gentle/slow (~100 BPM)",
+        "Play tempo is slightly faster (~120 BPM)",
+        "Transition between states doesn't cause audio glitch",
+        "Tempo change happens on next bar boundary (not mid-note)"
+      ]
+    },
+    {
+      "id": "T4",
+      "title": "Night mode variation — slower, softer",
+      "description": "In night mode, music plays at slower tempo (~80 BPM), lower volume, and possibly lower octave for a lullaby feel. Transition smoothly when night mode is toggled.",
+      "file": "index.html",
+      "acceptance_criteria": [
+        "Night mode music is noticeably slower and softer",
+        "Toggling night mode transitions music smoothly",
+        "Night + play state uses moderate tempo (not as fast as day play)"
+      ]
+    },
+    {
+      "id": "T5",
+      "title": "Default off + autoplay policy compliance",
+      "description": "Music defaults to OFF (respecting users who prefer silence). Only starts on explicit user action (clicking 🎵 button). Complies with browser autoplay policy by requiring user interaction. State persists — if user enabled music, it auto-starts on next visit after first interaction.",
+      "file": "index.html",
+      "acceptance_criteria": [
+        "Music is OFF by default on first visit",
+        "Clicking 🎵 starts music (first user interaction)",
+        "Music preference persists across refreshes",
+        "No autoplay policy console errors",
+        "Returning users with music enabled get music on first click/interaction"
+      ]
+    },
+    {
+      "id": "T6",
+      "title": "Add M keyboard shortcut for music toggle",
+      "description": "Add 'M' key as keyboard shortcut to toggle music on/off. Add to shortcuts modal.",
+      "file": "index.html",
+      "acceptance_criteria": [
+        "M key toggles music",
+        "Shortcut appears in shortcuts modal",
+        "Doesn't fire when typing in inputs"
+      ]
+    }
+  ],
+  "testing_focus": [
+    "Music doesn't interfere with SFX (train sounds, placement sounds)",
+    "Master mute silences both music and SFX",
+    "Volume controls are truly independent",
+    "Night mode variation transitions are smooth",
+    "Play/idle tempo changes happen cleanly",
+    "No memory leaks from music oscillators",
+    "Music stops cleanly when toggled off",
+    "localStorage persistence works correctly",
+    "Performance: music doesn't affect 60fps target"
+  ]
+}
