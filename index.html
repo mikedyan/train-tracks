@@ -4519,6 +4519,7 @@ function onPaletteDown(e) {
 }
 
 function onGridDown(e) {
+  clearGridFocus(); // Clear keyboard focus indicator on mouse interaction
   if (state.playing) {
     // During play, only allow T-junction switch toggling
     const cell = e.target.closest('.cell');
@@ -7415,6 +7416,7 @@ function clearGridFocus() {
 
 function handleGridKeyAction() {
   if (gridFocusRow < 0 || gridFocusCol < 0) return;
+  if (state.playing) return; // No placement during play
   const r = gridFocusRow, c = gridFocusCol;
   const piece = state.grid[r][c];
 
@@ -7555,6 +7557,18 @@ function handleKeyDown(e) {
     return;
   }
 
+  // F: fullscreen (works during play)
+  if ((key === 'f' || key === 'F') && !e.ctrlKey && !e.metaKey) {
+    toggleFullscreen();
+    return;
+  }
+
+  // A: high contrast (works during play)
+  if ((key === 'a' || key === 'A') && !e.ctrlKey && !e.metaKey) {
+    toggleHighContrast();
+    return;
+  }
+
   // Don't allow building shortcuts during play (except space to stop)
   if (state.playing) return;
 
@@ -7604,17 +7618,6 @@ function handleKeyDown(e) {
     return;
   }
 
-  // F: fullscreen
-  if ((key === 'f' || key === 'F') && !e.ctrlKey && !e.metaKey) {
-    toggleFullscreen();
-    return;
-  }
-
-  // A: high contrast (accessibility)
-  if ((key === 'a' || key === 'A') && !e.ctrlKey && !e.metaKey) {
-    toggleHighContrast();
-    return;
-  }
 
   // P: screenshot
   if ((key === 'p' || key === 'P') && !e.ctrlKey && !e.metaKey) {
