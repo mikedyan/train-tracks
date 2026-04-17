@@ -99,6 +99,38 @@ body.night-mode {
     radial-gradient(1px 1px at 20% 50%, rgba(255,255,255,0.5), transparent);
 }
 
+/* High-Contrast Mode */
+body.high-contrast .cell {
+  border: 2px solid rgba(0,0,0,0.5);
+  box-sizing: border-box;
+}
+body.high-contrast.night-mode .cell {
+  border-color: rgba(255,255,255,0.4);
+}
+body.high-contrast .cell svg {
+  filter: contrast(1.3) brightness(1.1);
+}
+body.high-contrast .cell .connection-dot {
+  width: 9px; height: 9px;
+  border: 2px solid #000;
+}
+body.high-contrast .cell .connection-dot.connected {
+  background: #00E676;
+  box-shadow: 0 0 8px #00E676;
+}
+body.high-contrast .cell .connection-dot.disconnected {
+  background: #FF1744;
+  box-shadow: 0 0 8px #FF1744;
+  width: 10px; height: 10px;
+}
+body.high-contrast #grid {
+  gap: 2px;
+}
+body.high-contrast .btn {
+  border: 2px solid rgba(0,0,0,0.3);
+  font-weight: 800;
+}
+
 html, body {
   width: 100%; height: 100%;
   overflow: hidden;
@@ -188,9 +220,13 @@ html, body {
   position: relative;
 }
 
-.palette-piece:hover {
+.palette-piece:hover, .palette-piece:focus-visible {
   background: rgba(255,255,255,0.2);
   transform: scale(1.08);
+}
+.palette-piece:focus-visible {
+  outline: 2px solid #64B5F6;
+  outline-offset: 2px;
 }
 
 .palette-piece:active { cursor: grabbing; }
@@ -347,6 +383,9 @@ body.night-mode #grid-viewport {
 }
 
 .cell:hover { background: var(--grass-hover); }
+.cell.grid-focus { outline: 3px solid #2196F3; outline-offset: -3px; z-index: 8; }
+body.night-mode .cell.grid-focus { outline-color: #64B5F6; }
+body.high-contrast .cell.grid-focus { outline: 4px solid #FFFF00; outline-offset: -4px; }
 .cell.highlight { background: #A5D64E; box-shadow: inset 0 0 0 2px #FFF; }
 .cell .ghost-preview {
   position: absolute;
@@ -432,7 +471,11 @@ body.night-mode #grid-viewport {
   transition: opacity 0.3s;
 }
 .cell .connection-dot.connected { opacity: 1; }
-.cell .connection-dot.disconnected { background: #FF5252; box-shadow: 0 0 6px #FF5252; opacity: 0.7; }
+.cell .connection-dot.disconnected { background: #FF5252; box-shadow: 0 0 6px #FF5252; opacity: 0.7; border-radius: 1px; transform: rotate(45deg); width: 7px; height: 7px; border: 1px solid #D32F2F; }
+.cell .connection-dot.disconnected.n { top: -4px; left: 50%; transform: translateX(-50%) rotate(45deg); }
+.cell .connection-dot.disconnected.s { bottom: -4px; left: 50%; transform: translateX(-50%) rotate(45deg); }
+.cell .connection-dot.disconnected.e { right: -4px; top: 50%; transform: translateY(-50%) rotate(45deg); }
+.cell .connection-dot.disconnected.w { left: -4px; top: 50%; transform: translateY(-50%) rotate(45deg); }
 
 /* Auto-connect pulse animation */
 @keyframes connect-pulse {
@@ -1799,79 +1842,107 @@ body.night-mode .milestone-unlocks { color: #78909C; }
   color: white;
   box-shadow: 0 3px 10px rgba(33,150,243,0.3);
 }
+
+/* Reduced Motion Preference */
+@media (prefers-reduced-motion: reduce) {
+  .smoke-particle, .chimney-smoke, .confetti-particle {
+    animation: none !important;
+    display: none !important;
+  }
+  .scenery-tree, .scenery-flower, .scenery-land-duck, .scenery-people,
+  .scenery-cow-flipped, .scenery-animal-flipped {
+    animation: none !important;
+  }
+  .water-duck {
+    animation: none !important;
+  }
+  .water-cell::before, .water-cell::after {
+    animation: none !important;
+  }
+  .cell .connection-dot.pulsing.n,
+  .cell .connection-dot.pulsing.s,
+  .cell .connection-dot.pulsing.e,
+  .cell .connection-dot.pulsing.w {
+    animation: none !important;
+  }
+  .switch-lever, .lever-arm {
+    transition: none !important;
+  }
+  /* Keep functional transitions for modals/UI */
+}
 </style>
 </head>
 <body>
 <div id="app">
   <button id="sidebar-toggle" onclick="toggleSidebar()" title="Toggle palette">◀</button>
-  <div id="sidebar">
+  <div id="sidebar" role="toolbar" aria-label="Piece palette">
     <h2>Tracks</h2>
-    <div class="palette-piece" data-type="straight"><div class="label">Straight</div></div>
-    <div class="palette-piece" data-type="curve"><div class="label">Curve</div></div>
-    <div class="palette-piece" data-type="tjunction"><div class="label">T-Split</div></div>
-    <div class="palette-piece" data-type="crossover"><div class="label">Cross</div></div>
-    <div class="palette-piece" data-type="bridge"><div class="label">Bridge</div></div>
-    <div class="palette-piece" data-type="tunnel"><div class="label">Tunnel</div></div>
-    <div class="palette-piece" data-type="station"><div class="label">Station</div></div>
+    <div class="palette-piece" data-type="straight" role="button" aria-label="Straight track piece" tabindex="0"><div class="label">Straight</div></div>
+    <div class="palette-piece" data-type="curve" role="button" aria-label="Curve track piece" tabindex="0"><div class="label">Curve</div></div>
+    <div class="palette-piece" data-type="tjunction" role="button" aria-label="T-Split track piece" tabindex="0"><div class="label">T-Split</div></div>
+    <div class="palette-piece" data-type="crossover" role="button" aria-label="Crossover track piece" tabindex="0"><div class="label">Cross</div></div>
+    <div class="palette-piece" data-type="bridge" role="button" aria-label="Bridge track piece" tabindex="0"><div class="label">Bridge</div></div>
+    <div class="palette-piece" data-type="tunnel" role="button" aria-label="Tunnel track piece" tabindex="0"><div class="label">Tunnel</div></div>
+    <div class="palette-piece" data-type="station" role="button" aria-label="Station track piece" tabindex="0"><div class="label">Station</div></div>
     <div class="palette-divider"></div>
     <h2>Trains</h2>
-    <div class="palette-piece palette-train palette-train-red" data-type="train-red"><div class="label">Red</div></div>
-    <div class="palette-piece palette-train palette-train-blue" data-type="train-blue"><div class="label">Blue</div></div>
-    <div class="palette-piece palette-train palette-train-green" data-type="train-green"><div class="label">Green</div></div>
-    <div class="palette-piece palette-train palette-train-yellow" data-type="train-yellow"><div class="label">Yellow</div></div>
-    <div class="palette-piece palette-train palette-train-purple" data-type="train-purple"><div class="label">Purple</div></div>
+    <div class="palette-piece palette-train palette-train-red" data-type="train-red" role="button" aria-label="Red train" tabindex="0"><div class="label">Red</div></div>
+    <div class="palette-piece palette-train palette-train-blue" data-type="train-blue" role="button" aria-label="Blue train" tabindex="0"><div class="label">Blue</div></div>
+    <div class="palette-piece palette-train palette-train-green" data-type="train-green" role="button" aria-label="Green train" tabindex="0"><div class="label">Green</div></div>
+    <div class="palette-piece palette-train palette-train-yellow" data-type="train-yellow" role="button" aria-label="Yellow train" tabindex="0"><div class="label">Yellow</div></div>
+    <div class="palette-piece palette-train palette-train-purple" data-type="train-purple" role="button" aria-label="Purple train" tabindex="0"><div class="label">Purple</div></div>
     <div class="palette-divider"></div>
     <h2>Cars</h2>
-    <div class="palette-piece palette-car" data-type="freight"><div class="label">Freight</div></div>
-    <div class="palette-piece palette-car" data-type="passenger"><div class="label">Passenger</div></div>
-    <div class="palette-piece palette-car" data-type="caboose"><div class="label">Caboose</div></div>
+    <div class="palette-piece palette-car" data-type="freight" role="button" aria-label="Freight car" tabindex="0"><div class="label">Freight</div></div>
+    <div class="palette-piece palette-car" data-type="passenger" role="button" aria-label="Passenger car" tabindex="0"><div class="label">Passenger</div></div>
+    <div class="palette-piece palette-car" data-type="caboose" role="button" aria-label="Caboose car" tabindex="0"><div class="label">Caboose</div></div>
     <div class="palette-divider"></div>
     <h2>Scenery</h2>
-    <div class="palette-piece" data-type="tree"><div class="label">Tree</div></div>
-    <div class="palette-piece" data-type="house"><div class="label">House</div></div>
-    <div class="palette-piece" data-type="cow"><div class="label">Cow</div></div>
-    <div class="palette-piece" data-type="water"><div class="label">Water</div></div>
-    <div class="palette-piece" data-type="flower"><div class="label">Flower</div></div>
-    <div class="palette-piece" data-type="sheep"><div class="label">Sheep</div></div>
-    <div class="palette-piece" data-type="horse"><div class="label">Horse</div></div>
-    <div class="palette-piece" data-type="duck-land"><div class="label">Duck</div></div>
-    <div class="palette-piece" data-type="people"><div class="label">People</div></div>
+    <div class="palette-piece" data-type="tree" role="button" aria-label="Tree scenery" tabindex="0"><div class="label">Tree</div></div>
+    <div class="palette-piece" data-type="house" role="button" aria-label="House scenery" tabindex="0"><div class="label">House</div></div>
+    <div class="palette-piece" data-type="cow" role="button" aria-label="Cow scenery" tabindex="0"><div class="label">Cow</div></div>
+    <div class="palette-piece" data-type="water" role="button" aria-label="Water scenery" tabindex="0"><div class="label">Water</div></div>
+    <div class="palette-piece" data-type="flower" role="button" aria-label="Flower scenery" tabindex="0"><div class="label">Flower</div></div>
+    <div class="palette-piece" data-type="sheep" role="button" aria-label="Sheep scenery" tabindex="0"><div class="label">Sheep</div></div>
+    <div class="palette-piece" data-type="horse" role="button" aria-label="Horse scenery" tabindex="0"><div class="label">Horse</div></div>
+    <div class="palette-piece" data-type="duck-land" role="button" aria-label="Duck scenery" tabindex="0"><div class="label">Duck</div></div>
+    <div class="palette-piece" data-type="people" role="button" aria-label="People scenery" tabindex="0"><div class="label">People</div></div>
   </div>
   <!-- Mobile Bottom Drawer (shown on mobile via CSS) -->
   <div id="mobile-drawer">
     <button id="drawer-toggle" onclick="toggleMobileDrawer()">▲ Pieces</button>
     <div id="drawer-content">
       <span class="drawer-section-label">Tracks</span>
-      <div class="palette-piece" data-type="straight"><div class="label">Straight</div></div>
-      <div class="palette-piece" data-type="curve"><div class="label">Curve</div></div>
-      <div class="palette-piece" data-type="tjunction"><div class="label">T-Split</div></div>
-      <div class="palette-piece" data-type="crossover"><div class="label">Cross</div></div>
-      <div class="palette-piece" data-type="bridge"><div class="label">Bridge</div></div>
-      <div class="palette-piece" data-type="tunnel"><div class="label">Tunnel</div></div>
-      <div class="palette-piece" data-type="station"><div class="label">Station</div></div>
+      <div class="palette-piece" data-type="straight" role="button" aria-label="Straight track piece" tabindex="0"><div class="label">Straight</div></div>
+      <div class="palette-piece" data-type="curve" role="button" aria-label="Curve track piece" tabindex="0"><div class="label">Curve</div></div>
+      <div class="palette-piece" data-type="tjunction" role="button" aria-label="T-Split track piece" tabindex="0"><div class="label">T-Split</div></div>
+      <div class="palette-piece" data-type="crossover" role="button" aria-label="Crossover track piece" tabindex="0"><div class="label">Cross</div></div>
+      <div class="palette-piece" data-type="bridge" role="button" aria-label="Bridge track piece" tabindex="0"><div class="label">Bridge</div></div>
+      <div class="palette-piece" data-type="tunnel" role="button" aria-label="Tunnel track piece" tabindex="0"><div class="label">Tunnel</div></div>
+      <div class="palette-piece" data-type="station" role="button" aria-label="Station track piece" tabindex="0"><div class="label">Station</div></div>
       <div class="palette-divider"></div>
       <span class="drawer-section-label">Trains</span>
-      <div class="palette-piece palette-train palette-train-red" data-type="train-red"><div class="label">Red</div></div>
-      <div class="palette-piece palette-train palette-train-blue" data-type="train-blue"><div class="label">Blue</div></div>
-      <div class="palette-piece palette-train palette-train-green" data-type="train-green"><div class="label">Green</div></div>
-      <div class="palette-piece palette-train palette-train-yellow" data-type="train-yellow"><div class="label">Yellow</div></div>
-      <div class="palette-piece palette-train palette-train-purple" data-type="train-purple"><div class="label">Purple</div></div>
+      <div class="palette-piece palette-train palette-train-red" data-type="train-red" role="button" aria-label="Red train" tabindex="0"><div class="label">Red</div></div>
+      <div class="palette-piece palette-train palette-train-blue" data-type="train-blue" role="button" aria-label="Blue train" tabindex="0"><div class="label">Blue</div></div>
+      <div class="palette-piece palette-train palette-train-green" data-type="train-green" role="button" aria-label="Green train" tabindex="0"><div class="label">Green</div></div>
+      <div class="palette-piece palette-train palette-train-yellow" data-type="train-yellow" role="button" aria-label="Yellow train" tabindex="0"><div class="label">Yellow</div></div>
+      <div class="palette-piece palette-train palette-train-purple" data-type="train-purple" role="button" aria-label="Purple train" tabindex="0"><div class="label">Purple</div></div>
       <div class="palette-divider"></div>
       <span class="drawer-section-label">Cars</span>
-      <div class="palette-piece palette-car" data-type="freight"><div class="label">Freight</div></div>
-      <div class="palette-piece palette-car" data-type="passenger"><div class="label">Passenger</div></div>
-      <div class="palette-piece palette-car" data-type="caboose"><div class="label">Caboose</div></div>
+      <div class="palette-piece palette-car" data-type="freight" role="button" aria-label="Freight car" tabindex="0"><div class="label">Freight</div></div>
+      <div class="palette-piece palette-car" data-type="passenger" role="button" aria-label="Passenger car" tabindex="0"><div class="label">Passenger</div></div>
+      <div class="palette-piece palette-car" data-type="caboose" role="button" aria-label="Caboose car" tabindex="0"><div class="label">Caboose</div></div>
       <div class="palette-divider"></div>
       <span class="drawer-section-label">Scenery</span>
-      <div class="palette-piece" data-type="tree"><div class="label">Tree</div></div>
-      <div class="palette-piece" data-type="house"><div class="label">House</div></div>
-      <div class="palette-piece" data-type="cow"><div class="label">Cow</div></div>
-      <div class="palette-piece" data-type="water"><div class="label">Water</div></div>
-      <div class="palette-piece" data-type="flower"><div class="label">Flower</div></div>
-      <div class="palette-piece" data-type="sheep"><div class="label">Sheep</div></div>
-      <div class="palette-piece" data-type="horse"><div class="label">Horse</div></div>
-      <div class="palette-piece" data-type="duck-land"><div class="label">Duck</div></div>
-      <div class="palette-piece" data-type="people"><div class="label">People</div></div>
+      <div class="palette-piece" data-type="tree" role="button" aria-label="Tree scenery" tabindex="0"><div class="label">Tree</div></div>
+      <div class="palette-piece" data-type="house" role="button" aria-label="House scenery" tabindex="0"><div class="label">House</div></div>
+      <div class="palette-piece" data-type="cow" role="button" aria-label="Cow scenery" tabindex="0"><div class="label">Cow</div></div>
+      <div class="palette-piece" data-type="water" role="button" aria-label="Water scenery" tabindex="0"><div class="label">Water</div></div>
+      <div class="palette-piece" data-type="flower" role="button" aria-label="Flower scenery" tabindex="0"><div class="label">Flower</div></div>
+      <div class="palette-piece" data-type="sheep" role="button" aria-label="Sheep scenery" tabindex="0"><div class="label">Sheep</div></div>
+      <div class="palette-piece" data-type="horse" role="button" aria-label="Horse scenery" tabindex="0"><div class="label">Horse</div></div>
+      <div class="palette-piece" data-type="duck-land" role="button" aria-label="Duck scenery" tabindex="0"><div class="label">Duck</div></div>
+      <div class="palette-piece" data-type="people" role="button" aria-label="People scenery" tabindex="0"><div class="label">People</div></div>
     </div>
   </div>
 
@@ -1887,18 +1958,18 @@ body.night-mode .milestone-unlocks { color: #78909C; }
       <div id="zoom-indicator">1.0×</div>
     </div>
     <div id="controls">
-      <button class="btn btn-play" id="btn-play" onclick="togglePlay()">▶️ Play</button>
-      <button class="btn" onclick="generateRandomTrack()" style="background:#9C27B0;color:white;box-shadow:0 3px 10px rgba(156,39,176,0.3);">🎲 Random</button>
-      <button class="btn btn-clear" onclick="clearAll()">🗑️ Clear</button>
-      <button class="btn btn-undo" id="btn-undo" onclick="undo()">↩️ Undo</button>
-      <button class="btn btn-undo" id="btn-redo" onclick="redo()" disabled>↪️ Redo</button>
+      <button class="btn btn-play" id="btn-play" onclick="togglePlay()" aria-label="Play trains">▶️ Play</button>
+      <button class="btn" onclick="generateRandomTrack()" aria-label="Generate random track" style="background:#9C27B0;color:white;box-shadow:0 3px 10px rgba(156,39,176,0.3);">🎲 Random</button>
+      <button class="btn btn-clear" onclick="clearAll()" aria-label="Clear all tracks">🗑️ Clear</button>
+      <button class="btn btn-undo" id="btn-undo" onclick="undo()" aria-label="Undo last action">↩️ Undo</button>
+      <button class="btn btn-undo" id="btn-redo" onclick="redo()" aria-label="Redo last action" disabled>↪️ Redo</button>
       <div class="speed-control">
-        🐢 <input type="range" id="speed-slider" min="0.3" max="4" step="0.1" value="1.2"> 🐇
+        🐢 <input type="range" id="speed-slider" aria-label="Train speed" min="0.3" max="4" step="0.1" value="1.2"> 🐇
       </div>
       <button class="btn" id="btn-mute" onclick="toggleMute()" style="background:#78909C;color:white;padding:8px 12px;">🔊</button>
-      <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.8" oninput="onVolumeChange(event)" style="width:50px;accent-color:#78909C;" title="Volume">
+      <input type="range" id="volume-slider" aria-label="Sound effects volume" min="0" max="1" step="0.05" value="0.8" oninput="onVolumeChange(event)" style="width:50px;accent-color:#78909C;" title="Volume">
       <button class="btn" id="btn-music" onclick="toggleMusic()" style="background:#78909C;color:white;padding:8px 12px;opacity:0.6;" title="Toggle background music">🎵</button>
-      <input type="range" id="music-volume-slider" min="0" max="1" step="0.05" value="0.5" oninput="onMusicVolumeChange(event)" style="width:40px;accent-color:#AB47BC;display:none;" title="Music Volume">
+      <input type="range" id="music-volume-slider" aria-label="Music volume" min="0" max="1" step="0.05" value="0.5" oninput="onMusicVolumeChange(event)" style="width:40px;accent-color:#AB47BC;display:none;" title="Music Volume">
       <button class="btn btn-night" id="btn-night" onclick="toggleNightMode()" style="padding:8px 12px;">☀️</button>
       <button class="btn" onclick="openSaveModal()" style="background:#607D8B;color:white;box-shadow:0 3px 10px rgba(96,125,139,0.3);">💾 Save</button>
       <button class="btn" onclick="openShortcutsModal()" style="background:#546E7A;color:white;padding:8px 12px;" title="Keyboard shortcuts">⌨️</button>
@@ -1908,7 +1979,9 @@ body.night-mode .milestone-unlocks { color: #78909C; }
       <button class="btn" id="btn-screenshot" onclick="openScreenshotModal()" style="background:#5C6BC0;color:white;box-shadow:0 3px 10px rgba(92,107,192,0.3);padding:8px 12px;" title="Take screenshot">📸</button>
       <button class="btn" id="btn-help" onclick="showTutorial()" style="background:#78909C;color:white;padding:8px 12px;" title="How to play">❓</button>
       <button class="btn btn-passengers" id="btn-passengers" onclick="togglePassengers()" style="padding:8px 12px;" title="Toggle passenger delivery">🧑</button>
-      <button class="btn" id="btn-stats" onclick="openStatsModal()" style="background:#6D4C41;color:white;box-shadow:0 3px 10px rgba(109,76,65,0.3);padding:8px 12px;" title="Stats & Milestones">📊</button>
+      <button class="btn" id="btn-stats" onclick="openStatsModal()" style="background:#6D4C41;color:white;box-shadow:0 3px 10px rgba(109,76,65,0.3);padding:8px 12px;" title="Stats & Milestones" aria-label="Stats and milestones">📊</button>
+      <button class="btn" id="btn-highcontrast" onclick="toggleHighContrast()" style="background:#455A64;color:white;padding:8px 12px;" title="High contrast mode" aria-label="Toggle high contrast mode">♿</button>
+      <button class="btn" id="btn-fullscreen" onclick="toggleFullscreen()" style="background:#37474F;color:white;padding:8px 12px;" title="Fullscreen" aria-label="Toggle fullscreen">⛶</button>
     </div>
   </div>
 </div>
@@ -1951,6 +2024,11 @@ body.night-mode .milestone-unlocks { color: #78909C; }
     <div class="shortcut-row"><span class="shortcut-desc">Screenshot</span><span class="shortcut-key">P</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Copy share link</span><span class="shortcut-key">L</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Toggle sidebar</span><span class="shortcut-key">Tab</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Fullscreen</span><span class="shortcut-key">F</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">High contrast</span><span class="shortcut-key">A</span></div>
+    <div class="shortcut-section">Grid Navigation</div>
+    <div class="shortcut-row"><span class="shortcut-desc">Move focus</span><span class="shortcut-key">Arrows</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Place / Rotate</span><span class="shortcut-key">Enter</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Zoom in</span><span class="shortcut-key">+</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Zoom out</span><span class="shortcut-key">-</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Reset zoom</span><span class="shortcut-key">0</span></div>
@@ -2954,6 +3032,64 @@ function restoreBiome() {
   } catch (e) {}
 }
 
+// ============================================================
+// HIGH-CONTRAST MODE
+// ============================================================
+const HIGH_CONTRAST_KEY = 'trainTracks_highContrast';
+
+function isHighContrast() {
+  return document.body.classList.contains('high-contrast');
+}
+
+function toggleHighContrast() {
+  const hc = !isHighContrast();
+  document.body.classList.toggle('high-contrast', hc);
+  const btn = document.getElementById('btn-highcontrast');
+  if (btn) btn.style.background = hc ? '#FDD835' : '#455A64';
+  if (btn) btn.style.color = hc ? '#000' : '#fff';
+  try { localStorage.setItem(HIGH_CONTRAST_KEY, hc ? '1' : '0'); } catch (e) {}
+  showToast(hc ? '♿ High contrast ON' : '♿ High contrast OFF');
+}
+
+function restoreHighContrast() {
+  try {
+    const val = localStorage.getItem(HIGH_CONTRAST_KEY);
+    if (val === '1') {
+      document.body.classList.add('high-contrast');
+      const btn = document.getElementById('btn-highcontrast');
+      if (btn) { btn.style.background = '#FDD835'; btn.style.color = '#000'; }
+    }
+  } catch (e) {}
+}
+
+// ============================================================
+// FULLSCREEN MODE
+// ============================================================
+function toggleFullscreen() {
+  if (document.fullscreenElement) {
+    document.exitFullscreen().catch(() => {});
+  } else {
+    document.documentElement.requestFullscreen().catch(() => {
+      showToast('Fullscreen not supported');
+    });
+  }
+}
+
+function onFullscreenChange() {
+  const isFS = !!document.fullscreenElement;
+  const btn = document.getElementById('btn-fullscreen');
+  if (btn) btn.textContent = isFS ? '🔲' : '⛶';
+  // Recalculate layout
+  setTimeout(() => {
+    resetZoom();
+    calculateSize();
+    initGrid();
+    renderAllCells();
+  }, 100);
+}
+
+document.addEventListener('fullscreenchange', onFullscreenChange);
+
 function rerenderPalette() {
   document.querySelectorAll('.palette-piece').forEach(el => {
     const type = el.dataset.type;
@@ -3597,6 +3733,8 @@ function createPaletteSVG(type) {
 function initGrid() {
   const grid = document.getElementById('grid');
   grid.innerHTML = '';
+  grid.setAttribute('role', 'grid');
+  grid.setAttribute('aria-label', 'Track building grid');
   grid.style.gridTemplateColumns = `repeat(${COLS}, ${cellSize}px)`;
   grid.style.gridTemplateRows = `repeat(${ROWS}, ${cellSize}px)`;
 
@@ -3604,6 +3742,8 @@ function initGrid() {
     for (let c = 0; c < COLS; c++) {
       const cell = document.createElement('div');
       cell.className = 'cell';
+      cell.setAttribute('role', 'gridcell');
+      cell.setAttribute('aria-label', `Empty cell, row ${r + 1}, column ${c + 1}`);
       cell.style.width = cellSize + 'px';
       cell.style.height = cellSize + 'px';
       cell.dataset.row = r;
@@ -3776,7 +3916,33 @@ function renderCell(row, col) {
     cell.classList.add('has-train');
   }
 
+  // Update ARIA label based on cell content
+  updateCellAriaLabel(row, col);
+
   updateConnectionDots(row, col);
+}
+
+function updateCellAriaLabel(row, col) {
+  const cell = getCellEl(row, col);
+  if (!cell) return;
+  const piece = state.grid[row][col];
+  const trainHere = getTrainAt(row, col);
+  let label = `Row ${row + 1}, column ${col + 1}`;
+  if (piece) {
+    const typeNames = {
+      straight: 'Straight track', curve: 'Curve track', tjunction: 'T-junction',
+      crossover: 'Crossover', bridge: 'Bridge', tunnel: 'Tunnel', station: 'Station',
+      tree: 'Tree', house: 'House', cow: 'Cow', water: 'Water', flower: 'Flower',
+      sheep: 'Sheep', horse: 'Horse', 'duck-land': 'Duck', people: 'People'
+    };
+    label += ', ' + (typeNames[piece.type] || piece.type);
+  } else {
+    label += ', empty';
+  }
+  if (trainHere) {
+    label += ', ' + (trainHere.color || 'red') + ' train';
+  }
+  cell.setAttribute('aria-label', label);
 }
 
 function renderAllCells() {
@@ -5010,7 +5176,13 @@ let smokeInterval = null;
 let smokeParticles = [];
 const MAX_SMOKE_PARTICLES = 30;
 
+function prefersReducedMotion() {
+  return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
 function spawnSmokeParticle(anim) {
+  if (prefersReducedMotion()) return;
+  if (prefersReducedMotion()) return;
   if (!anim || !anim.trainEl) return;
 
   // Get train position in grid-container coordinates
@@ -5100,6 +5272,7 @@ let chimneyInterval = null;
 const MAX_CHIMNEY_PARTICLES_PER_HOUSE = 2;
 
 function spawnChimneySmoke() {
+  if (prefersReducedMotion()) return;
   const gridContainer = document.getElementById('grid-container');
   const grid = document.getElementById('grid');
   if (!gridContainer || !grid) return;
@@ -5172,6 +5345,7 @@ function cleanupChimneySmoke() {
 // ============================================================
 function triggerLoopCelebration(anim) {
   if (!anim || !anim.trainEl) return;
+  const reduceMotion = prefersReducedMotion();
 
   incrementStat('loopsCompleted');
   SFX.celebrate();
@@ -5182,6 +5356,7 @@ function triggerLoopCelebration(anim) {
   const top = parseFloat(trainEl.style.top) || 0;
   const container = document.getElementById('grid-container');
 
+  if (reduceMotion) return; // Skip confetti particles for reduced motion
   const colors = ['#FF5252', '#FFAB40', '#FFEB3B', '#69F0AE', '#40C4FF', '#E040FB', '#FF4081', '#7C4DFF'];
   const numParticles = 25;
 
@@ -7172,6 +7347,8 @@ function hapticRemove() {
 // ============================================================
 let selectedTool = null;
 let hoveredCell = null;
+let gridFocusRow = -1;
+let gridFocusCol = -1;
 
 const TOOL_KEY_MAP = {
   '1': 'straight',
@@ -7206,6 +7383,76 @@ function clearSelectedTool() {
   if (selectedTool) {
     document.querySelectorAll('.palette-piece.palette-selected').forEach(el => el.classList.remove('palette-selected'));
     selectedTool = null;
+  }
+}
+
+function setGridFocus(row, col) {
+  // Remove old focus
+  if (gridFocusRow >= 0 && gridFocusCol >= 0) {
+    const oldCell = getCellEl(gridFocusRow, gridFocusCol);
+    if (oldCell) oldCell.classList.remove('grid-focus');
+  }
+  // Clamp
+  row = Math.max(0, Math.min(ROWS - 1, row));
+  col = Math.max(0, Math.min(COLS - 1, col));
+  gridFocusRow = row;
+  gridFocusCol = col;
+  const cell = getCellEl(row, col);
+  if (cell) {
+    cell.classList.add('grid-focus');
+    cell.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
+}
+
+function clearGridFocus() {
+  if (gridFocusRow >= 0 && gridFocusCol >= 0) {
+    const oldCell = getCellEl(gridFocusRow, gridFocusCol);
+    if (oldCell) oldCell.classList.remove('grid-focus');
+  }
+  gridFocusRow = -1;
+  gridFocusCol = -1;
+}
+
+function handleGridKeyAction() {
+  if (gridFocusRow < 0 || gridFocusCol < 0) return;
+  const r = gridFocusRow, c = gridFocusCol;
+  const piece = state.grid[r][c];
+
+  if (piece && !SCENERY_TYPES.includes(piece.type)) {
+    // Rotate existing track piece
+    if (isPuzzleLocked(r, c)) { showToast('🔒 Locked piece!'); return; }
+    pushUndo();
+    piece.rotation = (piece.rotation + 90) % 360;
+    renderCell(r, c);
+    ['N','S','E','W'].forEach(d => { const nb = getNeighbor(r, c, d); if (nb) updateConnectionDots(nb.row, nb.col); });
+    SFX.click();
+    hapticPlace();
+    autoSave();
+  } else if (selectedTool && !piece) {
+    // Place selected tool
+    if (!isPieceUnlocked(selectedTool)) return;
+    if (puzzleState.active && puzzleState.availablePieces) {
+      if ((puzzleState.availablePieces[selectedTool] || 0) <= 0) {
+        showToast('No more ' + selectedTool + ' pieces!');
+        return;
+      }
+    }
+    pushUndo();
+    const rotation = 0;
+    state.grid[r][c] = { type: selectedTool, rotation };
+    // Auto-connect
+    const best = findBestRotation(r, c, selectedTool);
+    if (best && best.score > 0) state.grid[r][c].rotation = best.rotation;
+    renderCell(r, c);
+    ['N','S','E','W'].forEach(d => { const nb = getNeighbor(r, c, d); if (nb) updateConnectionDots(nb.row, nb.col); });
+    SFX.place();
+    hapticPlace();
+    if (puzzleState.active && puzzleState.availablePieces) {
+      puzzleState.availablePieces[selectedTool]--;
+      updatePuzzleHUD();
+    }
+    incrementStat('tracksPlaced');
+    autoSave();
   }
 }
 
@@ -7284,6 +7531,23 @@ function handleKeyDown(e) {
     return;
   }
 
+  // Arrow keys: grid focus navigation
+  if (key === 'ArrowUp' || key === 'ArrowDown' || key === 'ArrowLeft' || key === 'ArrowRight') {
+    e.preventDefault();
+    if (gridFocusRow < 0) { setGridFocus(0, 0); return; }
+    const dr = key === 'ArrowDown' ? 1 : key === 'ArrowUp' ? -1 : 0;
+    const dc = key === 'ArrowRight' ? 1 : key === 'ArrowLeft' ? -1 : 0;
+    setGridFocus(gridFocusRow + dr, gridFocusCol + dc);
+    return;
+  }
+
+  // Enter: place/rotate at grid focus
+  if (key === 'Enter' && gridFocusRow >= 0) {
+    e.preventDefault();
+    handleGridKeyAction();
+    return;
+  }
+
   // Space: play/stop
   if (key === ' ') {
     e.preventDefault();
@@ -7337,6 +7601,18 @@ function handleKeyDown(e) {
   // H: show tutorial
   if ((key === 'h' || key === 'H') && !e.ctrlKey && !e.metaKey) {
     showTutorial();
+    return;
+  }
+
+  // F: fullscreen
+  if ((key === 'f' || key === 'F') && !e.ctrlKey && !e.metaKey) {
+    toggleFullscreen();
+    return;
+  }
+
+  // A: high contrast (accessibility)
+  if ((key === 'a' || key === 'A') && !e.ctrlKey && !e.metaKey) {
+    toggleHighContrast();
     return;
   }
 
@@ -8689,6 +8965,9 @@ function init() {
 
   // Restore biome preference
   restoreBiome();
+
+  // Restore high-contrast preference
+  restoreHighContrast();
 
   // Restore audio settings
   restoreAudioSettings();

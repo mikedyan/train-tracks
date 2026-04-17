@@ -1,0 +1,146 @@
+{
+  "day": 28,
+  "title": "Accessibility + Final Polish",
+  "date": "2026-04-17",
+  "bugs_to_fix": [],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "ARIA Labels on Grid Cells, Palette Items, and Buttons",
+      "description": "Add aria-label attributes to all grid cells (describing content: empty, track type, scenery type, train), palette items (piece name), and control buttons (action name). Grid gets role='grid', each row gets role='row', each cell gets role='gridcell'.",
+      "changes": [
+        "In initGrid(): Add role='gridcell', aria-label='Empty cell, row N, column N', tabindex='-1' to each cell div",
+        "In renderCell(): Update aria-label based on cell content (e.g., 'Straight track, row 3, column 5', 'Tree scenery', 'Red train')",
+        "Add role='grid' to the #grid element in initGrid()",
+        "Add aria-label attributes to all palette-piece elements in HTML",
+        "Add aria-label attributes to all control buttons in HTML"
+      ],
+      "acceptance_criteria": [
+        "Every grid cell has a descriptive aria-label reflecting its current content",
+        "Palette items have aria-labels like 'Straight track piece'",
+        "All buttons have aria-labels matching their function",
+        "Screen reader can describe any cell's contents"
+      ]
+    },
+    {
+      "id": "T2",
+      "title": "Keyboard Navigation: Tab Through Palette, Arrow Keys on Grid, Enter to Place",
+      "description": "Enable full keyboard-only play. Tab navigates palette pieces (with visible focus ring). When grid is focused, arrow keys move a focus indicator between cells. Enter places the selected tool at the focused cell. Focus indicator is a visible outline.",
+      "changes": [
+        "Add tabindex='0' to palette pieces and a visible :focus-visible style",
+        "Add a gridFocusRow/gridFocusCol state and a .grid-focus CSS class (bright outline)",
+        "In handleKeyDown: Arrow keys move grid focus when grid area is focused",
+        "Enter key places selectedTool at gridFocus position or rotates existing piece",
+        "Tab within grid moves to next occupied cell; Shift+Tab moves backwards",
+        "Add CSS .grid-focus class with bright 3px outline visible in both day/night modes"
+      ],
+      "acceptance_criteria": [
+        "Can Tab through all palette pieces with visible focus ring",
+        "Arrow keys move focus indicator on grid",
+        "Enter places selected tool at focused cell",
+        "Enter on occupied cell rotates it",
+        "Focus indicator clearly visible in both day and night modes",
+        "Keyboard-only play is fully possible"
+      ]
+    },
+    {
+      "id": "T3",
+      "title": "Colorblind-Friendly Connection Dots (Shape Difference)",
+      "description": "Add shape differentiation to connection dots. Connected dots remain circles with green. Disconnected dots become small triangles/diamonds with red. This ensures colorblind users can distinguish connected from disconnected without relying on color alone.",
+      "changes": [
+        "Change .connection-dot.disconnected to use a diamond/square shape via border-radius:2px instead of 50%",
+        "Add a subtle border to disconnected dots for extra visual distinction",
+        "Connected dots keep border-radius:50% (circle)",
+        "Add high-contrast mode support where dots have thicker borders"
+      ],
+      "acceptance_criteria": [
+        "Connected dots are round circles",
+        "Disconnected dots are square/diamond shapes",
+        "Shapes are distinguishable without color perception",
+        "Works in both day and night modes"
+      ]
+    },
+    {
+      "id": "T4",
+      "title": "High-Contrast Mode Toggle",
+      "description": "Add a high-contrast mode that strengthens borders, makes colors bolder, and increases dot visibility. Toggle via button and stored in localStorage.",
+      "changes": [
+        "Add body.high-contrast CSS class with stronger cell borders (2px solid), bolder track SVG strokes, larger connection dots",
+        "Add a high-contrast toggle button (♿) in the controls bar",
+        "Store preference in localStorage key 'trainTracks_highContrast'",
+        "Add keyboard shortcut 'A' for accessibility/high-contrast toggle"
+      ],
+      "acceptance_criteria": [
+        "High-contrast mode has visibly thicker borders on grid cells",
+        "Track SVG strokes are bolder in high-contrast",
+        "Connection dots are larger and have border outlines",
+        "Toggle persists across refreshes",
+        "Works with all biomes and night mode"
+      ]
+    },
+    {
+      "id": "T5",
+      "title": "Fullscreen Mode Button",
+      "description": "Add a fullscreen toggle button using the requestFullscreen API. Recalculates grid size on fullscreen change.",
+      "changes": [
+        "Add fullscreen button (⛶) in controls bar",
+        "Implement toggleFullscreen() using requestFullscreen/exitFullscreen",
+        "Listen for fullscreenchange event to update button text and recalculate size",
+        "Add keyboard shortcut 'F' for fullscreen toggle"
+      ],
+      "acceptance_criteria": [
+        "Fullscreen button enters fullscreen mode",
+        "Grid recalculates size in fullscreen",
+        "Button text updates (⛶ ↔ 🔲) to indicate state",
+        "F key toggles fullscreen",
+        "Works on desktop and mobile"
+      ]
+    },
+    {
+      "id": "T6",
+      "title": "Reduce Motion Preference",
+      "description": "Respect prefers-reduced-motion media query. Disable all CSS animations, particles, and transition effects when the user prefers reduced motion.",
+      "changes": [
+        "Add @media (prefers-reduced-motion: reduce) CSS block that sets animation: none, transition: none on particles, scenery, and decorative elements",
+        "Gate smoke particle spawning on !prefersReducedMotion()",
+        "Gate confetti spawning on !prefersReducedMotion()",
+        "Gate chimney smoke on !prefersReducedMotion()",
+        "Keep functional transitions (modal open/close) intact"
+      ],
+      "acceptance_criteria": [
+        "With prefers-reduced-motion set, no animations play",
+        "Smoke, confetti, chimney smoke particles don't spawn",
+        "Tree sway, cow flip, duck waddle all stop",
+        "Game is fully playable without any animations",
+        "Functional UI transitions preserved for usability"
+      ]
+    },
+    {
+      "id": "T7",
+      "title": "Final Bug Sweep + Polish",
+      "description": "Run a comprehensive check across all features. Verify HTML validity, JS parse, and cross-feature interactions. Add any missing keyboard shortcut entries to the shortcuts modal.",
+      "changes": [
+        "Add new shortcuts (F, A) to shortcuts modal HTML",
+        "Add new buttons to the controls row",
+        "Verify all modals have Escape handler entries",
+        "Verify all localStorage keys are consistent"
+      ],
+      "acceptance_criteria": [
+        "JS parses without errors",
+        "HTML tags are balanced",
+        "No duplicate code blocks",
+        "All keyboard shortcuts work",
+        "Shortcuts modal shows all current shortcuts"
+      ]
+    }
+  ],
+  "testing_focus": [
+    "Keyboard-only gameplay from palette selection to track placement",
+    "Screen reader description of grid cells",
+    "Connection dot shapes distinguishable without color",
+    "High-contrast mode with all biomes and night mode",
+    "Fullscreen entry/exit with proper resize",
+    "prefers-reduced-motion disables all decorative animations",
+    "All existing features still work (regression test)"
+  ]
+}
