@@ -1304,3 +1304,70 @@ Mark each test with the result after running.
 - [ ] Music doesn't interfere with placement sounds
 - [ ] Music doesn't interfere with animal sounds
 - [ ] Performance: no frame drops with music playing
+
+## Day 28 — Accessibility + Final Polish
+
+### ARIA Labels
+- [ ] Grid cells have descriptive aria-labels (empty, track type, scenery, train)
+- [ ] Palette pieces have aria-labels (sidebar + mobile drawer)
+- [ ] Control buttons have aria-labels
+- [ ] Labels update on cell content change (place/remove/rotate)
+
+### Keyboard Navigation
+- [ ] Arrow keys move grid focus indicator
+- [ ] Focus indicator visible in day mode
+- [ ] Focus indicator visible in night mode
+- [ ] Focus indicator visible in high-contrast mode
+- [ ] Enter places selected tool at focused cell
+- [ ] Enter rotates existing track piece at focused cell
+- [ ] Placement blocked during play
+- [ ] Grid focus cleared on mouse click
+- [ ] Palette pieces focusable with Tab key
+- [ ] Palette pieces show focus ring on :focus-visible
+
+### Colorblind Connection Dots
+- [ ] Connected dots are round circles
+- [ ] Disconnected dots are diamond/square shapes
+- [ ] Shapes distinguishable without color
+- [ ] Works in day mode
+- [ ] Works in night mode
+
+### High-Contrast Mode
+- [ ] Toggle button (♿) works
+- [ ] Grid cells have visible borders
+- [ ] Connection dots are larger
+- [ ] SVG tracks have boosted contrast
+- [ ] Preference persists in localStorage
+- [ ] Works with all 4 biomes
+- [ ] Works with night mode
+- [ ] A keyboard shortcut toggles it
+- [ ] Works during play mode
+
+### Fullscreen Mode
+- [ ] ⛶ button enters fullscreen
+- [ ] Grid recalculates size in fullscreen
+- [ ] Button text changes to 🔲 in fullscreen
+- [ ] F keyboard shortcut toggles fullscreen
+- [ ] Works during play mode
+- [ ] Exiting fullscreen restores layout
+
+### Reduced Motion
+- [ ] prefers-reduced-motion: reduce disables smoke particles
+- [ ] Disables chimney smoke
+- [ ] Disables confetti
+- [ ] Disables tree sway
+- [ ] Disables flower sway
+- [ ] Disables duck waddle
+- [ ] Disables water animations
+- [ ] Game fully playable without animations
+
+### Regression
+- [ ] Random → Play → full loop works
+- [ ] Save/Load works
+- [ ] Puzzle mode works
+- [ ] Night mode toggle works
+- [ ] Biome cycling works
+- [ ] Music toggle works
+- [ ] Share link encode/decode works
+- [ ] Screenshot works
+- [ ] All keyboard shortcuts from previous days still work

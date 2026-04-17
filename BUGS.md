@@ -115,3 +115,9 @@ Only logged here if a bug was found, for tracking purposes.
 
 ### Day 27 — No bugs found
 - QA: Code review passed. JS parse clean. HTML balanced. No duplicate code blocks.
+
+### Day 28 — QA Fixes Applied
+- **Fix 1:** `handleGridKeyAction()` was missing `state.playing` guard — keyboard placement could modify grid during play. Added guard.
+- **Fix 2:** Fullscreen (F) and High-contrast (A) shortcuts were placed after `state.playing` return, making them inaccessible during play. Moved before playing guard.
+- **Fix 3:** Grid focus indicator wasn't cleared on mouse click — added `clearGridFocus()` call at start of `onGridDown`.
+- All 3 fixes applied and committed. JS parse clean. No duplicate code. HTML balanced.

@@ -232,3 +232,14 @@
 - LESSON-174: Pentatonic scale (C, D, E, G, A) avoids dissonance — any note combination sounds pleasant. Ideal for ambient background music that shouldn't distract.
 - LESSON-175: Tempo changes work naturally with bar-level scheduling: `getMusicTempo()` is called fresh for each new bar, so state changes (play/idle, day/night) smoothly take effect at the next bar boundary without any explicit transition logic.
 - LESSON-176: Pause music on `visibilitychange` (tab hidden) to avoid background CPU usage and prevent audio surprises when user returns. Resume on visible if still enabled.
+
+## Accessibility Patterns (Day 28)
+- LESSON-177: Add `role="gridcell"` and `aria-label` to grid cells in initGrid(), then update labels dynamically in renderCell() via a separate `updateCellAriaLabel()` function. This keeps the ARIA state in sync with visual state.
+- LESSON-178: Palette pieces need `tabindex="0"` and `role="button"` for keyboard accessibility. Use `:focus-visible` for the focus ring (not `:focus`) to avoid showing it on mouse clicks.
+- LESSON-179: Grid keyboard navigation (arrow keys + Enter) should use a visible `.grid-focus` CSS class — not browser focus — since grid cells aren't focusable elements. The focus indicator needs to adapt for night mode and high-contrast mode.
+- LESSON-180: Keyboard shortcuts for visual toggles (fullscreen, high-contrast, night mode) must be placed BEFORE the `if (state.playing) return;` guard in handleKeyDown — these should work during play.
+- LESSON-181: Clear keyboard grid focus on mouse interaction (`clearGridFocus()` in `onGridDown`) to prevent stale focus indicators lingering after the user switches to mouse.
+- LESSON-182: For colorblind accessibility, use shape + color for connection dots: connected = circle (round), disconnected = diamond (rotated square). Never rely on color alone.
+- LESSON-183: `@media (prefers-reduced-motion: reduce)` CSS block should target decorative animations only (particles, sway, confetti). Keep functional transitions (modal open/close) intact. Also gate JS particle spawning with `prefersReducedMotion()` utility function.
+- LESSON-184: High-contrast mode uses `body.high-contrast` class with thicker borders, larger dots, and boosted contrast filter. Must work alongside biome AND night mode — order matters in CSS (biome < night-mode < high-contrast for overrides).
+- LESSON-185: Fullscreen toggle via `requestFullscreen` needs a `fullscreenchange` listener to recalculate grid size. Add 100ms delay before recalc to let the browser finish the transition.
