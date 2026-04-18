@@ -243,3 +243,12 @@
 - LESSON-183: `@media (prefers-reduced-motion: reduce)` CSS block should target decorative animations only (particles, sway, confetti). Keep functional transitions (modal open/close) intact. Also gate JS particle spawning with `prefersReducedMotion()` utility function.
 - LESSON-184: High-contrast mode uses `body.high-contrast` class with thicker borders, larger dots, and boosted contrast filter. Must work alongside biome AND night mode — order matters in CSS (biome < night-mode < high-contrast for overrides).
 - LESSON-185: Fullscreen toggle via `requestFullscreen` needs a `fullscreenchange` listener to recalculate grid size. Add 100ms delay before recalc to let the browser finish the transition.
+
+## Train Horn Patterns (Cycle 1, Day 1)
+- LESSON-186: Use staggered setTimeout per train for horn sounds (i * 80ms) to avoid simultaneous oscillator overload when multiple trains exist.
+- LESSON-187: Steam puff particles reuse the smoke-particle pattern but with larger size (8-18px) and stronger opacity. Key difference: stagger spawning (i * 60ms) for a natural eruption feel.
+- LESSON-188: Per-color pitch variation uses a lookup table (HORN_PITCHES) mapping color to base frequency and sweep target. Red=low (220Hz), Yellow=high (400Hz). Makes each train sound distinct.
+- LESSON-189: Horn cooldown (1s boolean flag with setTimeout reset) is simpler than timestamp-based cooldown for single-event buttons. No need for per-train cooldowns since the horn is a global action.
+- LESSON-190: Button bounce animation requires force-reflow trick (void btn.offsetHeight) between classList.remove and classList.add to restart the CSS animation on rapid presses.
+- LESSON-191: Three-layer horn sound design: triangle oscillator (body) + sine harmonic at 2x frequency (richness) + bandpass-filtered noise burst (steam hiss). Each layer has independent gain envelope.
+- LESSON-192: H key context-switching (horn during play, tutorial when stopped) replaces the fixed H=tutorial binding. Check state.playing before the state.playing guard that blocks build shortcuts.
