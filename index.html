@@ -1843,6 +1843,59 @@ body.night-mode .milestone-unlocks { color: #78909C; }
   box-shadow: 0 3px 10px rgba(33,150,243,0.3);
 }
 
+/* TRAIN HORN */
+#btn-horn {
+  display: none;
+  background: #FF6D00;
+  color: white;
+  box-shadow: 0 3px 12px rgba(255,109,0,0.4);
+  font-size: 16px;
+  padding: 8px 16px;
+  position: relative;
+  overflow: visible;
+}
+#app.playing #btn-horn { display: inline-flex; align-items: center; gap: 4px; }
+#btn-horn:active { transform: scale(0.92); }
+@keyframes horn-bounce {
+  0% { transform: scale(1); }
+  20% { transform: scale(1.2); }
+  40% { transform: scale(0.9); }
+  60% { transform: scale(1.08); }
+  80% { transform: scale(0.97); }
+  100% { transform: scale(1); }
+}
+#btn-horn.honking {
+  animation: horn-bounce 0.5s ease;
+}
+@keyframes horn-ripple {
+  0% { transform: scale(1); opacity: 0.5; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+.horn-ripple {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 100%; height: 100%;
+  border-radius: 12px;
+  border: 2px solid #FF6D00;
+  pointer-events: none;
+  transform-origin: center;
+  animation: horn-ripple 0.6s ease-out forwards;
+  margin-top: -50%; margin-left: -50%;
+  z-index: 1;
+}
+@keyframes steam-puff {
+  0% { opacity: 0.8; transform: translate(var(--steam-dx, 0px), 0px) scale(0.5); }
+  60% { opacity: 0.5; }
+  100% { opacity: 0; transform: translate(var(--steam-dx, 0px), -55px) scale(2.2); }
+}
+.steam-puff {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 60;
+  animation: steam-puff 0.9s ease-out forwards;
+}
+
 /* Reduced Motion Preference */
 @media (prefers-reduced-motion: reduce) {
   .smoke-particle, .chimney-smoke, .confetti-particle {
@@ -1979,6 +2032,7 @@ body.night-mode .milestone-unlocks { color: #78909C; }
       <button class="btn" id="btn-screenshot" onclick="openScreenshotModal()" style="background:#5C6BC0;color:white;box-shadow:0 3px 10px rgba(92,107,192,0.3);padding:8px 12px;" title="Take screenshot">📸</button>
       <button class="btn" id="btn-help" onclick="showTutorial()" style="background:#78909C;color:white;padding:8px 12px;" title="How to play">❓</button>
       <button class="btn btn-passengers" id="btn-passengers" onclick="togglePassengers()" style="padding:8px 12px;" title="Toggle passenger delivery">🧑</button>
+      <button class="btn" id="btn-horn" onclick="blowHorn()" title="Blow the horn! (H)">📯 HONK!</button>
       <button class="btn" id="btn-stats" onclick="openStatsModal()" style="background:#6D4C41;color:white;box-shadow:0 3px 10px rgba(109,76,65,0.3);padding:8px 12px;" title="Stats & Milestones" aria-label="Stats and milestones">📊</button>
       <button class="btn" id="btn-highcontrast" onclick="toggleHighContrast()" style="background:#455A64;color:white;padding:8px 12px;" title="High contrast mode" aria-label="Toggle high contrast mode">♿</button>
       <button class="btn" id="btn-fullscreen" onclick="toggleFullscreen()" style="background:#37474F;color:white;padding:8px 12px;" title="Fullscreen" aria-label="Toggle fullscreen">⛶</button>
@@ -2002,6 +2056,7 @@ body.night-mode .milestone-unlocks { color: #78909C; }
     <h2>⌨️ Keyboard Shortcuts</h2>
     <div class="shortcut-section">Playback</div>
     <div class="shortcut-row"><span class="shortcut-desc">Play / Stop</span><span class="shortcut-key">Space</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Blow horn (during play)</span><span class="shortcut-key">H</span></div>
     <div class="shortcut-section">Building</div>
     <div class="shortcut-row"><span class="shortcut-desc">Straight track</span><span class="shortcut-key">1</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Curve track</span><span class="shortcut-key">2</span></div>
@@ -5175,6 +5230,152 @@ function interpolatePath(points, t) {
 // ============================================================
 let smokeInterval = null;
 let smokeParticles = [];
+// ============================================================
+// TRAIN HORN SYSTEM (Feature: Cycle 1, Day 1)
+// ============================================================
+let hornCooldown = false;
+
+const HORN_PITCHES = {
+  red:    { base: 220, sweep: 180 },  // Low rumble
+  blue:   { base: 330, sweep: 260 },  // Medium
+  green:  { base: 280, sweep: 220 },  // Mid-low
+  yellow: { base: 400, sweep: 320 },  // Higher, bright
+  purple: { base: 260, sweep: 200 },  // Deep, mysterious
+};
+
+function playHornSound(color) {
+  if (!soundEnabled) return;
+  const ctx = getAudioCtx();
+  const mg = getMasterGain();
+  const pitch = HORN_PITCHES[color] || HORN_PITCHES.red;
+  const now = ctx.currentTime;
+
+  // Main horn tone: triangle wave with characteristic frequency sweep
+  const osc1 = ctx.createOscillator();
+  const gain1 = ctx.createGain();
+  osc1.type = 'triangle';
+  osc1.frequency.setValueAtTime(pitch.base * 1.5, now);
+  osc1.frequency.exponentialRampToValueAtTime(pitch.base, now + 0.15);
+  osc1.frequency.setValueAtTime(pitch.base, now + 0.5);
+  osc1.frequency.exponentialRampToValueAtTime(pitch.sweep, now + 0.8);
+  gain1.gain.setValueAtTime(0.18, now);
+  gain1.gain.setValueAtTime(0.18, now + 0.5);
+  gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
+  osc1.connect(gain1);
+  gain1.connect(mg);
+  osc1.start(now);
+  osc1.stop(now + 0.9);
+
+  // Harmonic overtone for richness
+  const osc2 = ctx.createOscillator();
+  const gain2 = ctx.createGain();
+  osc2.type = 'sine';
+  osc2.frequency.setValueAtTime(pitch.base * 2, now);
+  osc2.frequency.exponentialRampToValueAtTime(pitch.sweep * 2, now + 0.8);
+  gain2.gain.setValueAtTime(0.06, now);
+  gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
+  osc2.connect(gain2);
+  gain2.connect(mg);
+  osc2.start(now);
+  osc2.stop(now + 0.85);
+
+  // Breathy noise burst for steam hiss
+  const bufLen = ctx.sampleRate * 0.3;
+  const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < bufLen; i++) data[i] = (Math.random() * 2 - 1);
+  const noiseSrc = ctx.createBufferSource();
+  noiseSrc.buffer = buf;
+  const noiseGain = ctx.createGain();
+  const noiseFilter = ctx.createBiquadFilter();
+  noiseFilter.type = 'bandpass';
+  noiseFilter.frequency.value = 2000;
+  noiseFilter.Q.value = 0.8;
+  noiseGain.gain.setValueAtTime(0.04, now + 0.05);
+  noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+  noiseSrc.connect(noiseFilter);
+  noiseFilter.connect(noiseGain);
+  noiseGain.connect(mg);
+  noiseSrc.start(now + 0.05);
+  noiseSrc.stop(now + 0.35);
+}
+
+function spawnSteamPuffs(anim) {
+  if (prefersReducedMotion()) return;
+  if (!anim || !anim.trainEl) return;
+
+  const trainEl = anim.trainEl;
+  const left = parseFloat(trainEl.style.left) || 0;
+  const top = parseFloat(trainEl.style.top) || 0;
+  const container = document.getElementById('grid-container');
+  const nightMode = isNightMode();
+
+  // Spawn 5-7 big steam puffs per train
+  const count = 5 + Math.floor(Math.random() * 3);
+  for (let i = 0; i < count; i++) {
+    const puff = document.createElement('div');
+    puff.className = 'steam-puff';
+    const size = 8 + Math.random() * 10;
+    puff.style.width = size + 'px';
+    puff.style.height = size + 'px';
+
+    const dx = (Math.random() - 0.5) * 30;
+    puff.style.setProperty('--steam-dx', dx + 'px');
+
+    const shade = nightMode ? (220 + Math.floor(Math.random() * 35)) : (240 + Math.floor(Math.random() * 15));
+    const alpha = nightMode ? 0.7 : 0.8;
+    puff.style.background = 'rgba(' + shade + ',' + shade + ',' + shade + ',' + alpha + ')';
+    puff.style.left = (left + (Math.random() - 0.5) * 8) + 'px';
+    puff.style.top = (top - cellSize * 0.2) + 'px';
+
+    // Stagger spawning for natural look
+    setTimeout(function() {
+      container.appendChild(puff);
+      setTimeout(function() { if (puff.parentNode) puff.remove(); }, 1000);
+    }, i * 60);
+  }
+}
+
+function blowHorn() {
+  if (!state.playing || hornCooldown) return;
+  if (animStates.length === 0) return;
+
+  hornCooldown = true;
+  setTimeout(function() { hornCooldown = false; }, 1000);
+
+  // Play horn sound for each active train (stagger slightly)
+  for (let i = 0; i < animStates.length; i++) {
+    const anim = animStates[i];
+    if (anim.crashing || anim.finished) continue;
+
+    // Stagger sound per train
+    setTimeout(function() {
+      playHornSound(anim.color);
+    }, i * 80);
+
+    // Steam puffs (skip if in tunnel)
+    if (!anim.inTunnel) {
+      spawnSteamPuffs(anim);
+    }
+  }
+
+  // Button bounce animation
+  const btn = document.getElementById('btn-horn');
+  if (btn) {
+    btn.classList.remove('honking');
+    void btn.offsetHeight; // force reflow
+    btn.classList.add('honking');
+
+    // Ripple effect
+    const ripple = document.createElement('div');
+    ripple.className = 'horn-ripple';
+    btn.appendChild(ripple);
+    setTimeout(function() { if (ripple.parentNode) ripple.remove(); }, 600);
+  }
+
+  showToast('🚂 CHOO CHOO! 💨');
+}
+
 const MAX_SMOKE_PARTICLES = 30;
 
 function prefersReducedMotion() {
@@ -7612,9 +7813,10 @@ function handleKeyDown(e) {
     return;
   }
 
-  // H: show tutorial
+  // H: horn during play, tutorial when stopped
   if ((key === 'h' || key === 'H') && !e.ctrlKey && !e.metaKey) {
-    showTutorial();
+    if (state.playing) { blowHorn(); }
+    else { showTutorial(); }
     return;
   }
 
