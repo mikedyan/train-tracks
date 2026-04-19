@@ -252,3 +252,11 @@
 - LESSON-190: Button bounce animation requires force-reflow trick (void btn.offsetHeight) between classList.remove and classList.add to restart the CSS animation on rapid presses.
 - LESSON-191: Three-layer horn sound design: triangle oscillator (body) + sine harmonic at 2x frequency (richness) + bandpass-filtered noise burst (steam hiss). Each layer has independent gain envelope.
 - LESSON-192: H key context-switching (horn during play, tutorial when stopped) replaces the fixed H=tutorial binding. Check state.playing before the state.playing guard that blocks build shortcuts.
+
+## Animal Reaction Patterns (Cycle 1, Day 2)
+- LESSON-193: Use CSS class on the CELL element (not the emoji) for reaction animations, with `.animal-react-{type} .scenery-emoji` selectors. This lets the animation override the emoji's default animation (sway/waddle) via !important, and the cell class is easy to add/remove.
+- LESSON-194: Flipped animals need separate keyframe animations that include the scaleX(-1) in every keyframe state. Without it, the flip gets reset at the start of the reaction animation.
+- LESSON-195: Reaction animations should be very fast (0.5-0.8s) — short enough that they feel like a startled reflex, not a slow dance. Kids love the quick snap-back.
+- LESSON-196: Reuse the existing mooCooldowns system for reaction timing — visual reactions trigger at the same time as sound effects, keeping them perfectly in sync without a separate cooldown tracker.
+- LESSON-197: Always clean up reaction CSS classes in stopPlay() using regex-based class removal: `className.replace(/animal-react-\S+/g, '')`. This prevents stale animation classes lingering on cells.
+- LESSON-198: Force-reflow trick (void el.offsetHeight) between class remove/add is needed to restart CSS animation when the same animal gets triggered again within the animation duration.
