@@ -1896,6 +1896,86 @@ body.night-mode .milestone-unlocks { color: #78909C; }
   animation: steam-puff 0.9s ease-out forwards;
 }
 
+/* ANIMAL REACTIONS TO TRAINS */
+@keyframes cow-startle {
+  0% { transform: translate(-50%, -50%) scaleY(1); }
+  15% { transform: translate(-50%, -58%) scaleY(1.15) scaleX(0.9); }
+  30% { transform: translate(-50%, -65%) scaleY(1.1); }
+  50% { transform: translate(-50%, -55%) scaleY(0.85) scaleX(1.1); }
+  70% { transform: translate(-50%, -52%) scaleY(1.05); }
+  100% { transform: translate(-50%, -50%) scaleY(1); }
+}
+@keyframes cow-startle-flipped {
+  0% { transform: translate(-50%, -50%) scaleX(-1) scaleY(1); }
+  15% { transform: translate(-50%, -58%) scaleX(-1) scaleY(1.15); }
+  30% { transform: translate(-50%, -65%) scaleX(-1) scaleY(1.1); }
+  50% { transform: translate(-50%, -55%) scaleX(-1) scaleY(0.85); }
+  70% { transform: translate(-50%, -52%) scaleX(-1) scaleY(1.05); }
+  100% { transform: translate(-50%, -50%) scaleX(-1) scaleY(1); }
+}
+@keyframes sheep-hop {
+  0% { transform: translate(-50%, -50%); }
+  20% { transform: translate(-40%, -62%); }
+  40% { transform: translate(-35%, -55%); }
+  60% { transform: translate(-42%, -60%); }
+  80% { transform: translate(-48%, -53%); }
+  100% { transform: translate(-50%, -50%); }
+}
+@keyframes sheep-hop-flipped {
+  0% { transform: translate(-50%, -50%) scaleX(-1); }
+  20% { transform: translate(-60%, -62%) scaleX(-1); }
+  40% { transform: translate(-65%, -55%) scaleX(-1); }
+  60% { transform: translate(-58%, -60%) scaleX(-1); }
+  80% { transform: translate(-52%, -53%) scaleX(-1); }
+  100% { transform: translate(-50%, -50%) scaleX(-1); }
+}
+@keyframes horse-rear {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  15% { transform: translate(-50%, -62%) rotate(-8deg) scaleY(1.15); }
+  30% { transform: translate(-50%, -68%) rotate(-12deg) scaleY(1.2); }
+  50% { transform: translate(-50%, -60%) rotate(-6deg) scaleY(1.1); }
+  70% { transform: translate(-50%, -54%) rotate(-2deg); }
+  100% { transform: translate(-50%, -50%) rotate(0deg); }
+}
+@keyframes horse-rear-flipped {
+  0% { transform: translate(-50%, -50%) scaleX(-1) rotate(0deg); }
+  15% { transform: translate(-50%, -62%) scaleX(-1) rotate(8deg) scaleY(1.15); }
+  30% { transform: translate(-50%, -68%) scaleX(-1) rotate(12deg) scaleY(1.2); }
+  50% { transform: translate(-50%, -60%) scaleX(-1) rotate(6deg) scaleY(1.1); }
+  70% { transform: translate(-50%, -54%) scaleX(-1) rotate(2deg); }
+  100% { transform: translate(-50%, -50%) scaleX(-1) rotate(0deg); }
+}
+@keyframes duck-flap {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  15% { transform: translate(-50%, -65%) rotate(-5deg) scale(1.1); }
+  30% { transform: translate(-50%, -72%) rotate(5deg) scale(1.15); }
+  45% { transform: translate(-50%, -68%) rotate(-3deg) scale(1.1); }
+  60% { transform: translate(-50%, -62%) rotate(3deg) scale(1.05); }
+  80% { transform: translate(-50%, -55%) rotate(-1deg); }
+  100% { transform: translate(-50%, -50%) rotate(0deg); }
+}
+@keyframes people-excited {
+  0% { transform: translate(-50%, -50%); }
+  10% { transform: translate(-50%, -60%) scale(1.1); }
+  20% { transform: translate(-48%, -55%) scale(1.05); }
+  30% { transform: translate(-52%, -62%) scale(1.12); }
+  40% { transform: translate(-50%, -56%) scale(1.06); }
+  50% { transform: translate(-48%, -60%) scale(1.1); }
+  60% { transform: translate(-52%, -54%) scale(1.04); }
+  70% { transform: translate(-50%, -58%) scale(1.08); }
+  80% { transform: translate(-48%, -53%) scale(1.02); }
+  100% { transform: translate(-50%, -50%); }
+}
+
+.animal-react-cow .scenery-emoji { animation: cow-startle 0.6s ease-out !important; }
+.animal-react-cow .scenery-emoji.scenery-cow-flipped { animation: cow-startle-flipped 0.6s ease-out !important; }
+.animal-react-sheep .scenery-emoji { animation: sheep-hop 0.55s ease-out !important; }
+.animal-react-sheep .scenery-emoji.scenery-animal-flipped { animation: sheep-hop-flipped 0.55s ease-out !important; }
+.animal-react-horse .scenery-emoji { animation: horse-rear 0.7s ease-out !important; }
+.animal-react-horse .scenery-emoji.scenery-animal-flipped { animation: horse-rear-flipped 0.7s ease-out !important; }
+.animal-react-duck-land .scenery-emoji { animation: duck-flap 0.65s ease-out !important; }
+.animal-react-people .scenery-emoji { animation: people-excited 0.8s ease-out !important; }
+
 /* Reduced Motion Preference */
 @media (prefers-reduced-motion: reduce) {
   .smoke-particle, .chimney-smoke, .confetti-particle {
@@ -1904,6 +1984,9 @@ body.night-mode .milestone-unlocks { color: #78909C; }
   }
   .scenery-tree, .scenery-flower, .scenery-land-duck, .scenery-people,
   .scenery-cow-flipped, .scenery-animal-flipped {
+    animation: none !important;
+  }
+  [class*="animal-react-"] .scenery-emoji {
     animation: none !important;
   }
   .water-duck {
@@ -5959,6 +6042,26 @@ function animateFrame(timestamp) {
   }
 }
 
+// ANIMAL REACTION DURATIONS for cleanup timing
+const ANIMAL_REACT_DURATIONS = {
+  'cow': 600, 'sheep': 550, 'horse': 700, 'duck-land': 650, 'people': 800
+};
+
+function triggerAnimalReaction(row, col, animalType) {
+  if (prefersReducedMotion()) return;
+  const cell = getCellEl(row, col);
+  if (!cell) return;
+  const reactClass = 'animal-react-' + animalType;
+  // If already reacting, restart by removing and re-adding
+  if (cell.classList.contains(reactClass)) {
+    cell.classList.remove(reactClass);
+    void cell.offsetHeight; // force reflow to restart animation
+  }
+  cell.classList.add(reactClass);
+  const duration = ANIMAL_REACT_DURATIONS[animalType] || 700;
+  setTimeout(function() { cell.classList.remove(reactClass); }, duration + 50);
+}
+
 function checkAnimalProximity(anim, trainRow, trainCol) {
   const now = Date.now();
   const cooldownMs = 3000; // 3 seconds between sounds per animal
@@ -5979,6 +6082,8 @@ function checkAnimalProximity(anim, trainRow, trainCol) {
         if (!anim.mooCooldowns[key] || now - anim.mooCooldowns[key] > cooldownMs) {
           anim.mooCooldowns[key] = now;
           ANIMAL_SFX[piece.type]();
+          // Trigger visual reaction animation
+          triggerAnimalReaction(r, c, piece.type);
           return; // Only one sound per cell transition
         }
       }
@@ -6283,8 +6388,11 @@ function stopPlay() {
   cleanupSmokeParticles();
   // Clean up tunnel reverb
   if (tunnelReverbGain) tunnelReverbGain.gain.value = 0;
-  // Clean up crash particles
+  // Clean up crash particles and animal reaction classes
   document.querySelectorAll('.crash-star, .crash-dust').forEach(el => el.remove());
+  document.querySelectorAll('[class*="animal-react-"]').forEach(function(el) {
+    el.className = el.className.replace(/animal-react-\S+/g, '').trim();
+  });
   // Stop passenger system
   resetPassengerState();
   state.playing = false;
