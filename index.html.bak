@@ -1976,58 +1976,6 @@ body.night-mode .milestone-unlocks { color: #78909C; }
 .animal-react-duck-land .scenery-emoji { animation: duck-flap 0.65s ease-out !important; }
 .animal-react-people .scenery-emoji { animation: people-excited 0.8s ease-out !important; }
 
-/* WEATHER PARTICLES */
-@keyframes rain-fall {
-  0% { opacity: 0.7; transform: translateY(0) translateX(var(--rain-dx, 0px)); }
-  100% { opacity: 0; transform: translateY(var(--rain-dist, 120px)) translateX(var(--rain-dx, -3px)); }
-}
-@keyframes snow-fall {
-  0% { opacity: 0.8; transform: translateY(0) translateX(0) rotate(0deg); }
-  50% { opacity: 0.9; transform: translateY(var(--snow-half, 60px)) translateX(var(--snow-drift, 15px)) rotate(180deg); }
-  100% { opacity: 0; transform: translateY(var(--snow-dist, 120px)) translateX(var(--snow-drift-end, -5px)) rotate(360deg); }
-}
-.rain-particle {
-  position: absolute;
-  width: 2px;
-  border-radius: 0 0 2px 2px;
-  background: linear-gradient(to bottom, rgba(120,180,255,0), rgba(120,180,255,0.7));
-  pointer-events: none;
-  z-index: 75;
-  animation: rain-fall var(--rain-speed, 0.6s) linear forwards;
-}
-.snow-particle {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.85);
-  pointer-events: none;
-  z-index: 75;
-  box-shadow: 0 0 3px rgba(255,255,255,0.5);
-  animation: snow-fall var(--snow-speed, 3s) ease-in forwards;
-}
-
-/* Weather overlay tinting */
-#weather-overlay {
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  pointer-events: none;
-  z-index: 70;
-  border-radius: 12px;
-  transition: background 0.8s ease;
-}
-.weather-rain #weather-overlay {
-  background: rgba(60,80,120,0.12);
-}
-.weather-snow #weather-overlay {
-  background: rgba(200,220,240,0.1);
-}
-body.night-mode .weather-rain #weather-overlay {
-  background: rgba(20,30,50,0.15);
-}
-body.night-mode .weather-snow #weather-overlay {
-  background: rgba(100,120,150,0.1);
-}
-
 /* Reduced Motion Preference */
 @media (prefers-reduced-motion: reduce) {
   .smoke-particle, .chimney-smoke, .confetti-particle {
@@ -2046,10 +1994,6 @@ body.night-mode .weather-snow #weather-overlay {
   }
   .water-cell::before, .water-cell::after {
     animation: none !important;
-  }
-  .rain-particle, .snow-particle {
-    animation: none !important;
-    display: none !important;
   }
   .cell .connection-dot.pulsing.n,
   .cell .connection-dot.pulsing.s,
@@ -2147,7 +2091,6 @@ body.night-mode .weather-snow #weather-overlay {
         <div id="grid"></div>
         <div id="train-headlight"></div>
       </div>
-      <div id="weather-overlay"></div>
       <div id="zoom-indicator">1.0×</div>
     </div>
     <div id="controls">
@@ -2167,7 +2110,6 @@ body.night-mode .weather-snow #weather-overlay {
       <button class="btn" onclick="openSaveModal()" style="background:#607D8B;color:white;box-shadow:0 3px 10px rgba(96,125,139,0.3);">💾 Save</button>
       <button class="btn" onclick="openShortcutsModal()" style="background:#546E7A;color:white;padding:8px 12px;" title="Keyboard shortcuts">⌨️</button>
       <button class="btn" onclick="openPuzzleModal()" style="background:#FF5722;color:white;box-shadow:0 3px 10px rgba(255,87,34,0.3);">🧩 Puzzles</button>
-      <button class="btn" id="btn-weather" onclick="cycleWeather()" style="background:#5C9DC5;color:white;box-shadow:0 3px 10px rgba(92,157,197,0.3);padding:8px 12px;" title="Change weather (W)">☀️</button>
       <button class="btn" id="btn-biome" onclick="cycleBiome()" style="background:#66BB6A;color:white;box-shadow:0 3px 10px rgba(102,187,106,0.3);padding:8px 12px;" title="Change terrain biome">🌸</button>
       <button class="btn" id="btn-share" onclick="copyShareLink()" style="background:#26A69A;color:white;box-shadow:0 3px 10px rgba(38,166,154,0.3);padding:8px 12px;" title="Copy share link">🔗</button>
       <button class="btn" id="btn-screenshot" onclick="openScreenshotModal()" style="background:#5C6BC0;color:white;box-shadow:0 3px 10px rgba(92,107,192,0.3);padding:8px 12px;" title="Take screenshot">📸</button>
@@ -2215,7 +2157,6 @@ body.night-mode .weather-snow #weather-overlay {
     <div class="shortcut-section">Display</div>
     <div class="shortcut-row"><span class="shortcut-desc">Night mode</span><span class="shortcut-key">N</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Cycle biome</span><span class="shortcut-key">B</span></div>
-    <div class="shortcut-row"><span class="shortcut-desc">Cycle weather</span><span class="shortcut-key">W</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Toggle music</span><span class="shortcut-key">M</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Show tutorial</span><span class="shortcut-key">H</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Screenshot</span><span class="shortcut-key">P</span></div>
@@ -3220,202 +3161,6 @@ function cycleBiome() {
   showToast(BIOME_ICONS[newBiome] + ' ' + BIOME_NAMES[newBiome] + ' biome!');
 }
 
-
-// ============================================================
-// WEATHER SYSTEM — Rain, Snow, Sunny
-// ============================================================
-function cycleWeather() {
-  const idx = WEATHER_MODES.indexOf(currentWeather);
-  const newWeather = WEATHER_MODES[(idx + 1) % WEATHER_MODES.length];
-  applyWeather(newWeather);
-  try { localStorage.setItem(WEATHER_KEY, newWeather); } catch (e) {}
-  showToast(WEATHER_ICONS[newWeather] + ' ' + WEATHER_NAMES[newWeather] + ' weather!');
-}
-
-function applyWeather(weather) {
-  // Remove old weather classes from viewport
-  const vp = document.getElementById('grid-viewport');
-  if (vp) {
-    vp.classList.remove('weather-rain', 'weather-snow');
-    if (weather !== 'sunny') {
-      vp.classList.add('weather-' + weather);
-    }
-  }
-  // Stop old weather systems
-  stopWeatherParticles();
-  stopWeatherAmbient();
-  currentWeather = weather;
-  // Update button
-  const btn = document.getElementById('btn-weather');
-  if (btn) btn.textContent = WEATHER_ICONS[weather];
-  // Start new weather
-  if (weather !== 'sunny') {
-    startWeatherParticles();
-    startWeatherAmbient();
-  }
-}
-
-function restoreWeather() {
-  try {
-    const saved = localStorage.getItem(WEATHER_KEY);
-    if (saved && WEATHER_MODES.includes(saved)) {
-      applyWeather(saved);
-    }
-  } catch (e) {}
-}
-
-// --- Weather Particles ---
-function startWeatherParticles() {
-  stopWeatherParticles();
-  if (prefersReducedMotion()) return;
-  const rate = currentWeather === 'rain' ? 40 : 200; // ms between spawns
-  weatherInterval = setInterval(spawnWeatherParticle, rate);
-}
-
-function stopWeatherParticles() {
-  if (weatherInterval) { clearInterval(weatherInterval); weatherInterval = null; }
-  // Clean up existing particles
-  weatherParticles.forEach(p => { if (p.parentNode) p.remove(); });
-  weatherParticles = [];
-  // Also remove any orphaned weather particles from DOM
-  document.querySelectorAll('.rain-particle, .snow-particle').forEach(el => el.remove());
-}
-
-function spawnWeatherParticle() {
-  if (prefersReducedMotion()) return;
-  const vp = document.getElementById('grid-viewport');
-  if (!vp) return;
-
-  // Recycle old particles
-  if (weatherParticles.length >= MAX_WEATHER_PARTICLES) {
-    const old = weatherParticles.shift();
-    if (old.parentNode) old.remove();
-  }
-
-  const vpW = vp.clientWidth;
-  const vpH = vp.clientHeight;
-
-  const particle = document.createElement('div');
-
-  if (currentWeather === 'rain') {
-    particle.className = 'rain-particle';
-    const height = 8 + Math.random() * 12;
-    const speed = 0.4 + Math.random() * 0.3;
-    const dx = -2 + Math.random() * -3;
-    particle.style.height = height + 'px';
-    particle.style.left = (Math.random() * vpW) + 'px';
-    particle.style.top = (-height) + 'px';
-    particle.style.setProperty('--rain-speed', speed + 's');
-    particle.style.setProperty('--rain-dist', vpH + 'px');
-    particle.style.setProperty('--rain-dx', dx + 'px');
-  } else if (currentWeather === 'snow') {
-    particle.className = 'snow-particle';
-    const size = 3 + Math.random() * 5;
-    const speed = 2.5 + Math.random() * 2.5;
-    const drift = -20 + Math.random() * 40;
-    const driftEnd = -15 + Math.random() * 30;
-    particle.style.width = size + 'px';
-    particle.style.height = size + 'px';
-    particle.style.left = (Math.random() * vpW) + 'px';
-    particle.style.top = (-size) + 'px';
-    particle.style.setProperty('--snow-speed', speed + 's');
-    particle.style.setProperty('--snow-dist', vpH + 'px');
-    particle.style.setProperty('--snow-half', (vpH / 2) + 'px');
-    particle.style.setProperty('--snow-drift', drift + 'px');
-    particle.style.setProperty('--snow-drift-end', driftEnd + 'px');
-  }
-
-  vp.appendChild(particle);
-  weatherParticles.push(particle);
-
-  // Auto-remove after animation
-  const dur = parseFloat(particle.style.getPropertyValue(
-    currentWeather === 'rain' ? '--rain-speed' : '--snow-speed'
-  )) * 1000 + 100;
-  setTimeout(() => {
-    const idx = weatherParticles.indexOf(particle);
-    if (idx >= 0) weatherParticles.splice(idx, 1);
-    if (particle.parentNode) particle.remove();
-  }, dur);
-}
-
-// --- Weather Ambient Sound ---
-function startWeatherAmbient() {
-  if (!soundEnabled) return;
-  const ctx = getAudioCtx();
-  if (!ctx) return;
-  stopWeatherAmbient();
-
-  weatherAmbientGain = ctx.createGain();
-  weatherAmbientGain.gain.value = 0;
-  weatherAmbientGain.connect(getMasterGain());
-
-  if (currentWeather === 'rain') {
-    // Rain: filtered brown noise
-    const bufSize = ctx.sampleRate * 2;
-    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
-    const data = buf.getChannelData(0);
-    let lastOut = 0;
-    for (let i = 0; i < bufSize; i++) {
-      const white = Math.random() * 2 - 1;
-      lastOut = (lastOut + (0.02 * white)) / 1.02;
-      data[i] = lastOut * 3.5;
-    }
-    const src = ctx.createBufferSource();
-    src.buffer = buf;
-    src.loop = true;
-    const hpf = ctx.createBiquadFilter();
-    hpf.type = 'highpass';
-    hpf.frequency.value = 400;
-    const lpf = ctx.createBiquadFilter();
-    lpf.type = 'lowpass';
-    lpf.frequency.value = 3000;
-    src.connect(hpf);
-    hpf.connect(lpf);
-    lpf.connect(weatherAmbientGain);
-    src.start();
-    weatherAmbientNodes.push(src);
-    // Fade in
-    weatherAmbientGain.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 1.5);
-
-  } else if (currentWeather === 'snow') {
-    // Snow: gentle wind — very soft filtered noise
-    const bufSize = ctx.sampleRate * 2;
-    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
-    const data = buf.getChannelData(0);
-    let lastOut = 0;
-    for (let i = 0; i < bufSize; i++) {
-      const white = Math.random() * 2 - 1;
-      lastOut = (lastOut + (0.01 * white)) / 1.01;
-      data[i] = lastOut * 2;
-    }
-    const src = ctx.createBufferSource();
-    src.buffer = buf;
-    src.loop = true;
-    const lpf = ctx.createBiquadFilter();
-    lpf.type = 'lowpass';
-    lpf.frequency.value = 800;
-    src.connect(lpf);
-    lpf.connect(weatherAmbientGain);
-    src.start();
-    weatherAmbientNodes.push(src);
-    // Fade in softly
-    weatherAmbientGain.gain.linearRampToValueAtTime(0.04, ctx.currentTime + 2);
-  }
-}
-
-function stopWeatherAmbient() {
-  weatherAmbientNodes.forEach(node => {
-    try { node.stop(); } catch (e) {}
-    try { node.disconnect(); } catch (e) {}
-  });
-  weatherAmbientNodes = [];
-  if (weatherAmbientGain) {
-    try { weatherAmbientGain.disconnect(); } catch (e) {}
-    weatherAmbientGain = null;
-  }
-}
-
 function restoreBiome() {
   try {
     const saved = localStorage.getItem(BIOME_KEY);
@@ -3519,19 +3264,6 @@ const BIOME_EMOJI_OVERRIDES = {
   autumn: { tree: '🍂', flower: '🍁' },
 };
 let currentBiome = 'spring';
-// WEATHER SYSTEM
-const WEATHER_MODES = ['sunny', 'rain', 'snow'];
-const WEATHER_KEY = 'trainTracks_weather';
-const WEATHER_ICONS = { sunny: '☀️', rain: '🌧️', snow: '❄️' };
-const WEATHER_NAMES = { sunny: 'Sunny', rain: 'Rainy', snow: 'Snowy' };
-let currentWeather = 'sunny';
-let weatherInterval = null;
-let weatherParticles = [];
-const MAX_WEATHER_PARTICLES = 60;
-let weatherAmbientNodes = []; // active ambient sound oscillators/nodes
-let weatherAmbientGain = null;
-
-
 
 function getCurrentBiome() { return currentBiome; }
 
@@ -8183,12 +7915,6 @@ function handleKeyDown(e) {
     return;
   }
 
-  // W: cycle weather
-  if ((key === 'w' || key === 'W') && !e.ctrlKey && !e.metaKey) {
-    cycleWeather();
-    return;
-  }
-
   // M: toggle music
   if ((key === 'm' || key === 'M') && !e.ctrlKey && !e.metaKey) {
     toggleMusic();
@@ -9553,9 +9279,6 @@ function init() {
   // Restore biome preference
   restoreBiome();
 
-  // Restore weather preference
-  restoreWeather();
-
   // Restore high-contrast preference
   restoreHighContrast();
 
@@ -9652,13 +9375,10 @@ function init() {
       if (grid) grid.classList.add('animations-paused');
       stopChimneyLoop();
       stopMusicLoop();
-      stopWeatherParticles();
-      stopWeatherAmbient();
     } else {
       if (grid) grid.classList.remove('animations-paused');
       startChimneyLoop();
       if (musicEnabled) startMusicLoop();
-      if (currentWeather !== 'sunny') { startWeatherParticles(); startWeatherAmbient(); }
     }
   });
 }
