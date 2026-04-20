@@ -260,3 +260,15 @@
 - LESSON-196: Reuse the existing mooCooldowns system for reaction timing — visual reactions trigger at the same time as sound effects, keeping them perfectly in sync without a separate cooldown tracker.
 - LESSON-197: Always clean up reaction CSS classes in stopPlay() using regex-based class removal: `className.replace(/animal-react-\S+/g, '')`. This prevents stale animation classes lingering on cells.
 - LESSON-198: Force-reflow trick (void el.offsetHeight) between class remove/add is needed to restart CSS animation when the same animal gets triggered again within the animation duration.
+
+## Weather System Patterns (Cycle 1, Day 3)
+- LESSON-199: Weather is a global visual preference (like biome/night mode) — store in its own localStorage key, not in game state. This keeps save/load compatibility intact.
+- LESSON-200: Weather particles spawn into the grid-viewport element (not grid-container) so they're clipped to the visible game area and unaffected by zoom/pan transforms.
+- LESSON-201: Use CSS custom properties (--rain-speed, --snow-drift, etc.) to randomize each particle's behavior without creating separate keyframes per particle. Same pattern as smoke particles.
+- LESSON-202: Weather ambient sound uses filtered noise buffers (brown noise for rain, soft wind for snow). Route through a dedicated weatherAmbientGain → masterGainNode chain for independent volume control that still respects global mute.
+- LESSON-203: Fade-in ambient sound (linearRampToValueAtTime over 1.5-2s) prevents jarring audio starts when toggling weather. Always fade in, never snap.
+- LESSON-204: Weather overlay tinting uses a dedicated #weather-overlay div with CSS class-based background transitions. Separate from grid to avoid z-index conflicts with game elements.
+- LESSON-205: Visual toggle keyboard shortcuts (weather W, fullscreen F, high-contrast A) must be placed BEFORE the `state.playing` return guard in handleKeyDown so they work during play mode.
+- LESSON-206: Rain particles use thin 2px-wide linear-gradient strips with fast animation (0.4-0.7s). Snow particles use round dots (3-8px) with slow drift animation (2.5-5s) including horizontal sway via multi-stage keyframes.
+- LESSON-207: Stop weather particles and ambient sound on visibilitychange (tab hidden) and restart on visible, matching the pattern for chimney smoke and music.
+- LESSON-208: MAX_WEATHER_PARTICLES (60) provides good visual density without DOM bloat. Rain spawns every 40ms, snow every 200ms — matched to their visual density needs.
