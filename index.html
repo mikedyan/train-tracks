@@ -8146,6 +8146,12 @@ function handleKeyDown(e) {
     return;
   }
 
+  // W: cycle weather (works during play)
+  if ((key === 'w' || key === 'W') && !e.ctrlKey && !e.metaKey) {
+    cycleWeather();
+    return;
+  }
+
   // Don't allow building shortcuts during play (except space to stop)
   if (state.playing) return;
 
@@ -8183,11 +8189,7 @@ function handleKeyDown(e) {
     return;
   }
 
-  // W: cycle weather
-  if ((key === 'w' || key === 'W') && !e.ctrlKey && !e.metaKey) {
-    cycleWeather();
-    return;
-  }
+
 
   // M: toggle music
   if ((key === 'm' || key === 'M') && !e.ctrlKey && !e.metaKey) {
