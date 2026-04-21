@@ -272,3 +272,14 @@
 - LESSON-206: Rain particles use thin 2px-wide linear-gradient strips with fast animation (0.4-0.7s). Snow particles use round dots (3-8px) with slow drift animation (2.5-5s) including horizontal sway via multi-stage keyframes.
 - LESSON-207: Stop weather particles and ambient sound on visibilitychange (tab hidden) and restart on visible, matching the pattern for chimney smoke and music.
 - LESSON-208: MAX_WEATHER_PARTICLES (60) provides good visual density without DOM bloat. Rain spawns every 40ms, snow every 200ms — matched to their visual density needs.
+
+## Railroad Crossing Patterns (Cycle 1, Day 4)
+- LESSON-209: Crossing is a track piece with same connections as straight (N-S at rot 0). Use the same exit logic — no special through-route handling needed.
+- LESSON-210: Gate activation uses Manhattan distance (|dr| + |dc| <= 2) for proximity detection — simpler and more predictable than Euclidean distance for grid-based games.
+- LESSON-211: Gate deactivation needs an 800ms delay timer to prevent flickering when trains pass through the crossing cell itself. Use per-crossing timers in a `crossingActiveTimers` map.
+- LESSON-212: Crossing bell sound reuses the existing `SFX.crossingBell()` function (originally for crossover pieces) with a separate per-crossing cooldown map (`anim_crossingBellCooldowns`).
+- LESSON-213: Gate arm CSS animation uses `transform-origin` (right center for left arm, left center for right arm) with `rotate(-90deg)` as default (up) and `rotate(0deg)` as active (down). The `transition: transform 0.5s` handles smooth lowering/raising.
+- LESSON-214: Signal flash uses CSS `animation: alternate` for a natural oscillation between bright red and dark red, with `box-shadow` for the glow effect.
+- LESSON-215: The `updateCrossingGates()` function runs every animation frame via `animateFrame()`. It scans all crossing cells and all active trains — O(crossings × trains) but both are small numbers in practice.
+- LESSON-216: Clean up all crossing state (`clearCrossingGates()`) in `stopPlay()` — timers, cooldown maps, and CSS classes must all be reset to prevent stale state.
+- LESSON-217: When adding new track types that behave like straight, add them to: BASE_CONNECTIONS, createTrackSVG switch, SHARE_TYPE_MAP, TOOL_KEY_MAP, placeTrainOnLoop valid types, ARIA label typeNames, and the MILESTONES unlock list. Missing any one creates a subtle bug.
