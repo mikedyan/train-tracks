@@ -1976,6 +1976,74 @@ body.night-mode .milestone-unlocks { color: #78909C; }
 .animal-react-duck-land .scenery-emoji { animation: duck-flap 0.65s ease-out !important; }
 .animal-react-people .scenery-emoji { animation: people-excited 0.8s ease-out !important; }
 
+/* RAILROAD CROSSING GATES */
+.crossing-gates {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 9;
+}
+.crossing-arm {
+  position: absolute;
+  background: repeating-linear-gradient(90deg, #E53935 0px, #E53935 4px, #FFF 4px, #FFF 8px);
+  border-radius: 1px;
+  transition: transform 0.5s ease-in-out;
+}
+.crossing-arm-left {
+  width: 36%;
+  height: 4px;
+  top: 27%;
+  left: 6%;
+  transform-origin: right center;
+  transform: rotate(-90deg);
+}
+.crossing-arm-right {
+  width: 36%;
+  height: 4px;
+  bottom: 27%;
+  right: 6%;
+  transform-origin: left center;
+  transform: rotate(90deg);
+}
+.cell.crossing-active .crossing-arm-left {
+  transform: rotate(0deg);
+}
+.cell.crossing-active .crossing-arm-right {
+  transform: rotate(0deg);
+}
+.crossing-signal {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #880000;
+  opacity: 0.5;
+  transition: opacity 0.3s;
+}
+.crossing-signal-left {
+  top: calc(27% - 3px);
+  left: calc(42% - 3px);
+}
+.crossing-signal-right {
+  bottom: calc(27% - 3px);
+  right: calc(42% - 3px);
+}
+.cell.crossing-active .crossing-signal {
+  opacity: 1;
+  animation: crossing-signal-flash 0.4s ease-in-out infinite alternate;
+}
+@keyframes crossing-signal-flash {
+  0% { background: #FF1744; box-shadow: 0 0 8px 2px rgba(255,23,68,0.6); }
+  100% { background: #880000; box-shadow: none; }
+}
+body.night-mode .crossing-signal {
+  background: #550000;
+}
+body.night-mode .cell.crossing-active .crossing-signal {
+  background: #FF1744;
+}
+
 /* WEATHER PARTICLES */
 @keyframes rain-fall {
   0% { opacity: 0.7; transform: translateY(0) translateX(var(--rain-dx, 0px)); }
@@ -2051,6 +2119,9 @@ body.night-mode .weather-snow #weather-overlay {
     animation: none !important;
     display: none !important;
   }
+  .cell.crossing-active .crossing-signal {
+    animation: none !important;
+  }
   .cell .connection-dot.pulsing.n,
   .cell .connection-dot.pulsing.s,
   .cell .connection-dot.pulsing.e,
@@ -2076,6 +2147,7 @@ body.night-mode .weather-snow #weather-overlay {
     <div class="palette-piece" data-type="bridge" role="button" aria-label="Bridge track piece" tabindex="0"><div class="label">Bridge</div></div>
     <div class="palette-piece" data-type="tunnel" role="button" aria-label="Tunnel track piece" tabindex="0"><div class="label">Tunnel</div></div>
     <div class="palette-piece" data-type="station" role="button" aria-label="Station track piece" tabindex="0"><div class="label">Station</div></div>
+    <div class="palette-piece" data-type="crossing" role="button" aria-label="Railroad crossing piece" tabindex="0"><div class="label">Crossing</div></div>
     <div class="palette-divider"></div>
     <h2>Trains</h2>
     <div class="palette-piece palette-train palette-train-red" data-type="train-red" role="button" aria-label="Red train" tabindex="0"><div class="label">Red</div></div>
@@ -2112,6 +2184,7 @@ body.night-mode .weather-snow #weather-overlay {
       <div class="palette-piece" data-type="bridge" role="button" aria-label="Bridge track piece" tabindex="0"><div class="label">Bridge</div></div>
       <div class="palette-piece" data-type="tunnel" role="button" aria-label="Tunnel track piece" tabindex="0"><div class="label">Tunnel</div></div>
       <div class="palette-piece" data-type="station" role="button" aria-label="Station track piece" tabindex="0"><div class="label">Station</div></div>
+      <div class="palette-piece" data-type="crossing" role="button" aria-label="Railroad crossing piece" tabindex="0"><div class="label">Crossing</div></div>
       <div class="palette-divider"></div>
       <span class="drawer-section-label">Trains</span>
       <div class="palette-piece palette-train palette-train-red" data-type="train-red" role="button" aria-label="Red train" tabindex="0"><div class="label">Red</div></div>
@@ -2206,6 +2279,7 @@ body.night-mode .weather-snow #weather-overlay {
     <div class="shortcut-row"><span class="shortcut-desc">Bridge</span><span class="shortcut-key">5</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Tunnel</span><span class="shortcut-key">6</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Station</span><span class="shortcut-key">7</span></div>
+    <div class="shortcut-row"><span class="shortcut-desc">Crossing</span><span class="shortcut-key">8</span></div>
     <div class="shortcut-row"><span class="shortcut-desc">Remove hovered piece</span><span class="shortcut-key">Del</span></div>
     <div class="shortcut-section">Actions</div>
     <div class="shortcut-row"><span class="shortcut-desc">Random track</span><span class="shortcut-key">R</span></div>
@@ -3504,7 +3578,7 @@ const OPPOSITE = { N: 'S', S: 'N', E: 'W', W: 'E' };
 const DELTA = { N: { r: -1, c: 0 }, S: { r: 1, c: 0 }, E: { r: 0, c: 1 }, W: { r: 0, c: -1 } };
 const ROTATE_MAP = { N: 'E', E: 'S', S: 'W', W: 'N' };
 
-const TRACK_TYPES = ['straight', 'curve', 'tjunction', 'crossover', 'bridge', 'tunnel', 'station'];
+const TRACK_TYPES = ['straight', 'curve', 'tjunction', 'crossover', 'bridge', 'tunnel', 'station', 'crossing'];
 const SCENERY_TYPES = ['tree', 'house', 'cow', 'water', 'flower', 'sheep', 'horse', 'duck-land', 'people'];
 const SCENERY_EMOJI = { tree: '🌲', house: '🏠', cow: '🐄', water: '💧', flower: '🌻', sheep: '🐑', horse: '🐴', 'duck-land': '🦆', people: '👨‍👩‍👦' };
 
@@ -3561,6 +3635,7 @@ const BASE_CONNECTIONS = {
   bridge:   ['N', 'S', 'E', 'W'],
   tunnel:   ['N', 'S'],
   station:  ['N', 'S'],
+  crossing: ['N', 'S'],
 };
 
 // Through-routes for crossover/bridge (pairs that form continuous paths)
@@ -3969,6 +4044,27 @@ function createTrackSVG(type) {
       // Platform edge
       svg.appendChild(line(42,10,42,50,'#9E9E9E',1.5));
       break;
+
+    case 'crossing':
+      // Straight track (same as straight)
+      [10,22,34,46].forEach(y => svg.appendChild(line(20,y,40,y,tieColor,tieWidth,'butt')));
+      svg.appendChild(line(24,0,24,60,railColor,2.5));
+      svg.appendChild(line(36,0,36,60,railColor,2.5));
+      svg.appendChild(line(30,0,30,60,'#A1887F',12));
+      svg.appendChild(line(30,0,30,60,trackColor,8));
+      // Road crossing stripes (perpendicular to track)
+      svg.appendChild(rect(6,26,12,8,'#FDD835',1));
+      svg.appendChild(rect(42,26,12,8,'#FDD835',1));
+      // Gate posts
+      svg.appendChild(rect(15,13,3,12,'#616161',1));
+      svg.appendChild(rect(42,35,3,12,'#616161',1));
+      // Signal lights (dark red circles = inactive)
+      svg.appendChild(circle(16,12,2.5,'#880000'));
+      svg.appendChild(circle(43,48,2.5,'#880000'));
+      // Gate arm stubs (shown up = inactive)
+      svg.appendChild(rect(7,13,10,2,'#E53935',1));
+      svg.appendChild(rect(43,45,10,2,'#E53935',1));
+      break;
   }
 
   return svg;
@@ -4263,6 +4359,28 @@ function renderCell(row, col) {
 
       // Tunnel class for night mode glow
       if (piece.type === 'tunnel') cell.classList.add('has-tunnel');
+
+      // Railroad crossing gates and signals
+      if (piece.type === 'crossing') {
+        const gatesDiv = document.createElement('div');
+        gatesDiv.className = 'crossing-gates';
+        // Left gate arm
+        const armL = document.createElement('div');
+        armL.className = 'crossing-arm crossing-arm-left';
+        gatesDiv.appendChild(armL);
+        // Right gate arm
+        const armR = document.createElement('div');
+        armR.className = 'crossing-arm crossing-arm-right';
+        gatesDiv.appendChild(armR);
+        // Signal lights
+        const sigL = document.createElement('div');
+        sigL.className = 'crossing-signal crossing-signal-left';
+        gatesDiv.appendChild(sigL);
+        const sigR = document.createElement('div');
+        sigR.className = 'crossing-signal crossing-signal-right';
+        gatesDiv.appendChild(sigR);
+        cell.appendChild(gatesDiv);
+      }
 
       // Bridge over water visual enhancement
       if (piece.type === 'bridge') {
@@ -5687,6 +5805,73 @@ function spawnSteamPuffs(anim) {
   }
 }
 
+// ============================================================
+// RAILROAD CROSSING GATE PROXIMITY DETECTION
+// ============================================================
+let crossingActiveTimers = {}; // "row,col" -> timer ID
+
+function updateCrossingGates() {
+  if (!state.playing) return;
+  // Check every crossing cell for nearby trains
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const piece = state.grid[r]?.[c];
+      if (!piece || piece.type !== 'crossing') continue;
+      const key = r + ',' + c;
+      const cell = getCellEl(r, c);
+      if (!cell) continue;
+
+      // Check if any active train is within 2 cells
+      let trainNearby = false;
+      for (const anim of animStates) {
+        if (anim.crashing || anim.finished) continue;
+        const dist = Math.abs(anim.row - r) + Math.abs(anim.col - c);
+        if (dist <= 2) {
+          trainNearby = true;
+          break;
+        }
+      }
+
+      const wasActive = cell.classList.contains('crossing-active');
+      if (trainNearby && !wasActive) {
+        // Activate gates
+        cell.classList.add('crossing-active');
+        // Play crossing bell with per-crossing cooldown
+        if (!anim_crossingBellCooldowns[key] || Date.now() - anim_crossingBellCooldowns[key] > 3000) {
+          anim_crossingBellCooldowns[key] = Date.now();
+          SFX.crossingBell();
+        }
+      } else if (!trainNearby && wasActive) {
+        // Deactivate gates (with a short delay to let train pass fully)
+        if (!crossingActiveTimers[key]) {
+          crossingActiveTimers[key] = setTimeout(() => {
+            // Re-check — train might have come back
+            let stillNear = false;
+            for (const a of animStates) {
+              if (a.crashing || a.finished) continue;
+              if (Math.abs(a.row - r) + Math.abs(a.col - c) <= 2) { stillNear = true; break; }
+            }
+            if (!stillNear) cell.classList.remove('crossing-active');
+            delete crossingActiveTimers[key];
+          }, 800);
+        }
+      }
+    }
+  }
+}
+
+let anim_crossingBellCooldowns = {};
+
+function clearCrossingGates() {
+  // Remove all crossing-active classes and clear timers
+  document.querySelectorAll('.cell.crossing-active').forEach(el => el.classList.remove('crossing-active'));
+  for (const key of Object.keys(crossingActiveTimers)) {
+    clearTimeout(crossingActiveTimers[key]);
+  }
+  crossingActiveTimers = {};
+  anim_crossingBellCooldowns = {};
+}
+
 function blowHorn() {
   if (!state.playing || hornCooldown) return;
   if (animStates.length === 0) return;
@@ -6294,6 +6479,9 @@ function animateFrame(timestamp) {
     advanceTrainAnim(anim, timestamp);
   }
 
+  // Update railroad crossing gates
+  updateCrossingGates();
+
   // Collision detection: check if any two active trains share the same cell
   for (let i = 0; i < animStates.length; i++) {
     if (animStates[i].crashing || animStates[i].finished) continue;
@@ -6656,6 +6844,8 @@ function stopPlay() {
   cleanupSmokeParticles();
   // Clean up tunnel reverb
   if (tunnelReverbGain) tunnelReverbGain.gain.value = 0;
+  // Clear crossing gate states
+  clearCrossingGates();
   // Clean up crash particles and animal reaction classes
   document.querySelectorAll('.crash-star, .crash-dust').forEach(el => el.remove());
   document.querySelectorAll('[class*="animal-react-"]').forEach(function(el) {
@@ -7079,7 +7269,7 @@ function addRandomScenery() {
 function placeTrainOnLoop(path) {
   // Find a straight or tunnel section in the path
   for (const cell of path) {
-    if (cell.type === 'straight' || cell.type === 'tunnel') {
+    if (cell.type === 'straight' || cell.type === 'tunnel' || cell.type === 'crossing') {
       state.trains = [{ row: cell.row, col: cell.col, color: 'red', cars: [] }];
       renderCell(cell.row, cell.col);
       return;
@@ -7439,6 +7629,24 @@ function renderScreenshotCanvas() {
             const ty = y + ch * (0.15 + t * 0.22);
             ctx.fillRect(cx - bedW * 0.65, ty, bedW * 1.3, 3 * scale);
           }
+          if (piece.type === 'crossing') {
+            // Road crossing stripes
+            ctx.fillStyle = '#FDD835';
+            ctx.fillRect(cx - bedW * 1.5, cy - bedW * 0.35, bedW * 0.8, bedW * 0.7);
+            ctx.fillRect(cx + bedW * 0.7, cy - bedW * 0.35, bedW * 0.8, bedW * 0.7);
+            // Gate posts
+            ctx.fillStyle = '#616161';
+            ctx.fillRect(cx - bedW * 0.9, cy - bedW * 0.9, 3 * scale, bedW * 0.8);
+            ctx.fillRect(cx + bedW * 0.7, cy + bedW * 0.15, 3 * scale, bedW * 0.8);
+            // Signal circles
+            ctx.fillStyle = '#880000';
+            ctx.beginPath();
+            ctx.arc(cx - bedW * 0.85, cy - bedW * 1, 2.5 * scale, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(cx + bedW * 0.75, cy + bedW * 1, 2.5 * scale, 0, Math.PI * 2);
+            ctx.fill();
+          }
           if (piece.type === 'tunnel') {
             ctx.fillStyle = night ? '#3E5045' : '#7B8D72';
             ctx.beginPath();
@@ -7664,7 +7872,7 @@ const SHARE_TYPE_MAP = {
   'straight': 1, 'curve': 2, 'tjunction': 3, 'crossover': 4,
   'bridge': 5, 'tunnel': 6, 'station': 7,
   'tree': 8, 'house': 9, 'cow': 10, 'water': 11,
-  'flower': 12, 'sheep': 13, 'horse': 14, 'duck-land': 15, 'people': 16
+  'flower': 12, 'sheep': 13, 'horse': 14, 'duck-land': 15, 'people': 16, 'crossing': 17
 };
 const SHARE_TYPE_REVERSE = {};
 for (const [k, v] of Object.entries(SHARE_TYPE_MAP)) SHARE_TYPE_REVERSE[v] = k;
@@ -7936,6 +8144,7 @@ const TOOL_KEY_MAP = {
   '5': 'bridge',
   '6': 'tunnel',
   '7': 'station',
+  '8': 'crossing',
 };
 
 function selectTool(type) {
@@ -9284,7 +9493,7 @@ const MILESTONES = [
   { id: 'architect', name: 'Architect', emoji: '📐', statKey: 'tracksPlaced', threshold: 25, unlocks: ['crossover'], desc: 'Place 25 tracks' },
   { id: 'engineer', name: 'Engineer', emoji: '🏗️', statKey: 'tracksPlaced', threshold: 50, unlocks: ['bridge'], desc: 'Place 50 tracks' },
   { id: 'miner', name: 'Miner', emoji: '⛏️', statKey: 'tracksPlaced', threshold: 75, unlocks: ['tunnel'], desc: 'Place 75 tracks' },
-  { id: 'conductor', name: 'Conductor', emoji: '🚂', statKey: 'trainsRun', threshold: 3, unlocks: ['station', 'freight', 'passenger', 'caboose'], desc: 'Run 3 trains' },
+  { id: 'conductor', name: 'Conductor', emoji: '🚂', statKey: 'trainsRun', threshold: 3, unlocks: ['station', 'crossing', 'freight', 'passenger', 'caboose'], desc: 'Run 3 trains' },
   { id: 'master', name: 'Loop Master', emoji: '🔁', statKey: 'loopsCompleted', threshold: 1, unlocks: ['train-blue', 'train-green'], desc: 'Complete 1 loop' },
   { id: 'naturalist', name: 'Naturalist', emoji: '🌿', statKey: 'sceneryPlaced', threshold: 15, unlocks: ['water', 'flower', 'sheep'], desc: 'Place 15 scenery' },
   { id: 'explorer', name: 'Explorer', emoji: '🧩', statKey: 'puzzlesSolved', threshold: 1, unlocks: ['horse', 'duck-land', 'people'], desc: 'Solve 1 puzzle' },
