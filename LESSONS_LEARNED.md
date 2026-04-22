@@ -283,3 +283,12 @@
 - LESSON-215: The `updateCrossingGates()` function runs every animation frame via `animateFrame()`. It scans all crossing cells and all active trains — O(crossings × trains) but both are small numbers in practice.
 - LESSON-216: Clean up all crossing state (`clearCrossingGates()`) in `stopPlay()` — timers, cooldown maps, and CSS classes must all be reset to prevent stale state.
 - LESSON-217: When adding new track types that behave like straight, add them to: BASE_CONNECTIONS, createTrackSVG switch, SHARE_TYPE_MAP, TOOL_KEY_MAP, placeTrainOnLoop valid types, ARIA label typeNames, and the MILESTONES unlock list. Missing any one creates a subtle bug.
+
+## Rainbow Track Patterns (Cycle 1, Day 5)
+- LESSON-218: Rainbow track uses linearGradient in SVG with 6 color stops (ROYGBV) for the prismatic effect. CSS hue-rotate animation on the SVG element creates the shimmer without needing JS per-frame updates.
+- LESSON-219: Train rainbow glow uses CSS animation (rainbow-glow keyframes cycling through 7 colors) applied via classList.add/remove. The 3-second timer is tracked per-anim with rainbowGlowEnd timestamp compared against Date.now().
+- LESSON-220: Sparkle particles spawn from the train's current pixel position (locoX, locoY) into grid-container (not grid) to avoid zoom transform issues. 80ms spawn interval with 20-particle cap prevents DOM bloat.
+- LESSON-221: SFX.rainbowChime uses ascending pentatonic arpeggio (C5-E5-G5-A5) with staggered oscillator starts (80ms apart). Sparkle harmonics at 2x frequency with triangle wave add the magical shimmer quality.
+- LESSON-222: The rainbow glow re-triggers on every rainbow cell entry, resetting the 3-second timer. This means multiple rainbow tracks in sequence extend the glow effect naturally without special handling.
+- LESSON-223: New milestone type "Magician" gates rainbow behind puzzle progression (3 puzzles solved). This keeps the rainbow piece as a reward for engagement while being accessible fairly early.
+- LESSON-224: When adding new track types to the screenshot canvas, group them with similar types (straight/tunnel/rainbow share the same straight-line rendering base) and use conditional blocks for unique visuals rather than separate case statements.
