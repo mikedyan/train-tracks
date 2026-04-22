@@ -2096,6 +2096,52 @@ body.night-mode .weather-snow #weather-overlay {
   background: rgba(100,120,150,0.1);
 }
 
+
+/* RAINBOW TRACK */
+@keyframes rainbow-shimmer {
+  0% { filter: hue-rotate(0deg) brightness(1.1); }
+  50% { filter: hue-rotate(60deg) brightness(1.3); }
+  100% { filter: hue-rotate(0deg) brightness(1.1); }
+}
+@keyframes rainbow-sparkle-pulse {
+  0%, 100% { opacity: 0.3; r: 1; }
+  50% { opacity: 1; r: 2.5; }
+}
+.cell .rainbow-track-svg {
+  animation: rainbow-shimmer 3s ease-in-out infinite;
+}
+.rainbow-sparkle-dot {
+  animation: rainbow-sparkle-pulse 1.2s ease-in-out infinite;
+}
+/* Rainbow glow on trains */
+@keyframes rainbow-glow {
+  0% { box-shadow: 0 0 8px 3px #FF0000, 0 0 16px 6px rgba(255,0,0,0.3); }
+  16% { box-shadow: 0 0 8px 3px #FF8800, 0 0 16px 6px rgba(255,136,0,0.3); }
+  33% { box-shadow: 0 0 8px 3px #FFFF00, 0 0 16px 6px rgba(255,255,0,0.3); }
+  50% { box-shadow: 0 0 8px 3px #00CC00, 0 0 16px 6px rgba(0,204,0,0.3); }
+  66% { box-shadow: 0 0 8px 3px #0088FF, 0 0 16px 6px rgba(0,136,255,0.3); }
+  83% { box-shadow: 0 0 8px 3px #8800FF, 0 0 16px 6px rgba(136,0,255,0.3); }
+  100% { box-shadow: 0 0 8px 3px #FF0000, 0 0 16px 6px rgba(255,0,0,0.3); }
+}
+.train-rainbow-glow {
+  animation: rainbow-glow 1.5s linear infinite;
+  border-radius: 50%;
+}
+/* Rainbow sparkle trail particles */
+@keyframes rainbow-sparkle-trail {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(var(--sparkle-dx), var(--sparkle-dy)) scale(0); }
+}
+.rainbow-sparkle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 55;
+  animation: rainbow-sparkle-trail 0.8s ease-out forwards;
+}
+
 /* Reduced Motion Preference */
 @media (prefers-reduced-motion: reduce) {
   .smoke-particle, .chimney-smoke, .confetti-particle {
@@ -2121,6 +2167,17 @@ body.night-mode .weather-snow #weather-overlay {
   }
   .cell.crossing-active .crossing-signal {
     animation: none !important;
+  }
+  .rainbow-track-svg, .rainbow-sparkle-dot {
+    animation: none !important;
+  }
+  .train-rainbow-glow {
+    animation: none !important;
+    box-shadow: 0 0 8px 3px rgba(255,255,255,0.5) !important;
+  }
+  .rainbow-sparkle {
+    animation: none !important;
+    display: none !important;
   }
   .cell .connection-dot.pulsing.n,
   .cell .connection-dot.pulsing.s,
@@ -2148,6 +2205,7 @@ body.night-mode .weather-snow #weather-overlay {
     <div class="palette-piece" data-type="tunnel" role="button" aria-label="Tunnel track piece" tabindex="0"><div class="label">Tunnel</div></div>
     <div class="palette-piece" data-type="station" role="button" aria-label="Station track piece" tabindex="0"><div class="label">Station</div></div>
     <div class="palette-piece" data-type="crossing" role="button" aria-label="Railroad crossing piece" tabindex="0"><div class="label">Crossing</div></div>
+    <div class="palette-piece" data-type="rainbow" role="button" aria-label="Rainbow track piece" tabindex="0"><div class="label">Rainbow</div></div>
     <div class="palette-divider"></div>
     <h2>Trains</h2>
     <div class="palette-piece palette-train palette-train-red" data-type="train-red" role="button" aria-label="Red train" tabindex="0"><div class="label">Red</div></div>
@@ -2185,6 +2243,7 @@ body.night-mode .weather-snow #weather-overlay {
       <div class="palette-piece" data-type="tunnel" role="button" aria-label="Tunnel track piece" tabindex="0"><div class="label">Tunnel</div></div>
       <div class="palette-piece" data-type="station" role="button" aria-label="Station track piece" tabindex="0"><div class="label">Station</div></div>
       <div class="palette-piece" data-type="crossing" role="button" aria-label="Railroad crossing piece" tabindex="0"><div class="label">Crossing</div></div>
+      <div class="palette-piece" data-type="rainbow" role="button" aria-label="Rainbow track piece" tabindex="0"><div class="label">Rainbow</div></div>
       <div class="palette-divider"></div>
       <span class="drawer-section-label">Trains</span>
       <div class="palette-piece palette-train palette-train-red" data-type="train-red" role="button" aria-label="Red train" tabindex="0"><div class="label">Red</div></div>
@@ -2957,6 +3016,37 @@ const SFX = {
       osc2.stop(startTime + 0.07);
     }
   },
+  rainbowChime() {
+    // Ascending pentatonic chime: C-E-G-A (magical sparkle sound)
+    if (!soundEnabled) return;
+    const ctx = getAudioCtx();
+    const mg = getMasterGain();
+    const notes = [523.25, 659.25, 783.99, 880.00]; // C5, E5, G5, A5
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const startT = ctx.currentTime + i * 0.08;
+      gain.gain.setValueAtTime(0.1, startT);
+      gain.gain.exponentialRampToValueAtTime(0.001, startT + 0.4);
+      osc.connect(gain);
+      gain.connect(mg);
+      osc.start(startT);
+      osc.stop(startT + 0.45);
+      // Sparkle harmonic (2x freq, quieter)
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = 'triangle';
+      osc2.frequency.value = freq * 2;
+      gain2.gain.setValueAtTime(0.03, startT);
+      gain2.gain.exponentialRampToValueAtTime(0.001, startT + 0.3);
+      osc2.connect(gain2);
+      gain2.connect(mg);
+      osc2.start(startT);
+      osc2.stop(startT + 0.35);
+    });
+  },
   sheep() {
     // Sheep baa — nasal bleat with pitch wobble
     if (!soundEnabled) return;
@@ -3578,7 +3668,7 @@ const OPPOSITE = { N: 'S', S: 'N', E: 'W', W: 'E' };
 const DELTA = { N: { r: -1, c: 0 }, S: { r: 1, c: 0 }, E: { r: 0, c: 1 }, W: { r: 0, c: -1 } };
 const ROTATE_MAP = { N: 'E', E: 'S', S: 'W', W: 'N' };
 
-const TRACK_TYPES = ['straight', 'curve', 'tjunction', 'crossover', 'bridge', 'tunnel', 'station', 'crossing'];
+const TRACK_TYPES = ['straight', 'curve', 'tjunction', 'crossover', 'bridge', 'tunnel', 'station', 'crossing', 'rainbow'];
 const SCENERY_TYPES = ['tree', 'house', 'cow', 'water', 'flower', 'sheep', 'horse', 'duck-land', 'people'];
 const SCENERY_EMOJI = { tree: '🌲', house: '🏠', cow: '🐄', water: '💧', flower: '🌻', sheep: '🐑', horse: '🐴', 'duck-land': '🦆', people: '👨‍👩‍👦' };
 
@@ -3636,6 +3726,7 @@ const BASE_CONNECTIONS = {
   tunnel:   ['N', 'S'],
   station:  ['N', 'S'],
   crossing: ['N', 'S'],
+  rainbow:  ['N', 'S'],
 };
 
 // Through-routes for crossover/bridge (pairs that form continuous paths)
@@ -4065,6 +4156,50 @@ function createTrackSVG(type) {
       svg.appendChild(rect(7,13,10,2,'#E53935',1));
       svg.appendChild(rect(43,45,10,2,'#E53935',1));
       break;
+
+    case 'rainbow':
+      // Rainbow track: shimmering prismatic straight track
+      {
+        // Ties (same as straight)
+        [10,22,34,46].forEach(y => svg.appendChild(line(20,y,40,y,tieColor,tieWidth,'butt')));
+        // Track bed with rainbow gradient
+        const defs = document.createElementNS(ns, 'defs');
+        const grad = document.createElementNS(ns, 'linearGradient');
+        grad.setAttribute('id', 'rainbow-grad');
+        grad.setAttribute('x1', '0'); grad.setAttribute('y1', '0');
+        grad.setAttribute('x2', '0'); grad.setAttribute('y2', '1');
+        const rainbowColors = ['#FF0000','#FF8800','#FFFF00','#00CC00','#0088FF','#8800FF'];
+        rainbowColors.forEach((c, i) => {
+          const stop = document.createElementNS(ns, 'stop');
+          stop.setAttribute('offset', (i / (rainbowColors.length - 1) * 100) + '%');
+          stop.setAttribute('stop-color', c);
+          grad.appendChild(stop);
+        });
+        defs.appendChild(grad);
+        svg.appendChild(defs);
+        // Shimmering track bed
+        const bedPath = document.createElementNS(ns, 'rect');
+        bedPath.setAttribute('x', '21'); bedPath.setAttribute('y', '0');
+        bedPath.setAttribute('width', '18'); bedPath.setAttribute('height', '60');
+        bedPath.setAttribute('fill', 'url(#rainbow-grad)');
+        bedPath.setAttribute('opacity', '0.85');
+        svg.appendChild(bedPath);
+        // Rails with shimmer
+        svg.appendChild(line(24,0,24,60,'rgba(255,255,255,0.6)',2.5));
+        svg.appendChild(line(36,0,36,60,'rgba(255,255,255,0.6)',2.5));
+        // Sparkle dots
+        const sparklePositions = [[26,8],[34,18],[28,30],[35,42],[27,52]];
+        sparklePositions.forEach(([sx,sy]) => {
+          const sp = document.createElementNS(ns, 'circle');
+          sp.setAttribute('cx', sx); sp.setAttribute('cy', sy);
+          sp.setAttribute('r', '1.5');
+          sp.setAttribute('fill', 'white');
+          sp.setAttribute('opacity', '0.8');
+          sp.classList.add('rainbow-sparkle-dot');
+          svg.appendChild(sp);
+        });
+      }
+      break;
   }
 
   return svg;
@@ -4360,6 +4495,12 @@ function renderCell(row, col) {
       // Tunnel class for night mode glow
       if (piece.type === 'tunnel') cell.classList.add('has-tunnel');
 
+      // Rainbow track shimmer animation
+      if (piece.type === 'rainbow') {
+        const svgEl = cell.querySelector('svg');
+        if (svgEl) svgEl.classList.add('rainbow-track-svg');
+      }
+
       // Railroad crossing gates and signals
       if (piece.type === 'crossing') {
         const gatesDiv = document.createElement('div');
@@ -4455,7 +4596,7 @@ function updateCellAriaLabel(row, col) {
   if (piece) {
     const typeNames = {
       straight: 'Straight track', curve: 'Curve track', tjunction: 'T-junction',
-      crossover: 'Crossover', bridge: 'Bridge', tunnel: 'Tunnel', station: 'Station',
+      crossover: 'Crossover', bridge: 'Bridge', tunnel: 'Tunnel', station: 'Station', rainbow: 'Rainbow track',
       tree: 'Tree', house: 'House', cow: 'Cow', water: 'Water', flower: 'Flower',
       sheep: 'Sheep', horse: 'Horse', 'duck-land': 'Duck', people: 'People'
     };
@@ -6468,6 +6609,28 @@ function startPlay() {
   requestAnimationFrame(animateFrame);
 }
 
+// Rainbow sparkle particle spawner
+const RAINBOW_SPARKLE_COLORS = ['#FF0000','#FF8800','#FFFF00','#00CC00','#0088FF','#8800FF','#FF44FF'];
+function spawnRainbowSparkle(x, y) {
+  const container = document.getElementById('grid-container');
+  if (!container) return;
+  // Limit active sparkles
+  if (container.querySelectorAll('.rainbow-sparkle').length >= 20) return;
+  const sparkle = document.createElement('div');
+  sparkle.className = 'rainbow-sparkle';
+  const color = RAINBOW_SPARKLE_COLORS[Math.floor(Math.random() * RAINBOW_SPARKLE_COLORS.length)];
+  sparkle.style.background = color;
+  sparkle.style.boxShadow = '0 0 4px ' + color;
+  sparkle.style.left = x + 'px';
+  sparkle.style.top = y + 'px';
+  const angle = Math.random() * Math.PI * 2;
+  const dist = 8 + Math.random() * 15;
+  sparkle.style.setProperty('--sparkle-dx', (Math.cos(angle) * dist) + 'px');
+  sparkle.style.setProperty('--sparkle-dy', (Math.sin(angle) * dist) + 'px');
+  container.appendChild(sparkle);
+  setTimeout(() => sparkle.remove(), 850);
+}
+
 function animateFrame(timestamp) {
   if (!state.playing || animStates.length === 0) return;
 
@@ -6617,6 +6780,16 @@ function advanceTrainAnim(anim, timestamp) {
       }
     }
 
+    // Rainbow track: activate rainbow glow on train for 3 seconds
+    if (nextPiece.type === 'rainbow') {
+      if (!anim.rainbowGlowActive) {
+        SFX.rainbowChime();
+      }
+      anim.rainbowGlowActive = true;
+      anim.rainbowGlowEnd = Date.now() + 3000;
+      if (anim.trainEl) anim.trainEl.classList.add('train-rainbow-glow');
+    }
+
     // Crossing bell at crossover pieces (with cooldown)
     if (nextPiece.type === 'crossover') {
       const crossKey = nextPos.row + ',' + nextPos.col;
@@ -6694,6 +6867,20 @@ function renderTrainAtProgress(anim) {
 
   anim.trainEl.style.opacity = locoOpacity;
   anim.trainEl.style.transform = `translate(-50%, -50%) rotate(${angleDeg + 90}deg) scale(${locoScale})`;
+
+  // Rainbow glow timer check + sparkle trail
+  if (anim.rainbowGlowActive) {
+    if (Date.now() > anim.rainbowGlowEnd) {
+      anim.rainbowGlowActive = false;
+      if (anim.trainEl) anim.trainEl.classList.remove('train-rainbow-glow');
+    } else if (!prefersReducedMotion()) {
+      // Spawn sparkle particle behind train
+      if (!anim._lastSparkle || Date.now() - anim._lastSparkle > 80) {
+        anim._lastSparkle = Date.now();
+        spawnRainbowSparkle(locoX, locoY);
+      }
+    }
+  }
 
   // Update per-train headlight position (night mode) — hide inside tunnel
   if (anim.headlightEl && isNightMode() && !isInTunnel) {
@@ -6846,8 +7033,8 @@ function stopPlay() {
   if (tunnelReverbGain) tunnelReverbGain.gain.value = 0;
   // Clear crossing gate states
   clearCrossingGates();
-  // Clean up crash particles and animal reaction classes
-  document.querySelectorAll('.crash-star, .crash-dust').forEach(el => el.remove());
+  // Clean up crash particles, animal reaction classes, and rainbow sparkles
+  document.querySelectorAll('.crash-star, .crash-dust, .rainbow-sparkle').forEach(el => el.remove());
   document.querySelectorAll('[class*="animal-react-"]').forEach(function(el) {
     el.className = el.className.replace(/animal-react-\S+/g, '').trim();
   });
@@ -7269,7 +7456,7 @@ function addRandomScenery() {
 function placeTrainOnLoop(path) {
   // Find a straight or tunnel section in the path
   for (const cell of path) {
-    if (cell.type === 'straight' || cell.type === 'tunnel' || cell.type === 'crossing') {
+    if (cell.type === 'straight' || cell.type === 'tunnel' || cell.type === 'crossing' || cell.type === 'rainbow') {
       state.trains = [{ row: cell.row, col: cell.col, color: 'red', cars: [] }];
       renderCell(cell.row, cell.col);
       return;
@@ -7620,6 +7807,24 @@ function renderScreenshotCanvas() {
       switch (piece.type) {
         case 'straight':
         case 'tunnel':
+        case 'rainbow':
+          if (piece.type === 'rainbow') {
+            // Rainbow gradient track bed
+            const rbGrad = ctx.createLinearGradient(cx, y, cx, y + ch);
+            rbGrad.addColorStop(0, '#FF0000');
+            rbGrad.addColorStop(0.2, '#FF8800');
+            rbGrad.addColorStop(0.4, '#FFFF00');
+            rbGrad.addColorStop(0.6, '#00CC00');
+            rbGrad.addColorStop(0.8, '#0088FF');
+            rbGrad.addColorStop(1, '#8800FF');
+            ctx.fillStyle = rbGrad;
+            ctx.globalAlpha = 0.85;
+            ctx.fillRect(cx - bedW / 2, y, bedW, ch);
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = 'rgba(255,255,255,0.6)';
+            ctx.fillRect(cx - trackW * 0.35, y, trackW * 0.25, ch);
+            ctx.fillRect(cx + trackW * 0.1, y, trackW * 0.25, ch);
+          } else {
           ctx.fillStyle = bedColor;
           ctx.fillRect(cx - bedW / 2, y, bedW, ch);
           ctx.fillStyle = trackColor;
@@ -7629,6 +7834,7 @@ function renderScreenshotCanvas() {
             const ty = y + ch * (0.15 + t * 0.22);
             ctx.fillRect(cx - bedW * 0.65, ty, bedW * 1.3, 3 * scale);
           }
+          } // close else for rainbow
           if (piece.type === 'crossing') {
             // Road crossing stripes
             ctx.fillStyle = '#FDD835';
@@ -7870,7 +8076,7 @@ function copyScreenshot() {
 // Type mapping: 0=empty, 1-7=track types, 8-16=scenery types
 const SHARE_TYPE_MAP = {
   'straight': 1, 'curve': 2, 'tjunction': 3, 'crossover': 4,
-  'bridge': 5, 'tunnel': 6, 'station': 7,
+  'bridge': 5, 'tunnel': 6, 'station': 7, 'rainbow': 18,
   'tree': 8, 'house': 9, 'cow': 10, 'water': 11,
   'flower': 12, 'sheep': 13, 'horse': 14, 'duck-land': 15, 'people': 16, 'crossing': 17
 };
@@ -8145,6 +8351,7 @@ const TOOL_KEY_MAP = {
   '6': 'tunnel',
   '7': 'station',
   '8': 'crossing',
+  '9': 'rainbow',
 };
 
 function selectTool(type) {
@@ -9498,6 +9705,7 @@ const MILESTONES = [
   { id: 'naturalist', name: 'Naturalist', emoji: '🌿', statKey: 'sceneryPlaced', threshold: 15, unlocks: ['water', 'flower', 'sheep'], desc: 'Place 15 scenery' },
   { id: 'explorer', name: 'Explorer', emoji: '🧩', statKey: 'puzzlesSolved', threshold: 1, unlocks: ['horse', 'duck-land', 'people'], desc: 'Solve 1 puzzle' },
   { id: 'rainbow', name: 'Rainbow Fleet', emoji: '🌈', statKey: 'passengersDelivered', threshold: 10, unlocks: ['train-yellow', 'train-purple'], desc: 'Deliver 10 passengers' },
+  { id: 'magician', name: 'Magician', emoji: '✨', statKey: 'puzzlesSolved', threshold: 3, unlocks: ['rainbow'], desc: 'Solve 3 puzzles' },
 ];
 
 let unlockedPieces = new Set(DEFAULT_UNLOCKED);
