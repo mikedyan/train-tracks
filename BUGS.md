@@ -121,3 +121,65 @@ Only logged here if a bug was found, for tracking purposes.
 - **Fix 2:** Fullscreen (F) and High-contrast (A) shortcuts were placed after `state.playing` return, making them inaccessible during play. Moved before playing guard.
 - **Fix 3:** Grid focus indicator wasn't cleared on mouse click — added `clearGridFocus()` call at start of `onGridDown`.
 - All 3 fixes applied and committed. JS parse clean. No duplicate code. HTML balanced.
+
+---
+
+## Harden Week 1 — Full Feature Audit (Day 34)
+
+### Audit Date: Thu Apr 23, 2026
+
+**Testing Environment:** Desktop (1200x834 viewport), Chrome-based browser
+
+### Systematic Test Results
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Page Load | ✅ PASS | Zero JS errors, clean console |
+| Tutorial Overlay | ✅ PASS | Shows on fresh visit, Skip/Next work, re-trigger via ❓ |
+| Random Track Generator | ✅ PASS | Generates valid closed loops with scenery, water, bridges, tunnels |
+| Play/Stop | ✅ PASS | Train animates smoothly around loop, Stop returns to build mode |
+| Connection Dots | ✅ PASS | All green after random generation, no stale red dots |
+| Night Mode | ✅ PASS | Toggle works, house glow, dark theme, moon icon |
+| Undo/Redo | ✅ PASS | Both buttons work, Redo enables after Undo |
+| Save/Load | ✅ PASS | Modal opens with 3 slots, Save button works |
+| Puzzles | ✅ PASS | All 10 puzzles listed, First Loop loads correctly with locked pieces |
+| Puzzle Exit | ✅ PASS | Sandbox button restores previous track |
+| Keyboard Shortcuts Modal | ✅ PASS | All shortcuts listed: Space, H, 1-8, Del, R, Z, ⇧Z, C |
+| Biome: Default (Spring) | ✅ PASS | Green grass, standard trees/flowers |
+| Biome: Winter | ✅ PASS | Light blue, Christmas trees, snowflake |
+| Biome: Desert | ✅ PASS | Sandy/tan, cacti, rice emoji |
+| Biome: Autumn | ✅ PASS | Brown, maple leaves, fallen leaves |
+| Weather: Rain | ✅ PASS | Rain particles visible, icon changes |
+| Weather: Snow | ✅ PASS | Snow particles drift down |
+| Weather: Sunny (off) | ✅ PASS | Particles stop |
+| Share Link | ✅ PASS | Button works (copies to clipboard) |
+| Screenshot | ✅ PASS | Canvas renders track, Download/Copy buttons present |
+| Stats & Milestones | ✅ PASS | All stats tracked, milestones with progress bars |
+| High Contrast Mode | ✅ PASS | Thicker grid lines, larger dots |
+| Passenger Delivery Toggle | ✅ PASS | Button toggles |
+| HONK! Button | ✅ PASS | Appears during play mode |
+| Train Animation (Tunnel) | ✅ PASS | Train fades out inside tunnel correctly |
+| Water Tiles | ✅ PASS | Blue animated waves, duck decorations |
+| Bridge over Water | ✅ PASS | Bridge renders correctly over water |
+| ARIA Labels | ✅ PASS | All 96 cells have labels, grid role present |
+| Sidebar Palette | ✅ PASS | All 9 track types, 5 trains, 3 cars, 9 scenery items |
+| Train Colors | ✅ PASS | Red, Blue, Green, Yellow, Purple all in palette |
+
+### BUG-014 | 🟢 FIXED | Missing favicon causes 404 on every page load
+- **Found:** Thu Apr 23 — Harden Day 1
+- **Fixed:** Thu Apr 23 (inline SVG favicon added)
+- **Severity:** P2 (cosmetic — 404 in console, no visual impact)
+- **Root cause:** No `<link rel="icon">` tag in `<head>`. Browser requests `/favicon.ico` by default.
+- **Fix applied:** Added inline SVG data URI favicon with 🚂 emoji.
+
+### Code Health Check
+- **JS Syntax:** ✅ Clean (node -c passes)
+- **HTML Tags:** ✅ All balanced (div: 207/207, span: 79/79, button: 39/39)
+- **Duplicate Code:** ✅ None found (all key functions appear exactly once)
+- **File Size:** 10,090 lines
+- **Console Errors During Play:** Zero (after favicon fix)
+
+### Summary
+- **Bugs found:** 1 (P2 favicon 404 — fixed)
+- **Bugs remaining:** 0
+- **Overall Status:** Game is in excellent shape. All features functional, no JS errors, no duplicate code.
