@@ -183,3 +183,70 @@ Only logged here if a bug was found, for tracking purposes.
 - **Bugs found:** 1 (P2 favicon 404 — fixed)
 - **Bugs remaining:** 0
 - **Overall Status:** Game is in excellent shape. All features functional, no JS errors, no duplicate code.
+
+---
+
+## Harden Week 1 — Puzzle & Mode Testing (Day 35)
+
+### Audit Date: Fri Apr 24, 2026
+
+**Testing Environment:** Desktop (1200x834 viewport), Chrome-based browser
+
+### Puzzle Testing Results
+
+All 10 puzzles verified solvable with 3-star solutions.
+
+| # | Puzzle | Difficulty | Stars | Notes |
+|---|--------|-----------|-------|-------|
+| 1 | First Loop | Easy | ⭐⭐⭐ | 4 straights complete rectangle |
+| 2 | Around the Lake | Easy | ⭐⭐⭐ | 10 straights around water |
+| 3 | Figure Eight | Medium | ⭐⭐⭐ | 6 curves + crossover, two loops |
+| 4 | Tunnel Run | Medium | ⭐⭐⭐ | 6 straights + 2 tunnels |
+| 5 | Grand Station | Hard | ⭐⭐⭐ | S-bend connects all 3 stations |
+| 6 | Switchyard | Medium | ⭐⭐⭐ | T-junctions route through station |
+| 7 | Speed Run | Medium | ⭐⭐⭐ | 18/20 straights used |
+| 8 | Cow Pasture | Easy | ⭐⭐⭐ | 12/14 straights, cows pre-placed |
+| 9 | Night Express | Hard | ⭐⭐⭐ | Night mode forced correctly |
+| 10 | Twin Loops | Hard | ⭐⭐⭐ | Two separate loops, 2 trains |
+
+### Mode & Feature Testing
+
+**Puzzle System:**
+- ✅ All 10 puzzles load with correct locked pieces
+- ✅ Piece counters decrement on placement
+- ✅ Check validates and awards stars
+- ✅ Progress persists in localStorage
+- ✅ Sandbox restore works on exit
+- ✅ Night mode save/restore (Puzzle 9)
+- ✅ Multi-train puzzles (Puzzle 10)
+
+**Passenger Delivery:**
+- ✅ Toggle enables/disables correctly
+- ✅ Counter appears during play ("Delivered: 0")
+- ✅ State persists in localStorage
+
+**Progression & Unlocks:**
+- ✅ Stats: Tracks 125, Trains 10, Loops 19, Puzzles 10
+- ✅ Milestones: Builder/Architect/Engineer/Miner all complete
+- ✅ Progress bars and descriptions accurate
+
+**Share Links:**
+- ✅ Encodes to 138-char base64url hash
+- ✅ Encode/decode functions present and working
+
+**Screenshots:**
+- ✅ Canvas renders all elements (tracks, scenery, water, tunnel, train)
+- ✅ Download and Copy buttons functional
+
+**Save/Load:**
+- ✅ 3 save slots with name inputs and thumbnails
+
+**Play Mode:**
+- ✅ Train animates, Full Loop toast, HONK button, Stop button
+
+### Code Health
+- **Console Errors:** Zero (throughout all testing)
+
+### Bugs Found: 0
+
+All tested systems working correctly. No bugs found.
