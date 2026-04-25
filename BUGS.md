@@ -250,3 +250,92 @@ All 10 puzzles verified solvable with 3-star solutions.
 ### Bugs Found: 0
 
 All tested systems working correctly. No bugs found.
+
+---
+
+## Harden Week 1 — Platform & Edge Cases (Day 36)
+
+### Audit Date: Sat Apr 25, 2026
+
+**Testing Environment:** Desktop (1280x900) + Mobile (375x667), Chrome-based browser
+
+### Mobile Viewport Testing (375px)
+
+| Test | Status | Notes |
+|------|--------|-------|
+| Sidebar hidden | ✅ PASS | Desktop sidebar replaced by bottom drawer |
+| Bottom drawer visible | ✅ PASS | "▲ Pieces" toggle, all categories scrollable |
+| Bottom drawer content | ✅ PASS | Tracks, Trains, Cars, Scenery all present |
+| Play mode on mobile | ✅ PASS | Train animates, HONK button appears, drawer collapses |
+| Stop returns to build | ✅ PASS | Drawer re-expands on stop |
+| Puzzle modal on mobile | ✅ PASS | All 10 puzzles listed, scrollable, proper sizing |
+| Puzzle load on mobile | ✅ PASS | First Loop loads, piece counter visible, Check/Sandbox buttons |
+| Pieces unlocked in puzzle | ✅ PASS | No 🔒 icons during puzzle mode |
+
+### Biome + Night Mode Combinations
+
+| Combination | Status | Notes |
+|------------|--------|-------|
+| Spring + Night | ✅ PASS | Dark theme, house glow, moon icon |
+| Winter + Night | ✅ PASS | Snowflakes, Christmas trees, light water |
+| Desert + Night | ✅ PASS | Cacti, rice emoji, dark theme |
+| Autumn + Night | ✅ PASS | Maple/fallen leaves, dark theme |
+| Spring + Day (default) | ✅ PASS | Standard green, sunflowers |
+
+### High Contrast Mode
+
+| Test | Status | Notes |
+|------|--------|-------|
+| Toggle on (mobile) | ✅ PASS | Thicker grid lines, larger dots, boosted contrast |
+| Toggle off | ✅ PASS | Returns to normal |
+
+### Keyboard Navigation
+
+| Test | Status | Notes |
+|------|--------|-------|
+| Arrow keys (grid nav) | ✅ PASS | Moves focus indicator |
+| Enter (place piece) | ✅ PASS | Places selected piece |
+| Space (play/stop) | ✅ PASS | Toggles play mode |
+| 1 (select straight) | ✅ PASS | Highlights in palette |
+| Z (undo) | ✅ PASS | Undoes last action |
+| Shift+Z (redo) | ✅ PASS | Redoes undone action |
+| W (weather cycle) | ✅ PASS | Rain → Snow → Off cycling |
+| H (tutorial) | ✅ PASS | Opens shortcuts modal |
+
+### Weather System
+
+| Test | Status | Notes |
+|------|--------|-------|
+| Rain toggle | ✅ PASS | Rain particles visible |
+| Snow toggle | ✅ PASS | Snow particles drifting with horizontal sway |
+| Off toggle | ✅ PASS | Particles stop |
+
+### Fresh Start (localStorage Clear)
+
+| Test | Status | Notes |
+|------|--------|-------|
+| Tutorial shows | ✅ PASS | "Drag a Track Piece!" with spotlight, 3-step flow |
+| Grid empty | ✅ PASS | All 96 cells empty |
+| Progression locks active | ✅ PASS | 🔒 on T-Split, Cross, Bridge, Tunnel, Station, Crossing, Rainbow, extra trains, cars, some scenery |
+| Random generator works | ✅ PASS | Valid closed loop with scenery, train auto-placed |
+| Play on fresh start | ✅ PASS | Train animates smoothly |
+
+### Edge Cases
+
+| Test | Status | Notes |
+|------|--------|-------|
+| Rapid random generation (4x) | ✅ PASS | Zero console errors, each generation valid |
+| Play after rapid generation | ✅ PASS | Train animates correctly |
+| Resize desktop→mobile→desktop | ✅ PASS | Layout transitions cleanly |
+| Puzzle exit restores sandbox | ✅ PASS | Previous track state restored |
+
+### Code Health Check
+- **JS Syntax:** ✅ Clean (node -c passes)
+- **HTML Tags:** ✅ All balanced (div: 207/207, span: 46/46, button: 39/39)
+- **Duplicate Code:** ✅ None found (all 10 key functions appear exactly once)
+- **File Size:** 10,089 lines
+- **Console Errors:** Zero (throughout all 25+ test actions)
+
+### Bugs Found: 0
+
+All platform and edge case tests passed. The game is rock-solid across mobile/desktop, all biome/mode combinations, keyboard navigation, and edge cases like fresh start and rapid interaction.
