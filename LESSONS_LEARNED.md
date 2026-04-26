@@ -292,3 +292,8 @@
 - LESSON-222: The rainbow glow re-triggers on every rainbow cell entry, resetting the 3-second timer. This means multiple rainbow tracks in sequence extend the glow effect naturally without special handling.
 - LESSON-223: New milestone type "Magician" gates rainbow behind puzzle progression (3 puzzles solved). This keeps the rainbow piece as a reward for engagement while being accessible fairly early.
 - LESSON-224: When adding new track types to the screenshot canvas, group them with similar types (straight/tunnel/rainbow share the same straight-line rendering base) and use conditional blocks for unique visuals rather than separate case statements.
+
+## Harden Week Patterns (Cycle 1, Days 34-37)
+- LESSON-225: A naive `grep -c "function loadPuzzle"` will count both `loadPuzzle` and `loadPuzzleProgress`. When auditing for duplicates, use exact word boundaries (`grep -nE "function loadPuzzle\b"`) or eyeball the line numbers — don't trust raw counts blindly.
+- LESSON-226: Four consecutive harden audits (full feature, puzzles, platform, code health) yielding only one P2 favicon bug suggests black-box test coverage is mature. Future harden weeks can compress to 2-3 days and free a day for delight polish or refactor experiments.
+- LESSON-227: When `BUGS.md` shows zero open issues on a "Fix Everything" day, treat it as a code-health audit day instead: run JS parse, check tag balance, hunt duplicate code, scan for unsafe innerHTML/console patterns, then runtime smoke-test the live deployment. Document everything — a clean audit is still a deliverable.
