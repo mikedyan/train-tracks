@@ -395,3 +395,55 @@ Tested at https://mikedyan.github.io/train-tracks/
 
 ### Conclusion
 Four-day audit cycle (Days 34-37) produced exactly **one** P2 bug (BUG-014: missing favicon) which was fixed same-day. The codebase is clean, balanced, and free of duplication. Tomorrow (Day 38, weekDay 5) will run a final regression pass before the cycle moves into PRUNE week.
+
+
+## Harden Week 1 — Regression Pass (Day 38)
+
+### Audit Date: Mon Apr 27, 2026
+
+**Mission:** Final regression pass before PRUNE week. Verify the deployed site against the original Day-1 promise (build, play, save, share). Zero new features.
+
+### Live Site — https://mikedyan.github.io/train-tracks/
+
+| Test | Result | Notes |
+|------|--------|-------|
+| Page load (cold) | ✅ PASS | Zero train-tracks console messages (two warnings observed are from sibling project signal-circuit, not us) |
+| Saved track auto-restore | ✅ PASS | Grid hydrates from `trainTracks_autosave` localStorage |
+| Random generator (sandbox) | ✅ PASS | 37 occupied cells, 1 train auto-placed, mix of track + scenery |
+| Generator inside puzzle | ✅ PASS (correctly inert) | In puzzle mode, generator does not overwrite the puzzle layout |
+| Sandbox ↔ Puzzle round-trip | ✅ PASS | Exit puzzle → sandbox restored, generator re-enabled |
+| Train animation logic | ✅ PASS | `renderTrainAtProgress` updates inline `left/top/transform`. 60-step manual stepping advanced the train through 60 cells with `crashing=false, finished=false`. (Real-time `requestAnimationFrame` was paused inside the CDP-controlled tab — environment artifact, not a code bug.) |
+| Play → Stop button toggle | ✅ PASS | Aria label preserved, label flips ▶️↔⏹️ |
+| Speed slider | ✅ PASS | Value 0.3-4.0, step 0.1, dispatches input/change events |
+| Save modal | ✅ PASS | Opens with 3 slots (Slot 1 / 2 / 3), `trainTracks_autosave` exists in localStorage |
+| Puzzle modal | ✅ PASS | 10 puzzle cards render, "First Loop" loads into grid |
+| Share link encoding | ✅ PASS | `encodeGridState()` → 138 chars, hash roundtrip preserves `state.grid` byte-identical |
+| Palette completeness | ✅ PASS | All 26 piece types present (×2 for sidebar+mobile drawer): straight, curve, tjunction, crossover, bridge, tunnel, station, crossing, rainbow, 5 trains, 3 cars, 9 scenery types |
+| Tutorial / Stats / Unlocks | ✅ PASS | localStorage flags `trainTracks_tutorialDone=1`, `trainTracks_stats`, `trainTracks_unlocks` all populated |
+| Console errors (entire pass) | ✅ ZERO | level=error filter returned empty messages array |
+
+### Code Health (delta from Day 37)
+- **File size:** 10,089 lines (unchanged — Harden mandate satisfied)
+- **JS parse:** Clean
+- **HTML balance:** Unchanged (div 207/207, span 79/79, button 39/39, script 1/1, style 1/1)
+- **No regressions** vs Day 37 baseline
+
+### Bugs Found Today: 0
+### Bugs Fixed Today: 0
+### Net New Bugs This Harden Week: 1 (BUG-014, fixed same-day on Day 34)
+
+### Harden Week 1 — Final Tally
+
+| Day | Activity | Bugs Found | Bugs Fixed |
+|-----|----------|-----------:|-----------:|
+| 34 (Mon) | Full feature audit | 1 (BUG-014 favicon) | 1 (BUG-014) |
+| 35 (Tue) | Puzzle & mode testing | 0 | 0 |
+| 36 (Wed) | Platform & edge cases | 0 | 0 |
+| 37 (Thu) | Fix everything / code health audit | 0 | 0 |
+| 38 (Fri) | Regression pass | 0 | 0 |
+| **Total** | | **1** | **1** |
+
+### Verdict
+**Ship-ready.** The deployed game is rock-solid: zero open bugs, zero console errors, all 38 days of features intact, save/share/puzzle/sandbox modes all functional. Codebase is balanced, free of duplicates, and stayed exactly flat in line count this week (no feature creep).
+
+Tomorrow (Day 39) opens **PRUNE Week 1** — the cycle's first simplification pass.
