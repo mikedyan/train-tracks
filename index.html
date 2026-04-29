@@ -1375,7 +1375,9 @@ body.night-mode .cell.has-tunnel svg {
 }
 
 /* KEYBOARD SHORTCUTS OVERLAY */
-#shortcuts-overlay {
+#shortcuts-overlay,
+#settings-overlay,
+#share-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,0.5);
@@ -1385,7 +1387,44 @@ body.night-mode .cell.has-tunnel svg {
   justify-content: center;
   backdrop-filter: blur(2px);
 }
-#shortcuts-overlay.open { display: flex; }
+#shortcuts-overlay.open,
+#settings-overlay.open,
+#share-overlay.open { display: flex; }
+
+#settings-modal,
+#share-modal {
+  background: #FFF;
+  border-radius: 16px;
+  padding: 24px;
+  width: 360px;
+  max-width: 90vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+  position: relative;
+}
+body.night-mode #settings-modal,
+body.night-mode #share-modal { background: #263238; color: #ECEFF1; }
+#settings-modal h2,
+#share-modal h2 { font-size: 20px; color: #3E2723; margin-bottom: 16px; text-align: center; }
+body.night-mode #settings-modal h2,
+body.night-mode #share-modal h2 { color: #ECEFF1; }
+#settings-modal .close-btn,
+#share-modal .close-btn { position: absolute; top: 12px; right: 14px; background: none; border: none; font-size: 22px; cursor: pointer; color: #999; line-height: 1; }
+#settings-modal .close-btn:hover,
+#share-modal .close-btn:hover { color: #333; }
+
+.settings-grid,
+.share-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.share-grid { grid-template-columns: 1fr 1fr; }
+.settings-item { display: flex !important; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 14px 8px !important; background: #ECEFF1 !important; color: #37474F !important; border-radius: 12px !important; min-height: 80px; box-shadow: none !important; }
+.settings-item:hover { background: #CFD8DC !important; transform: translateY(-1px); }
+body.night-mode .settings-item { background: #37474F !important; color: #ECEFF1 !important; }
+body.night-mode .settings-item:hover { background: #455A64 !important; }
+.settings-item .si-icon { font-size: 28px; line-height: 1; }
+.settings-item .si-label { font-size: 13px; font-weight: 600; text-align: center; }
+.settings-music-volume { margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+body.night-mode .settings-music-volume { border-top-color: rgba(255,255,255,0.1); }
 
 #shortcuts-modal {
   background: #FFF;
@@ -2292,24 +2331,18 @@ body.night-mode .weather-snow #weather-overlay {
       <div class="speed-control">
         🐢 <input type="range" id="speed-slider" aria-label="Train speed" min="0.3" max="4" step="0.1" value="1.2"> 🐇
       </div>
-      <button class="btn" id="btn-mute" onclick="toggleMute()" style="background:#78909C;color:white;padding:8px 12px;">🔊</button>
+      <button class="btn" id="btn-mute" onclick="toggleMute()" style="background:#78909C;color:white;padding:8px 12px;" title="Sound (M)">🔊</button>
       <input type="range" id="volume-slider" aria-label="Sound effects volume" min="0" max="1" step="0.05" value="0.8" oninput="onVolumeChange(event)" style="width:50px;accent-color:#78909C;" title="Volume">
-      <button class="btn" id="btn-music" onclick="toggleMusic()" style="background:#78909C;color:white;padding:8px 12px;opacity:0.6;" title="Toggle background music">🎵</button>
-      <input type="range" id="music-volume-slider" aria-label="Music volume" min="0" max="1" step="0.05" value="0.5" oninput="onMusicVolumeChange(event)" style="width:40px;accent-color:#AB47BC;display:none;" title="Music Volume">
-      <button class="btn btn-night" id="btn-night" onclick="toggleNightMode()" style="padding:8px 12px;">☀️</button>
+      <button class="btn btn-night" id="btn-night" onclick="toggleNightMode()" style="padding:8px 12px;" title="Day / Night (N)">☀️</button>
       <button class="btn" onclick="openSaveModal()" style="background:#607D8B;color:white;box-shadow:0 3px 10px rgba(96,125,139,0.3);">💾 Save</button>
-      <button class="btn" onclick="openShortcutsModal()" style="background:#546E7A;color:white;padding:8px 12px;" title="Keyboard shortcuts">⌨️</button>
       <button class="btn" onclick="openPuzzleModal()" style="background:#FF5722;color:white;box-shadow:0 3px 10px rgba(255,87,34,0.3);">🧩 Puzzles</button>
-      <button class="btn" id="btn-weather" onclick="cycleWeather()" style="background:#5C9DC5;color:white;box-shadow:0 3px 10px rgba(92,157,197,0.3);padding:8px 12px;" title="Change weather (W)">☀️</button>
+      <button class="btn" id="btn-weather" onclick="cycleWeather()" style="background:#5C9DC5;color:white;box-shadow:0 3px 10px rgba(92,157,197,0.3);padding:8px 12px;" title="Change weather (W)">🌤️</button>
       <button class="btn" id="btn-biome" onclick="cycleBiome()" style="background:#66BB6A;color:white;box-shadow:0 3px 10px rgba(102,187,106,0.3);padding:8px 12px;" title="Change terrain biome">🌸</button>
-      <button class="btn" id="btn-share" onclick="copyShareLink()" style="background:#26A69A;color:white;box-shadow:0 3px 10px rgba(38,166,154,0.3);padding:8px 12px;" title="Copy share link">🔗</button>
-      <button class="btn" id="btn-screenshot" onclick="openScreenshotModal()" style="background:#5C6BC0;color:white;box-shadow:0 3px 10px rgba(92,107,192,0.3);padding:8px 12px;" title="Take screenshot">📸</button>
-      <button class="btn" id="btn-help" onclick="showTutorial()" style="background:#78909C;color:white;padding:8px 12px;" title="How to play">❓</button>
       <button class="btn btn-passengers" id="btn-passengers" onclick="togglePassengers()" style="padding:8px 12px;" title="Toggle passenger delivery">🧑</button>
+      <button class="btn" onclick="openShareMenu()" style="background:#26A69A;color:white;box-shadow:0 3px 10px rgba(38,166,154,0.3);padding:8px 12px;" title="Share / Save image" aria-label="Share menu">📤</button>
+      <button class="btn" id="btn-help" onclick="showTutorial()" style="background:#78909C;color:white;padding:8px 12px;" title="How to play">❓</button>
+      <button class="btn" onclick="openSettingsMenu()" style="background:#455A64;color:white;padding:8px 12px;" title="Settings" aria-label="Settings menu">⚙️</button>
       <button class="btn" id="btn-horn" onclick="blowHorn()" title="Blow the horn! (H)">📯 HONK!</button>
-      <button class="btn" id="btn-stats" onclick="openStatsModal()" style="background:#6D4C41;color:white;box-shadow:0 3px 10px rgba(109,76,65,0.3);padding:8px 12px;" title="Stats & Milestones" aria-label="Stats and milestones">📊</button>
-      <button class="btn" id="btn-highcontrast" onclick="toggleHighContrast()" style="background:#455A64;color:white;padding:8px 12px;" title="High contrast mode" aria-label="Toggle high contrast mode">♿</button>
-      <button class="btn" id="btn-fullscreen" onclick="toggleFullscreen()" style="background:#37474F;color:white;padding:8px 12px;" title="Fullscreen" aria-label="Toggle fullscreen">⛶</button>
     </div>
   </div>
 </div>
@@ -2320,6 +2353,37 @@ body.night-mode .weather-snow #weather-overlay {
     <button class="close-btn" onclick="closeSaveModal()">✕</button>
     <h2>💾 Save & Load</h2>
     <div id="save-slots"></div>
+  </div>
+</div>
+
+<!-- Settings Menu (groups power-user toggles) -->
+<div id="settings-overlay" onclick="closeSettingsMenuOutside(event)">
+  <div id="settings-modal">
+    <button class="close-btn" onclick="closeSettingsMenu()">✕</button>
+    <h2>⚙️ Settings</h2>
+    <div class="settings-grid">
+      <button class="btn settings-item" onclick="closeSettingsMenu(); toggleMusic();" title="Background music"><span class="si-icon">🎵</span><span class="si-label" id="settings-music-label">Music: Off</span></button>
+      <button class="btn settings-item" onclick="closeSettingsMenu(); toggleHighContrast();" title="High contrast mode"><span class="si-icon">♿</span><span class="si-label">High Contrast</span></button>
+      <button class="btn settings-item" onclick="closeSettingsMenu(); openStatsModal();" title="Stats and milestones"><span class="si-icon">📊</span><span class="si-label">Stats &amp; Milestones</span></button>
+      <button class="btn settings-item" onclick="closeSettingsMenu(); openShortcutsModal();" title="Keyboard shortcuts"><span class="si-icon">⌨️</span><span class="si-label">Keyboard Shortcuts</span></button>
+      <button class="btn settings-item" onclick="closeSettingsMenu(); toggleFullscreen();" title="Fullscreen"><span class="si-icon">⛶</span><span class="si-label">Fullscreen</span></button>
+    </div>
+    <div class="settings-music-volume">
+      <span style="font-size:13px;color:#777;">Music volume</span>
+      <input type="range" id="music-volume-slider" aria-label="Music volume" min="0" max="1" step="0.05" value="0.5" oninput="onMusicVolumeChange(event)" style="width:120px;accent-color:#AB47BC;" title="Music Volume">
+    </div>
+  </div>
+</div>
+
+<!-- Share Menu (combines copy-link + screenshot) -->
+<div id="share-overlay" onclick="closeShareMenuOutside(event)">
+  <div id="share-modal">
+    <button class="close-btn" onclick="closeShareMenu()">✕</button>
+    <h2>📤 Share Your Track</h2>
+    <div class="share-grid">
+      <button class="btn settings-item" onclick="closeShareMenu(); copyShareLink();" title="Copy share link"><span class="si-icon">🔗</span><span class="si-label">Copy Link</span></button>
+      <button class="btn settings-item" onclick="closeShareMenu(); openScreenshotModal();" title="Save as image"><span class="si-icon">📸</span><span class="si-label">Save Image</span></button>
+    </div>
   </div>
 </div>
 
@@ -2625,21 +2689,19 @@ function stopMusicLoop() {
 
 function toggleMusic() {
   musicEnabled = !musicEnabled;
-  const btn = document.getElementById('btn-music');
   if (musicEnabled) {
-    btn.style.opacity = '1';
-    btn.style.background = '#AB47BC';
-    const slider = document.getElementById('music-volume-slider');
-    if (slider) slider.style.display = '';
     startMusicLoop();
   } else {
-    btn.style.opacity = '0.6';
-    btn.style.background = '#78909C';
-    const slider = document.getElementById('music-volume-slider');
-    if (slider) slider.style.display = 'none';
     stopMusicLoop();
   }
+  updateMusicSettingsLabel();
+  showToast(musicEnabled ? '🎵 Music ON' : '🎵 Music OFF');
   try { localStorage.setItem(MUSIC_ENABLED_KEY, musicEnabled ? '1' : '0'); } catch (e) {}
+}
+
+function updateMusicSettingsLabel() {
+  const lbl = document.getElementById('settings-music-label');
+  if (lbl) lbl.textContent = 'Music: ' + (musicEnabled ? 'On' : 'Off');
 }
 
 function onMusicVolumeChange(e) {
@@ -2655,21 +2717,9 @@ function restoreMusicSettings() {
     if (savedVol !== null) musicVolume = parseFloat(savedVol);
     if (savedEnabled === '1') musicEnabled = true;
   } catch (e) {}
-  const btn = document.getElementById('btn-music');
   const slider = document.getElementById('music-volume-slider');
-  if (btn) {
-    if (musicEnabled) {
-      btn.style.opacity = '1';
-      btn.style.background = '#AB47BC';
-    } else {
-      btn.style.opacity = '0.6';
-      btn.style.background = '#78909C';
-    }
-  }
-  if (slider) {
-    slider.value = musicVolume;
-    slider.style.display = musicEnabled ? '' : 'none';
-  }
+  if (slider) slider.value = musicVolume;
+  updateMusicSettingsLabel();
 }
 
 // Called when play state or night mode changes to update music tempo
@@ -3602,9 +3652,6 @@ function isHighContrast() {
 function toggleHighContrast() {
   const hc = !isHighContrast();
   document.body.classList.toggle('high-contrast', hc);
-  const btn = document.getElementById('btn-highcontrast');
-  if (btn) btn.style.background = hc ? '#FDD835' : '#455A64';
-  if (btn) btn.style.color = hc ? '#000' : '#fff';
   try { localStorage.setItem(HIGH_CONTRAST_KEY, hc ? '1' : '0'); } catch (e) {}
   showToast(hc ? '♿ High contrast ON' : '♿ High contrast OFF');
 }
@@ -3612,11 +3659,7 @@ function toggleHighContrast() {
 function restoreHighContrast() {
   try {
     const val = localStorage.getItem(HIGH_CONTRAST_KEY);
-    if (val === '1') {
-      document.body.classList.add('high-contrast');
-      const btn = document.getElementById('btn-highcontrast');
-      if (btn) { btn.style.background = '#FDD835'; btn.style.color = '#000'; }
-    }
+    if (val === '1') document.body.classList.add('high-contrast');
   } catch (e) {}
 }
 
@@ -3634,9 +3677,6 @@ function toggleFullscreen() {
 }
 
 function onFullscreenChange() {
-  const isFS = !!document.fullscreenElement;
-  const btn = document.getElementById('btn-fullscreen');
-  if (btn) btn.textContent = isFS ? '🔲' : '⛶';
   // Recalculate layout
   setTimeout(() => {
     resetZoom();
@@ -3687,7 +3727,7 @@ let currentBiome = 'spring';
 // WEATHER SYSTEM
 const WEATHER_MODES = ['sunny', 'rain', 'snow'];
 const WEATHER_KEY = 'trainTracks_weather';
-const WEATHER_ICONS = { sunny: '☀️', rain: '🌧️', snow: '❄️' };
+const WEATHER_ICONS = { sunny: '🌤️', rain: '🌧️', snow: '❄️' };
 const WEATHER_NAMES = { sunny: 'Sunny', rain: 'Rainy', snow: 'Snowy' };
 let currentWeather = 'sunny';
 let weatherInterval = null;
@@ -6998,9 +7038,39 @@ function toggleMute() {
     soundEnabled = true;
   }
   const icons = { full: '🔊', low: '🔉', mute: '🔇' };
-  document.getElementById('btn-mute').textContent = icons[soundState];
+  const btn = document.getElementById('btn-mute');
+  if (btn) btn.textContent = icons[soundState];
   applyVolumeState();
+  // Mute kills music; unmute resumes if user has enabled it
+  if (soundState === 'mute') {
+    if (musicIsPlaying) stopMusicLoop();
+  } else if (musicEnabled && !musicIsPlaying) {
+    startMusicLoop();
+  }
   try { localStorage.setItem(SOUND_STATE_KEY, soundState); } catch (e) {}
+}
+
+// ============================================================
+// SETTINGS MENU + SHARE MENU (Day 40 prune-week consolidation)
+// ============================================================
+function openSettingsMenu() {
+  updateMusicSettingsLabel();
+  document.getElementById('settings-overlay').classList.add('open');
+}
+function closeSettingsMenu() {
+  document.getElementById('settings-overlay').classList.remove('open');
+}
+function closeSettingsMenuOutside(e) {
+  if (e.target === document.getElementById('settings-overlay')) closeSettingsMenu();
+}
+function openShareMenu() {
+  document.getElementById('share-overlay').classList.add('open');
+}
+function closeShareMenu() {
+  document.getElementById('share-overlay').classList.remove('open');
+}
+function closeShareMenuOutside(e) {
+  if (e.target === document.getElementById('share-overlay')) closeShareMenu();
 }
 
 function onVolumeChange(e) {
@@ -8481,6 +8551,14 @@ function handleKeyDown(e) {
       closeShortcutsModal();
       return;
     }
+    if (document.getElementById('settings-overlay').classList.contains('open')) {
+      closeSettingsMenu();
+      return;
+    }
+    if (document.getElementById('share-overlay').classList.contains('open')) {
+      closeShareMenu();
+      return;
+    }
     if (document.getElementById('save-overlay').classList.contains('open')) {
       closeSaveModal();
       return;
@@ -8496,6 +8574,8 @@ function handleKeyDown(e) {
   // Don't fire other shortcuts when modals are open
   if (document.getElementById('save-overlay').classList.contains('open')) return;
   if (document.getElementById('shortcuts-overlay').classList.contains('open')) return;
+  if (document.getElementById('settings-overlay').classList.contains('open')) return;
+  if (document.getElementById('share-overlay').classList.contains('open')) return;
   if (document.getElementById('screenshot-overlay').classList.contains('open')) return;
   if (document.getElementById('stats-overlay').classList.contains('open')) return;
 
