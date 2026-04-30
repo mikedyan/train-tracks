@@ -580,6 +580,20 @@ body.high-contrast .cell.grid-focus { outline: 4px solid #FFFF00; outline-offset
 .btn-stop { background: var(--stop-red); color: white; box-shadow: 0 3px 10px rgba(244,67,54,0.4); }
 .btn-clear { background: #FF9800; color: white; box-shadow: 0 3px 10px rgba(255,152,0,0.3); }
 .btn-undo { background: #9E9E9E; color: white; box-shadow: 0 3px 10px rgba(0,0,0,0.15); }
+/* Toolbar color variants — consolidated from inline styles (Day 41 prune) */
+.btn-random { background: #9C27B0; color: white; box-shadow: 0 3px 10px rgba(156,39,176,0.3); }
+.btn-mute { background: #78909C; color: white; padding: 8px 12px; }
+.btn-night { padding: 8px 12px; }
+.btn-save-modal { background: #607D8B; color: white; box-shadow: 0 3px 10px rgba(96,125,139,0.3); }
+.btn-puzzle-modal { background: #FF5722; color: white; box-shadow: 0 3px 10px rgba(255,87,34,0.3); }
+.btn-weather { background: #5C9DC5; color: white; box-shadow: 0 3px 10px rgba(92,157,197,0.3); padding: 8px 12px; }
+.btn-biome { background: #66BB6A; color: white; box-shadow: 0 3px 10px rgba(102,187,106,0.3); padding: 8px 12px; }
+.btn-passengers-icon { padding: 8px 12px; }
+.btn-share { background: #26A69A; color: white; box-shadow: 0 3px 10px rgba(38,166,154,0.3); padding: 8px 12px; }
+.btn-help { background: #78909C; color: white; padding: 8px 12px; }
+.btn-settings { background: #455A64; color: white; padding: 8px 12px; }
+.btn-unlock-all { background: #FF9800; color: white; padding: 10px 24px; font-size: 14px; box-shadow: 0 3px 10px rgba(255,152,0,0.3); }
+.volume-slider { width: 50px; accent-color: #78909C; }
 
 .speed-control {
   display: flex;
@@ -2270,44 +2284,10 @@ body.night-mode .weather-snow #weather-overlay {
     <div class="palette-piece" data-type="duck-land" role="button" aria-label="Duck scenery" tabindex="0"><div class="label">Duck</div></div>
     <div class="palette-piece" data-type="people" role="button" aria-label="People scenery" tabindex="0"><div class="label">People</div></div>
   </div>
-  <!-- Mobile Bottom Drawer (shown on mobile via CSS) -->
+  <!-- Mobile Bottom Drawer (populated from #sidebar at boot — see buildMobileDrawer) -->
   <div id="mobile-drawer">
     <button id="drawer-toggle" onclick="toggleMobileDrawer()">▲ Pieces</button>
-    <div id="drawer-content">
-      <span class="drawer-section-label">Tracks</span>
-      <div class="palette-piece" data-type="straight" role="button" aria-label="Straight track piece" tabindex="0"><div class="label">Straight</div></div>
-      <div class="palette-piece" data-type="curve" role="button" aria-label="Curve track piece" tabindex="0"><div class="label">Curve</div></div>
-      <div class="palette-piece" data-type="tjunction" role="button" aria-label="T-Split track piece" tabindex="0"><div class="label">T-Split</div></div>
-      <div class="palette-piece" data-type="crossover" role="button" aria-label="Crossover track piece" tabindex="0"><div class="label">Cross</div></div>
-      <div class="palette-piece" data-type="bridge" role="button" aria-label="Bridge track piece" tabindex="0"><div class="label">Bridge</div></div>
-      <div class="palette-piece" data-type="tunnel" role="button" aria-label="Tunnel track piece" tabindex="0"><div class="label">Tunnel</div></div>
-      <div class="palette-piece" data-type="station" role="button" aria-label="Station track piece" tabindex="0"><div class="label">Station</div></div>
-      <div class="palette-piece" data-type="crossing" role="button" aria-label="Railroad crossing piece" tabindex="0"><div class="label">Crossing</div></div>
-      <div class="palette-piece" data-type="rainbow" role="button" aria-label="Rainbow track piece" tabindex="0"><div class="label">Rainbow</div></div>
-      <div class="palette-divider"></div>
-      <span class="drawer-section-label">Trains</span>
-      <div class="palette-piece palette-train palette-train-red" data-type="train-red" role="button" aria-label="Red train" tabindex="0"><div class="label">Red</div></div>
-      <div class="palette-piece palette-train palette-train-blue" data-type="train-blue" role="button" aria-label="Blue train" tabindex="0"><div class="label">Blue</div></div>
-      <div class="palette-piece palette-train palette-train-green" data-type="train-green" role="button" aria-label="Green train" tabindex="0"><div class="label">Green</div></div>
-      <div class="palette-piece palette-train palette-train-yellow" data-type="train-yellow" role="button" aria-label="Yellow train" tabindex="0"><div class="label">Yellow</div></div>
-      <div class="palette-piece palette-train palette-train-purple" data-type="train-purple" role="button" aria-label="Purple train" tabindex="0"><div class="label">Purple</div></div>
-      <div class="palette-divider"></div>
-      <span class="drawer-section-label">Cars</span>
-      <div class="palette-piece palette-car" data-type="freight" role="button" aria-label="Freight car" tabindex="0"><div class="label">Freight</div></div>
-      <div class="palette-piece palette-car" data-type="passenger" role="button" aria-label="Passenger car" tabindex="0"><div class="label">Passenger</div></div>
-      <div class="palette-piece palette-car" data-type="caboose" role="button" aria-label="Caboose car" tabindex="0"><div class="label">Caboose</div></div>
-      <div class="palette-divider"></div>
-      <span class="drawer-section-label">Scenery</span>
-      <div class="palette-piece" data-type="tree" role="button" aria-label="Tree scenery" tabindex="0"><div class="label">Tree</div></div>
-      <div class="palette-piece" data-type="house" role="button" aria-label="House scenery" tabindex="0"><div class="label">House</div></div>
-      <div class="palette-piece" data-type="cow" role="button" aria-label="Cow scenery" tabindex="0"><div class="label">Cow</div></div>
-      <div class="palette-piece" data-type="water" role="button" aria-label="Water scenery" tabindex="0"><div class="label">Water</div></div>
-      <div class="palette-piece" data-type="flower" role="button" aria-label="Flower scenery" tabindex="0"><div class="label">Flower</div></div>
-      <div class="palette-piece" data-type="sheep" role="button" aria-label="Sheep scenery" tabindex="0"><div class="label">Sheep</div></div>
-      <div class="palette-piece" data-type="horse" role="button" aria-label="Horse scenery" tabindex="0"><div class="label">Horse</div></div>
-      <div class="palette-piece" data-type="duck-land" role="button" aria-label="Duck scenery" tabindex="0"><div class="label">Duck</div></div>
-      <div class="palette-piece" data-type="people" role="button" aria-label="People scenery" tabindex="0"><div class="label">People</div></div>
-    </div>
+    <div id="drawer-content"></div>
   </div>
 
   <div id="main">
@@ -2324,24 +2304,24 @@ body.night-mode .weather-snow #weather-overlay {
     </div>
     <div id="controls">
       <button class="btn btn-play" id="btn-play" onclick="togglePlay()" aria-label="Play trains">▶️ Play</button>
-      <button class="btn" onclick="generateRandomTrack()" aria-label="Generate random track" style="background:#9C27B0;color:white;box-shadow:0 3px 10px rgba(156,39,176,0.3);">🎲 Random</button>
+      <button class="btn btn-random" onclick="generateRandomTrack()" aria-label="Generate random track">🎲 Random</button>
       <button class="btn btn-clear" onclick="clearAll()" aria-label="Clear all tracks">🗑️ Clear</button>
       <button class="btn btn-undo" id="btn-undo" onclick="undo()" aria-label="Undo last action">↩️ Undo</button>
       <button class="btn btn-undo" id="btn-redo" onclick="redo()" aria-label="Redo last action" disabled>↪️ Redo</button>
       <div class="speed-control">
         🐢 <input type="range" id="speed-slider" aria-label="Train speed" min="0.3" max="4" step="0.1" value="1.2"> 🐇
       </div>
-      <button class="btn" id="btn-mute" onclick="toggleMute()" style="background:#78909C;color:white;padding:8px 12px;" title="Sound (M)">🔊</button>
-      <input type="range" id="volume-slider" aria-label="Sound effects volume" min="0" max="1" step="0.05" value="0.8" oninput="onVolumeChange(event)" style="width:50px;accent-color:#78909C;" title="Volume">
-      <button class="btn btn-night" id="btn-night" onclick="toggleNightMode()" style="padding:8px 12px;" title="Day / Night (N)">☀️</button>
-      <button class="btn" onclick="openSaveModal()" style="background:#607D8B;color:white;box-shadow:0 3px 10px rgba(96,125,139,0.3);">💾 Save</button>
-      <button class="btn" onclick="openPuzzleModal()" style="background:#FF5722;color:white;box-shadow:0 3px 10px rgba(255,87,34,0.3);">🧩 Puzzles</button>
-      <button class="btn" id="btn-weather" onclick="cycleWeather()" style="background:#5C9DC5;color:white;box-shadow:0 3px 10px rgba(92,157,197,0.3);padding:8px 12px;" title="Change weather (W)">🌤️</button>
-      <button class="btn" id="btn-biome" onclick="cycleBiome()" style="background:#66BB6A;color:white;box-shadow:0 3px 10px rgba(102,187,106,0.3);padding:8px 12px;" title="Change terrain biome">🌸</button>
-      <button class="btn btn-passengers" id="btn-passengers" onclick="togglePassengers()" style="padding:8px 12px;" title="Toggle passenger delivery">🧑</button>
-      <button class="btn" onclick="openShareMenu()" style="background:#26A69A;color:white;box-shadow:0 3px 10px rgba(38,166,154,0.3);padding:8px 12px;" title="Share / Save image" aria-label="Share menu">📤</button>
-      <button class="btn" id="btn-help" onclick="showTutorial()" style="background:#78909C;color:white;padding:8px 12px;" title="How to play">❓</button>
-      <button class="btn" onclick="openSettingsMenu()" style="background:#455A64;color:white;padding:8px 12px;" title="Settings" aria-label="Settings menu">⚙️</button>
+      <button class="btn btn-mute" id="btn-mute" onclick="toggleMute()" title="Sound (M)">🔊</button>
+      <input type="range" id="volume-slider" aria-label="Sound effects volume" min="0" max="1" step="0.05" value="0.8" oninput="onVolumeChange(event)" class="volume-slider" title="Volume">
+      <button class="btn btn-night" id="btn-night" onclick="toggleNightMode()" title="Day / Night (N)">☀️</button>
+      <button class="btn btn-save-modal" onclick="openSaveModal()">💾 Save</button>
+      <button class="btn btn-puzzle-modal" onclick="openPuzzleModal()">🧩 Puzzles</button>
+      <button class="btn btn-weather" id="btn-weather" onclick="cycleWeather()" title="Change weather (W)">🌤️</button>
+      <button class="btn btn-biome" id="btn-biome" onclick="cycleBiome()" title="Change terrain biome">🌸</button>
+      <button class="btn btn-passengers btn-passengers-icon" id="btn-passengers" onclick="togglePassengers()" title="Toggle passenger delivery">🧑</button>
+      <button class="btn btn-share" onclick="openShareMenu()" title="Share / Save image" aria-label="Share menu">📤</button>
+      <button class="btn btn-help" id="btn-help" onclick="showTutorial()" title="How to play">❓</button>
+      <button class="btn btn-settings" onclick="openSettingsMenu()" title="Settings" aria-label="Settings menu">⚙️</button>
       <button class="btn" id="btn-horn" onclick="blowHorn()" title="Blow the horn! (H)">📯 HONK!</button>
     </div>
   </div>
@@ -3738,8 +3718,6 @@ let weatherAmbientGain = null;
 
 
 
-function getCurrentBiome() { return currentBiome; }
-
 function getSceneryEmoji(type) {
   const overrides = BIOME_EMOJI_OVERRIDES[currentBiome];
   if (overrides && overrides[type]) return overrides[type];
@@ -3948,12 +3926,6 @@ function getNeighbor(row, col, dir) {
   const nr = row + d.r, nc = col + d.c;
   if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) return null;
   return { row: nr, col: nc };
-}
-
-function isConnectedAt(row, col, dir) {
-  const piece = state.grid[row][col];
-  if (!piece) return false;
-  return getConnections(piece.type, piece.rotation).includes(dir);
 }
 
 function neighborConnected(row, col, dir) {
@@ -4683,15 +4655,6 @@ function updateConnectionDots(row, col) {
   });
 }
 
-function updateAllConnectionDots() {
-  for (let r = 0; r < ROWS; r++)
-    for (let c = 0; c < COLS; c++) {
-      if (state.grid[r][c] && !SCENERY_TYPES.includes(state.grid[r][c].type)) {
-        updateConnectionDots(r, c);
-      }
-    }
-}
-
 // ============================================================
 // CAR POSITIONING (Static display)
 // ============================================================
@@ -5095,16 +5058,6 @@ function handleRemoveCell(row, col) {
   } else {
     showToast('Track removed!');
   }
-}
-
-function startLongPress(row, col) {
-  longPressTarget = { row, col };
-  longPressTimer = setTimeout(() => {
-    if (longPressTarget) {
-      handleRemoveCell(row, col);
-      longPressTarget = null;
-    }
-  }, 500);
 }
 
 function cancelLongPress() {
@@ -8389,6 +8342,25 @@ function toggleMobileDrawer() {
   }
 }
 
+// Populate the mobile drawer by mirroring the desktop sidebar's palette items.
+// Single source of truth lives in #sidebar; <h2> headers map to .drawer-section-label spans.
+function buildMobileDrawer() {
+  const sidebar = document.getElementById('sidebar');
+  const drawer = document.getElementById('drawer-content');
+  if (!sidebar || !drawer) return;
+  drawer.innerHTML = '';
+  for (const node of sidebar.children) {
+    if (node.tagName === 'H2') {
+      const span = document.createElement('span');
+      span.className = 'drawer-section-label';
+      span.textContent = node.textContent;
+      drawer.appendChild(span);
+    } else {
+      drawer.appendChild(node.cloneNode(true));
+    }
+  }
+}
+
 // ============================================================
 // HAPTIC FEEDBACK
 // ============================================================
@@ -9966,7 +9938,7 @@ function renderStatsContent() {
 
   if (!allUnlocked) {
     html += '<div style="text-align:center;margin-top:12px;">';
-    html += '<button class="btn" onclick="unlockEverything();renderStatsContent();" style="background:#FF9800;color:white;padding:10px 24px;font-size:14px;box-shadow:0 3px 10px rgba(255,152,0,0.3);">🔓 Unlock Everything</button>';
+    html += '<button class="btn btn-unlock-all" onclick="unlockEverything();renderStatsContent();">🔓 Unlock Everything</button>';
     html += '</div>';
   } else {
     html += '<div style="text-align:center;color:#4CAF50;font-weight:700;font-size:14px;margin-top:8px;">🔓 All pieces unlocked!</div>';
@@ -10036,13 +10008,6 @@ function setPaletteTrainColor(paletteEl, newColor) {
   SFX.rotate();
 }
 
-function cyclePaletteTrainColor(paletteEl) {
-  const currentColor = getTrainColor(paletteEl.dataset.type);
-  const idx = TRAIN_COLOR_ORDER.indexOf(currentColor);
-  const nextIdx = (idx + 1) % TRAIN_COLOR_ORDER.length;
-  setPaletteTrainColor(paletteEl, TRAIN_COLOR_ORDER[nextIdx]);
-}
-
 function init() {
   calculateSize();
   initGrid();
@@ -10084,7 +10049,10 @@ function init() {
     showToast('Welcome back! 🚂');
   }
 
-  // Render palette SVGs
+  // Mirror desktop sidebar into mobile drawer (single source of truth)
+  buildMobileDrawer();
+
+  // Render palette SVGs (desktop sidebar + mobile drawer)
   document.querySelectorAll('.palette-piece').forEach(el => {
     const type = el.dataset.type;
     const svg = createPaletteSVG(type);
