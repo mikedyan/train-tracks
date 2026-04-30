@@ -1,8 +1,11 @@
 # Lessons Learned — Train Tracks
 
 ## Code Patterns
-- LESSON-001: The game is a single `index.html` file (~2200 lines). All changes go here.
+- LESSON-001: The game is a single `index.html` file (~10,100 lines after Day 41 prune). All changes go here.
 - LESSON-002: SVG rendering for all track pieces — clean, scales to any size.
+- LESSON-DAY41-A: Single-source-of-truth palette — desktop sidebar (#sidebar) is the canonical palette HTML; mobile drawer (#drawer-content) is now built at boot via `buildMobileDrawer()` which clones sidebar children. `<h2>` headers map to `<span class="drawer-section-label">` automatically. ALWAYS edit ONLY the sidebar markup when adding/removing palette pieces — the drawer mirrors automatically. Run `buildMobileDrawer()` BEFORE the SVG render loop in `init()` so both sets get SVGs in one pass.
+- LESSON-DAY41-B: Inline button styles (`style="background:...;color:white;box-shadow:..."`) belong in CSS utility classes (`.btn-random`, `.btn-share`, `.btn-settings`, etc.). It's the same number of HTML lines but ~50% fewer characters per button, easier to theme, and survives a future palette restyle without touching every button in HTML.
+- LESSON-DAY41-C: Dead-function audit pattern — `awk -F'function ' '/^function /{split($2,a,"("); print a[1]}' index.html | while read fn; do total=$(grep -cE "\b${fn}\b" index.html); [ "$total" -le 1 ] && echo "$fn dead"; done`. Total=1 means defined-but-never-called. Day 41 caught: `getCurrentBiome`, `isConnectedAt`, `updateAllConnectionDots`, `startLongPress` (orphaned), `cyclePaletteTrainColor` (only called itself via `setPaletteTrainColor`).
 - LESSON-003: Web Audio API for all sounds — no external audio files, everything synthesized.
 - LESSON-004: Uses pointer events (not separate mouse/touch) — works on both desktop and mobile.
 - LESSON-005: CSS custom properties used for theming — leverage for day/night mode.
