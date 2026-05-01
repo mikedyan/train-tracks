@@ -6595,8 +6595,10 @@ function startPlay() {
   incrementStat('trainsRun', validTrains.length);
 
   SFX.whistle();
-  setTimeout(startChugLoop, 500);
-  setTimeout(startSmokeLoop, 300);
+  // Day 42: tighter sound layering — smoke and chugs kick in sooner so the
+  // first ~half-second of play feels alive instead of silent after the toot.
+  setTimeout(startChugLoop, 350);
+  setTimeout(startSmokeLoop, 200);
   updateHeadlightVisibility();
   // Start passenger delivery system if enabled
   startPassengerSystem();
@@ -6704,6 +6706,13 @@ function checkAnimalProximity(anim, trainRow, trainCol) {
   }
 }
 
+// Day 42 prune helper: collapse 4× "snap to end of cell, render, crash, return" repetition.
+function crashTrainHere(anim) {
+  anim.progress = 1;
+  renderTrainAtProgress(anim);
+  triggerCrashSequence(anim);
+}
+
 function advanceTrainAnim(anim, timestamp) {
   const dt = (timestamp - anim.lastTime) / 1000;
   anim.lastTime = timestamp;
@@ -6715,37 +6724,17 @@ function advanceTrainAnim(anim, timestamp) {
 
   if (anim.progress >= 1) {
     const nextPos = getNeighbor(anim.row, anim.col, anim.exitEdge);
-    if (!nextPos) {
-      anim.progress = 1;
-      renderTrainAtProgress(anim);
-      triggerCrashSequence(anim);
-      return;
-    }
+    if (!nextPos) { crashTrainHere(anim); return; }
 
     const nextPiece = state.grid[nextPos.row]?.[nextPos.col];
-    if (!nextPiece || SCENERY_TYPES.includes(nextPiece.type)) {
-      anim.progress = 1;
-      renderTrainAtProgress(anim);
-      triggerCrashSequence(anim);
-      return;
-    }
+    if (!nextPiece || SCENERY_TYPES.includes(nextPiece.type)) { crashTrainHere(anim); return; }
 
     const newEntry = OPPOSITE[anim.exitEdge];
     const nextConns = getConnections(nextPiece.type, nextPiece.rotation);
-    if (!nextConns.includes(newEntry)) {
-      anim.progress = 1;
-      renderTrainAtProgress(anim);
-      triggerCrashSequence(anim);
-      return;
-    }
+    if (!nextConns.includes(newEntry)) { crashTrainHere(anim); return; }
 
     const newExit = getExitDir(nextPiece.type, nextPiece.rotation, newEntry, nextPos.row, nextPos.col);
-    if (!newExit) {
-      anim.progress = 1;
-      renderTrainAtProgress(anim);
-      triggerCrashSequence(anim);
-      return;
-    }
+    if (!newExit) { crashTrainHere(anim); return; }
 
     anim.row = nextPos.row;
     anim.col = nextPos.col;
@@ -6816,8 +6805,13 @@ function renderTrainAtProgress(anim) {
   const locoX = pixelX + offX;
   const locoY = pixelY + offY;
 
+  // Day 42 polish: tiny vertical "chuff" bob brings the loco to life as it rolls.
+  // Skipped for accessibility (reduced motion), and amplitude is sub-pixel-small
+  // (±1.2px) so it never reads as wobble — just gives the chassis a heartbeat.
+  const bob = prefersReducedMotion() ? 0 : Math.sin(performance.now() * 0.012) * 1.2;
+
   anim.trainEl.style.left = locoX + 'px';
-  anim.trainEl.style.top = locoY + 'px';
+  anim.trainEl.style.top = (locoY + bob) + 'px';
 
   const angleDeg = (pos.angle || 0) * (180 / Math.PI);
 
@@ -6912,12 +6906,15 @@ function renderTrainAtProgress(anim) {
     const gridOffX = gridEl2 ? gridEl2.offsetLeft : 0;
     const gridOffY = gridEl2 ? gridEl2.offsetTop : 0;
 
+    // Same bob phase as the loco; each car offset by index so they wave gently.
+    const carBobBase = prefersReducedMotion() ? 0 : performance.now() * 0.012;
     for (let i = 0; i < anim.carEls.length; i++) {
       const targetDist = anim.cumulativeDistance - (i + 1) * carSpacing;
       const entry = findHistoryEntry(anim.positionHistory, targetDist);
       if (entry) {
+        const carBob = prefersReducedMotion() ? 0 : Math.sin(carBobBase - (i + 1) * 0.6) * 1.0;
         anim.carEls[i].style.left = entry.x + 'px';
-        anim.carEls[i].style.top = entry.y + 'px';
+        anim.carEls[i].style.top = (entry.y + carBob) + 'px';
 
         // Determine which grid cell this car is in for tunnel fade
         const carGridX = entry.x - gridOffX;
@@ -7110,12 +7107,22 @@ function generateRandomTrack() {
     return;
   }
   
-  // Randomly convert some straight pieces to tunnels (~20% chance per straight)
+  // Day 42 delight polish: randomized special pieces along straights.
+  // • ~20% of straights become tunnels (existing behavior — mountains!)
+  // • always promote one straight to a station (kids love the "Toot toot!")
+  // • 25% of tracks also get a rainbow tile for sparkle/magic
   path.forEach(cell => {
     if (cell.type === 'straight' && Math.random() < 0.2) {
       cell.type = 'tunnel';
     }
   });
+  const promote = (toType) => {
+    const candidates = path.filter(c => c.type === 'straight');
+    if (candidates.length === 0) return;
+    candidates[Math.floor(Math.random() * candidates.length)].type = toType;
+  };
+  promote('station');
+  if (Math.random() < 0.25) promote('rainbow');
 
   // Animate placing pieces with cascading sound effect
   let delay = 0;
