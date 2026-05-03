@@ -1391,7 +1391,8 @@ body.night-mode .cell.has-tunnel svg {
 /* KEYBOARD SHORTCUTS OVERLAY */
 #shortcuts-overlay,
 #settings-overlay,
-#share-overlay {
+#share-overlay,
+#train-names-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,0.5);
@@ -1403,10 +1404,12 @@ body.night-mode .cell.has-tunnel svg {
 }
 #shortcuts-overlay.open,
 #settings-overlay.open,
-#share-overlay.open { display: flex; }
+#share-overlay.open,
+#train-names-overlay.open { display: flex; }
 
 #settings-modal,
-#share-modal {
+#share-modal,
+#train-names-modal {
   background: #FFF;
   border-radius: 16px;
   padding: 24px;
@@ -1418,15 +1421,59 @@ body.night-mode .cell.has-tunnel svg {
   position: relative;
 }
 body.night-mode #settings-modal,
-body.night-mode #share-modal { background: #263238; color: #ECEFF1; }
+body.night-mode #share-modal,
+body.night-mode #train-names-modal { background: #263238; color: #ECEFF1; }
 #settings-modal h2,
-#share-modal h2 { font-size: 20px; color: #3E2723; margin-bottom: 16px; text-align: center; }
+#share-modal h2,
+#train-names-modal h2 { font-size: 20px; color: #3E2723; margin-bottom: 16px; text-align: center; }
 body.night-mode #settings-modal h2,
-body.night-mode #share-modal h2 { color: #ECEFF1; }
+body.night-mode #share-modal h2,
+body.night-mode #train-names-modal h2 { color: #ECEFF1; }
 #settings-modal .close-btn,
-#share-modal .close-btn { position: absolute; top: 12px; right: 14px; background: none; border: none; font-size: 22px; cursor: pointer; color: #999; line-height: 1; }
+#share-modal .close-btn,
+#train-names-modal .close-btn { position: absolute; top: 12px; right: 14px; background: none; border: none; font-size: 22px; cursor: pointer; color: #999; line-height: 1; }
 #settings-modal .close-btn:hover,
-#share-modal .close-btn:hover { color: #333; }
+#share-modal .close-btn:hover,
+#train-names-modal .close-btn:hover { color: #333; }
+
+/* Day 44: Train Name Labels */
+.train-name-row { display: flex; align-items: center; gap: 10px; padding: 8px 4px; border-bottom: 1px solid rgba(0,0,0,0.06); }
+.train-name-row:last-child { border-bottom: none; }
+body.night-mode .train-name-row { border-bottom-color: rgba(255,255,255,0.08); }
+.train-name-row .tn-swatch { width: 28px; height: 28px; border-radius: 50%; flex: 0 0 28px; box-shadow: 0 0 0 2px rgba(0,0,0,0.1) inset; }
+.train-name-row .tn-input { flex: 1; padding: 8px 10px; font-size: 15px; font-family: inherit; border: 2px solid #CFD8DC; border-radius: 8px; background: #FAFAFA; color: #263238; text-transform: uppercase; letter-spacing: 0.5px; }
+.train-name-row .tn-input:focus { outline: none; border-color: #FFA726; background: #FFF; }
+body.night-mode .train-name-row .tn-input { background: #1B262C; color: #ECEFF1; border-color: #455A64; }
+body.night-mode .train-name-row .tn-input:focus { border-color: #FFA726; background: #263238; }
+.train-names-empty { padding: 30px 10px; text-align: center; color: #888; font-size: 14px; }
+body.night-mode .train-names-empty { color: #B0BEC5; }
+.train-names-actions { display: flex; gap: 10px; margin-top: 16px; }
+.train-names-actions .btn-primary { flex: 1; background: #FF9800; color: white; padding: 10px 14px; font-weight: 600; border-radius: 10px; }
+.train-names-actions .btn-primary:hover { background: #F57C00; }
+
+.train-name-label {
+  position: absolute;
+  z-index: 51;
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+  background: rgba(38, 50, 56, 0.92);
+  color: #FFF;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  white-space: nowrap;
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: 'Trebuchet MS', system-ui, sans-serif;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.4);
+  border: 1.5px solid rgba(255,255,255,0.55);
+}
+body.night-mode .train-name-label { background: rgba(255, 235, 130, 0.95); color: #1B262C; border-color: rgba(0,0,0,0.25); text-shadow: none; }
+body.high-contrast .train-name-label { background: #000; color: #FFF; border-color: #FFF; }
 
 .settings-grid,
 .share-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -2347,10 +2394,24 @@ body.night-mode .weather-snow #weather-overlay {
       <button class="btn settings-item" onclick="closeSettingsMenu(); openStatsModal();" title="Stats and milestones"><span class="si-icon">📊</span><span class="si-label">Stats &amp; Milestones</span></button>
       <button class="btn settings-item" onclick="closeSettingsMenu(); openShortcutsModal();" title="Keyboard shortcuts"><span class="si-icon">⌨️</span><span class="si-label">Keyboard Shortcuts</span></button>
       <button class="btn settings-item" onclick="closeSettingsMenu(); toggleFullscreen();" title="Fullscreen"><span class="si-icon">⛶</span><span class="si-label">Fullscreen</span></button>
+      <button class="btn settings-item" onclick="closeSettingsMenu(); openTrainNamesModal();" title="Name your trains"><span class="si-icon">🏷️</span><span class="si-label">Name Your Trains</span></button>
     </div>
     <div class="settings-music-volume">
       <span style="font-size:13px;color:#777;">Music volume</span>
       <input type="range" id="music-volume-slider" aria-label="Music volume" min="0" max="1" step="0.05" value="0.5" oninput="onMusicVolumeChange(event)" style="width:120px;accent-color:#AB47BC;" title="Music Volume">
+    </div>
+  </div>
+</div>
+
+<!-- Train Names Modal (Day 44 — Cycle 2 Build Day 1) -->
+<div id="train-names-overlay" onclick="closeTrainNamesModalOutside(event)">
+  <div id="train-names-modal">
+    <button class="close-btn" onclick="closeTrainNamesModal()">✕</button>
+    <h2>🏷️ Name Your Trains</h2>
+    <p style="font-size:13px;color:#777;text-align:center;margin:-8px 0 14px;">Type a name (up to 14 letters). It floats above the loco when it rolls.</p>
+    <div id="train-names-list"></div>
+    <div class="train-names-actions">
+      <button class="btn btn-primary" onclick="saveTrainNames()">Save</button>
     </div>
   </div>
 </div>
@@ -4971,7 +5032,7 @@ function placeTrain(row, col, color) {
       showToast('🚂 Max ' + MAX_TRAINS + ' trains!');
       return;
     }
-    state.trains.push({ row, col, color, cars: [] });
+    state.trains.push({ row, col, color, cars: [], name: '' });
   }
   renderCell(row, col);
   renderStaticCars();
@@ -6512,6 +6573,15 @@ function startPlay() {
     hlEl.style.cssText = 'position:absolute;pointer-events:none;z-index:45;border-radius:50%;opacity:0;transition:opacity 0.3s ease;';
     document.getElementById('grid-container').appendChild(hlEl);
 
+    // Day 44: Create floating name label (only if train has a name)
+    let nameLabelEl = null;
+    if (train.name && train.name.trim()) {
+      nameLabelEl = document.createElement('div');
+      nameLabelEl.className = 'train-name-label';
+      nameLabelEl.textContent = train.name.trim().toUpperCase().slice(0, 14);
+      document.getElementById('grid-container').appendChild(nameLabelEl);
+    }
+
     const exitDir = getExitDir(piece.type, piece.rotation, entryEdge, train.row, train.col);
 
     const anim = {
@@ -6524,6 +6594,7 @@ function startPlay() {
       progress: 0,
       trainEl: trainEl,
       headlightEl: hlEl,
+      nameLabelEl: nameLabelEl,
       lastTime: performance.now(),
       startRow: train.row,
       startCol: train.col,
@@ -6856,6 +6927,15 @@ function renderTrainAtProgress(anim) {
   anim.trainEl.style.opacity = locoOpacity;
   anim.trainEl.style.transform = `translate(-50%, -50%) rotate(${angleDeg + 90}deg) scale(${locoScale})`;
 
+  // Day 44: Position floating name label (always upright, follows loco)
+  if (anim.nameLabelEl) {
+    // Lift label above the locomotive sprite (~half train height + small gap)
+    const labelOffsetY = -(cellSize * 0.55);
+    anim.nameLabelEl.style.left = locoX + 'px';
+    anim.nameLabelEl.style.top = (locoY + labelOffsetY) + 'px';
+    anim.nameLabelEl.style.opacity = locoOpacity;
+  }
+
   // Rainbow glow timer check + sparkle trail
   if (anim.rainbowGlowActive) {
     if (Date.now() > anim.rainbowGlowEnd) {
@@ -7023,6 +7103,101 @@ function closeShareMenuOutside(e) {
   if (e.target === document.getElementById('share-overlay')) closeShareMenu();
 }
 
+// ============================================================
+// TRAIN NAME LABELS (Day 44 — Cycle 2 Build Day 1)
+// ============================================================
+// Lets kids type a name per placed train ("MARK'S TRAIN", "RAINBOW EXPRESS")
+// which floats above the loco during play. Names persist via the existing
+// state.trains JSON serialization (auto-save, save slots) for free — they
+// are just an additional `name` field on each train object.
+function openTrainNamesModal() {
+  normalizeTrainsName();
+  const list = document.getElementById('train-names-list');
+  if (!list) return;
+  list.innerHTML = '';
+  if (!state.trains || state.trains.length === 0) {
+    list.innerHTML = '<div class="train-names-empty">🚂 Place a train on the grid first, then come back to name it!</div>';
+  } else {
+    state.trains.forEach((t, i) => {
+      const tc = (typeof TRAIN_COLORS !== 'undefined' && TRAIN_COLORS[t.color]) ? TRAIN_COLORS[t.color] : { body: '#D32F2F' };
+      const row = document.createElement('div');
+      row.className = 'train-name-row';
+      const swatch = document.createElement('div');
+      swatch.className = 'tn-swatch';
+      swatch.style.background = tc.body;
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'tn-input';
+      input.maxLength = 14;
+      input.value = (t.name || '').toUpperCase();
+      input.placeholder = (t.color ? t.color.toUpperCase() : 'TRAIN') + "'S NAME";
+      input.dataset.trainIdx = i;
+      input.setAttribute('aria-label', 'Name for ' + (t.color || 'train') + ' train');
+      input.addEventListener('input', () => {
+        // Strip illegal chars and force upper-case as the user types.
+        const v = input.value.replace(/[^A-Za-z0-9 '!?.\-]/g, '').toUpperCase().slice(0, 14);
+        if (v !== input.value) input.value = v;
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); saveTrainNames(); }
+      });
+      row.appendChild(swatch);
+      row.appendChild(input);
+      list.appendChild(row);
+    });
+  }
+  document.getElementById('train-names-overlay').classList.add('open');
+  // Auto-focus first input for a fast typing flow on desktop.
+  setTimeout(() => {
+    const first = list.querySelector('.tn-input');
+    if (first) first.focus();
+  }, 50);
+}
+function closeTrainNamesModal() {
+  document.getElementById('train-names-overlay').classList.remove('open');
+}
+function closeTrainNamesModalOutside(e) {
+  if (e.target === document.getElementById('train-names-overlay')) closeTrainNamesModal();
+}
+function saveTrainNames() {
+  const inputs = document.querySelectorAll('#train-names-list .tn-input');
+  let changed = false;
+  inputs.forEach(inp => {
+    const idx = parseInt(inp.dataset.trainIdx, 10);
+    if (Number.isNaN(idx) || !state.trains[idx]) return;
+    const newName = inp.value.trim().toUpperCase().slice(0, 14);
+    if ((state.trains[idx].name || '') !== newName) {
+      state.trains[idx].name = newName;
+      changed = true;
+    }
+  });
+  closeTrainNamesModal();
+  if (changed) {
+    autoSave();
+    SFX.place();
+    showToast('🏷️ Names saved!');
+    // If trains are currently playing, refresh their labels live.
+    if (state.playing && Array.isArray(animStates)) {
+      for (const anim of animStates) {
+        const t = state.trains.find(tr => tr.color === anim.color);
+        const wantName = t && t.name ? t.name.trim().toUpperCase().slice(0, 14) : '';
+        if (wantName) {
+          if (!anim.nameLabelEl) {
+            anim.nameLabelEl = document.createElement('div');
+            anim.nameLabelEl.className = 'train-name-label';
+            const gc = document.getElementById('grid-container');
+            if (gc) gc.appendChild(anim.nameLabelEl);
+          }
+          anim.nameLabelEl.textContent = wantName;
+        } else if (anim.nameLabelEl) {
+          anim.nameLabelEl.remove();
+          anim.nameLabelEl = null;
+        }
+      }
+    }
+  }
+}
+
 function onVolumeChange(e) {
   volumeLevel = parseFloat(e.target.value);
   applyVolumeState();
@@ -7044,6 +7219,15 @@ function restoreAudioSettings() {
   if (muteBtn) muteBtn.textContent = icons[soundState];
   const volSlider = document.getElementById('volume-slider');
   if (volSlider) volSlider.value = volumeLevel;
+}
+
+// Day 44: Ensure all loaded train objects have a `name` field (default '').
+// Older saves, share-link decodes, and puzzle-init paths all funnel through here.
+function normalizeTrainsName() {
+  if (!Array.isArray(state.trains)) return;
+  for (const t of state.trains) {
+    if (typeof t.name !== 'string') t.name = '';
+  }
 }
 
 function stopPlay() {
@@ -7073,6 +7257,7 @@ function stopPlay() {
   for (const anim of animStates) {
     if (anim.trainEl) anim.trainEl.remove();
     if (anim.headlightEl) anim.headlightEl.remove();
+    if (anim.nameLabelEl) anim.nameLabelEl.remove();
     if (anim.carEls) anim.carEls.forEach(el => el.remove());
   }
 
@@ -7530,6 +7715,7 @@ function deserializeState(json) {
       }
       state.switchStates = data.switchStates || {};
       state.undoStack = [];
+      normalizeTrainsName();
       return true;
     }
   } catch (e) { /* ignore parse errors */ }
@@ -8538,6 +8724,10 @@ function handleKeyDown(e) {
       closeShareMenu();
       return;
     }
+    if (document.getElementById('train-names-overlay').classList.contains('open')) {
+      closeTrainNamesModal();
+      return;
+    }
     if (document.getElementById('save-overlay').classList.contains('open')) {
       closeSaveModal();
       return;
@@ -8557,6 +8747,7 @@ function handleKeyDown(e) {
   if (document.getElementById('share-overlay').classList.contains('open')) return;
   if (document.getElementById('screenshot-overlay').classList.contains('open')) return;
   if (document.getElementById('stats-overlay').classList.contains('open')) return;
+  if (document.getElementById('train-names-overlay').classList.contains('open')) return;
 
   const key = e.key;
 
