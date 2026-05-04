@@ -3770,6 +3770,7 @@ function restoreBigGrid() {
     const val = localStorage.getItem(BIG_GRID_KEY);
     if (val === '1') applyGridSize(true);
   } catch (e) {}
+  updateBigGridLabel();
 }
 
 function toggleBigGrid() {
@@ -7163,6 +7164,7 @@ function toggleMute() {
 // ============================================================
 function openSettingsMenu() {
   updateMusicSettingsLabel();
+  updateBigGridLabel();
   document.getElementById('settings-overlay').classList.add('open');
 }
 function closeSettingsMenu() {
