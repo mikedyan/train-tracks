@@ -4634,7 +4634,7 @@ function renderCell(row, col) {
   if (!cell) return;
 
   // Clear existing content except connection dots
-  cell.querySelectorAll('svg, .train-emoji, .train-svg, .scenery-emoji, .car-svg, .car-count-badge, .switch-lever, .water-duck').forEach(el => el.remove());
+  cell.querySelectorAll('svg, .train-emoji, .train-svg, .scenery-emoji, .car-svg, .car-count-badge, .switch-lever, .water-duck, .station-cargo-badge').forEach(el => el.remove());
   cell.classList.remove('occupied', 'has-train', 'has-switch', 'has-tunnel', 'water-cell', 'bridge-over-water');
   cell.classList.remove('locked-cell');
   if (isPuzzleLocked(row, col)) cell.classList.add('locked-cell');
@@ -4815,6 +4815,11 @@ function renderCell(row, col) {
   updateCellAriaLabel(row, col);
 
   updateConnectionDots(row, col);
+
+  // Day 46: Re-render cargo badge if this is a cargo station
+  if (piece && piece.type === 'station' && piece.cargoType && typeof renderStationCargo === 'function') {
+    renderStationCargo(row, col);
+  }
 }
 
 function updateCellAriaLabel(row, col) {
@@ -7456,6 +7461,8 @@ function generateRandomTrack() {
   state.grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
   state.trains = [];
   renderAllCells();
+  // Day 46: clear any stale cargo badges before re-render
+  cleanupStationCargoBadges();
   
   SFX.generate();
   showToast('🎲 Generating track...');
@@ -10192,10 +10199,12 @@ let cargoState = {
 function resetCargoState() {
   cargoState.onboard = {};
   cargoState.delivered = 0;
-  cleanupStationCargoBadges();
   cleanupTrainCargoBadges();
   const hud = document.getElementById('cargo-hud');
   if (hud) hud.classList.remove('active');
+  // NOTE: station cargo badges are *not* cleaned here — they are
+  // permanent visual indicators of placed cargo missions. They are
+  // cleared automatically by renderCell when a station is replaced/removed.
 }
 
 function hasAnyCargoStations() {
