@@ -1791,6 +1791,78 @@ body.night-mode #passenger-hud .passenger-best { color: #78909C; }
 .btn-passengers { background: #8D6E63; color: white; box-shadow: 0 3px 10px rgba(141,110,99,0.3); }
 .btn-passengers.enabled { background: #43A047; box-shadow: 0 3px 10px rgba(67,160,71,0.4); }
 
+/* Day 46: Cargo delivery badges */
+.station-cargo-badge {
+  position: absolute;
+  left: 6%;
+  top: 6%;
+  width: 26%;
+  height: 26%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(10px, 2.4vw, 16px);
+  background: rgba(255, 255, 255, 0.92);
+  border: 2px solid #FFB300;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.18);
+  pointer-events: none;
+  z-index: 6;
+  animation: cargo-pulse 2.4s ease-in-out infinite;
+}
+.station-cargo-badge[data-cargo-role="delivery"] {
+  border-color: #43A047;
+  background: rgba(232, 245, 233, 0.94);
+}
+body.night-mode .station-cargo-badge { background: rgba(38, 50, 56, 0.9); border-color: #FFD54F; }
+body.night-mode .station-cargo-badge[data-cargo-role="delivery"] { border-color: #66BB6A; background: rgba(27, 38, 44, 0.9); }
+@keyframes cargo-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .station-cargo-badge { animation: none; }
+}
+.train-cargo-badge {
+  position: absolute;
+  pointer-events: none;
+  z-index: 51;
+  font-size: 14px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 248, 225, 0.95);
+  border: 2px solid #FFB300;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+  transform: translate(-50%, -50%);
+}
+body.night-mode .train-cargo-badge { background: rgba(38, 50, 56, 0.95); border-color: #FFD54F; }
+body.high-contrast .train-cargo-badge { background: #000; color: #FFF; border-color: #FFF; }
+#cargo-hud {
+  position: fixed;
+  top: 110px;
+  right: 18px;
+  background: rgba(255, 248, 225, 0.95);
+  border: 2px solid #FFB300;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #5D4037;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+  display: none;
+  z-index: 60;
+  font-family: inherit;
+}
+#cargo-hud.active { display: flex; gap: 10px; align-items: center; }
+body.night-mode #cargo-hud { background: rgba(38, 50, 56, 0.95); color: #FFE082; border-color: #FFD54F; }
+@media (max-width: 760px) {
+  #cargo-hud { top: auto; bottom: 110px; right: 10px; font-size: 12px; padding: 6px 10px; }
+}
+
 /* PROGRESSION & UNLOCKS */
 .palette-piece.palette-locked {
   opacity: 0.35;
@@ -2487,6 +2559,11 @@ body.night-mode .weather-snow #weather-overlay {
 <div id="passenger-hud">
   <span class="passenger-count" id="passenger-count">🧑 Delivered: 0</span>
   <span class="passenger-best" id="passenger-best"></span>
+</div>
+
+<!-- Day 46: Cargo Delivery HUD -->
+<div id="cargo-hud">
+  <span id="cargo-count">📦 Cargo: 0</span>
 </div>
 
 <!-- Puzzle Select Modal -->
@@ -6752,6 +6829,8 @@ function startPlay() {
   updateHeadlightVisibility();
   // Start passenger delivery system if enabled
   startPassengerSystem();
+  // Day 46: Start cargo system (auto-on if any cargo stations exist on the grid)
+  startCargoSystem();
   requestAnimationFrame(animateFrame);
 }
 
@@ -6905,10 +6984,15 @@ function advanceTrainAnim(anim, timestamp) {
 
     if (nextPiece.type === 'station') {
       SFX.station();
+      let didCargoEvent = false;
+      // Day 46: Cargo pickup/delivery (independent of passenger toggle)
+      if (nextPiece.cargoType) {
+        didCargoEvent = handleTrainAtCargoStation(anim, nextPos.row, nextPos.col);
+      }
       // Handle passenger pickup/delivery
       if (passengerState.enabled) {
         handleTrainAtStation(anim, nextPos.row, nextPos.col);
-      } else {
+      } else if (!didCargoEvent) {
         showToast('🚉 Toot toot!');
       }
     }
@@ -7013,6 +7097,15 @@ function renderTrainAtProgress(anim) {
     anim.nameLabelEl.style.left = locoX + 'px';
     anim.nameLabelEl.style.top = (locoY + labelOffsetY) + 'px';
     anim.nameLabelEl.style.opacity = locoOpacity;
+  }
+
+  // Day 46: Position cargo badge (upright, hovers next to loco — top-right corner)
+  if (anim.cargoBadgeEl) {
+    const badgeOffsetX = cellSize * 0.32;
+    const badgeOffsetY = -(cellSize * 0.32);
+    anim.cargoBadgeEl.style.left = (locoX + badgeOffsetX) + 'px';
+    anim.cargoBadgeEl.style.top = (locoY + badgeOffsetY) + 'px';
+    anim.cargoBadgeEl.style.opacity = locoOpacity;
   }
 
   // Rainbow glow timer check + sparkle trail
@@ -7325,6 +7418,8 @@ function stopPlay() {
   });
   // Stop passenger system
   resetPassengerState();
+  // Day 46: Stop cargo system
+  resetCargoState();
   state.playing = false;
 
   // Update music tempo for idle state
@@ -7338,6 +7433,7 @@ function stopPlay() {
     if (anim.trainEl) anim.trainEl.remove();
     if (anim.headlightEl) anim.headlightEl.remove();
     if (anim.nameLabelEl) anim.nameLabelEl.remove();
+    if (anim.cargoBadgeEl) anim.cargoBadgeEl.remove();
     if (anim.carEls) anim.carEls.forEach(el => el.remove());
   }
 
@@ -7389,16 +7485,47 @@ function generateRandomTrack() {
   promote('station');
   if (Math.random() < 0.25) promote('rainbow');
 
+  // Day 46: Cargo Delivery — promote a 2nd straight to a station and pair them
+  // as a cargo pickup + delivery. ~70% chance, only if 2+ straights remain.
+  if (Math.random() < 0.7) {
+    const moreCandidates = path.filter(c => c.type === 'straight');
+    if (moreCandidates.length >= 1) {
+      const pickup = moreCandidates[Math.floor(Math.random() * moreCandidates.length)];
+      pickup.type = 'station';
+      // Pick a random cargo type and tag both stations as a pair
+      const cargoType = CARGO_TYPE_KEYS[Math.floor(Math.random() * CARGO_TYPE_KEYS.length)];
+      pickup.cargoType = cargoType;
+      pickup.cargoRole = 'pickup';
+      // Find the other station (the one promoted earlier) and mark it as delivery
+      const otherStation = path.find(c => c.type === 'station' && c !== pickup && !c.cargoType);
+      if (otherStation) {
+        otherStation.cargoType = cargoType;
+        otherStation.cargoRole = 'delivery';
+      } else {
+        // Couldn't pair — clear cargo on the new station so it's a plain station
+        delete pickup.cargoType;
+        delete pickup.cargoRole;
+      }
+    }
+  }
+
   // Animate placing pieces with cascading sound effect
   let delay = 0;
   const delayIncrement = 40; // ms between placements
   
   path.forEach((cell, index) => {
     setTimeout(() => {
-      const { row, col, type, rotation } = cell;
-      state.grid[row][col] = { type, rotation };
+      const { row, col, type, rotation, cargoType, cargoRole } = cell;
+      const piece = { type, rotation };
+      // Day 46: carry cargo metadata onto the placed piece
+      if (cargoType && cargoRole) {
+        piece.cargoType = cargoType;
+        piece.cargoRole = cargoRole;
+      }
+      state.grid[row][col] = piece;
       renderCell(row, col);
       updateConnectionDots(row, col);
+      if (piece.cargoType) renderStationCargo(row, col);
       SFX.build();
     }, delay);
     delay += delayIncrement;
@@ -10047,6 +10174,141 @@ function updatePassengerHUD() {
 }
 
 // ============================================================
+// CARGO DELIVERY SYSTEM (Day 46)
+// ============================================================
+const CARGO_TYPES = {
+  logs: { emoji: '🪵', label: 'Logs' },
+  milk: { emoji: '🥛', label: 'Milk' },
+  mail: { emoji: '✉️', label: 'Mail' },
+  coal: { emoji: '🪨', label: 'Coal' },
+};
+const CARGO_TYPE_KEYS = ['logs', 'milk', 'mail', 'coal'];
+
+let cargoState = {
+  onboard: {},     // trainColor -> cargoType (string or null)
+  delivered: 0,
+};
+
+function resetCargoState() {
+  cargoState.onboard = {};
+  cargoState.delivered = 0;
+  cleanupStationCargoBadges();
+  cleanupTrainCargoBadges();
+  const hud = document.getElementById('cargo-hud');
+  if (hud) hud.classList.remove('active');
+}
+
+function hasAnyCargoStations() {
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const piece = state.grid[r][c];
+      if (piece && piece.type === 'station' && piece.cargoType) return true;
+    }
+  }
+  return false;
+}
+
+function startCargoSystem() {
+  resetCargoState();
+  if (!hasAnyCargoStations()) return;
+  // Render badges on cargo stations
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const piece = state.grid[r][c];
+      if (piece && piece.type === 'station' && piece.cargoType) {
+        renderStationCargo(r, c);
+      }
+    }
+  }
+  // Show HUD
+  const hud = document.getElementById('cargo-hud');
+  if (hud) hud.classList.add('active');
+  updateCargoHUD();
+}
+
+function renderStationCargo(row, col) {
+  const cell = getCellEl(row, col);
+  if (!cell) return;
+  cell.querySelectorAll('.station-cargo-badge').forEach(el => el.remove());
+  const piece = state.grid[row][col];
+  if (!piece || !piece.cargoType) return;
+  const cfg = CARGO_TYPES[piece.cargoType];
+  if (!cfg) return;
+  const badge = document.createElement('div');
+  badge.className = 'station-cargo-badge';
+  badge.dataset.cargoRole = piece.cargoRole || 'pickup';
+  badge.textContent = cfg.emoji;
+  badge.title = (piece.cargoRole === 'delivery' ? 'Deliver: ' : 'Pickup: ') + cfg.label;
+  cell.appendChild(badge);
+}
+
+function cleanupStationCargoBadges() {
+  document.querySelectorAll('.station-cargo-badge').forEach(el => el.remove());
+}
+
+function cleanupTrainCargoBadges() {
+  document.querySelectorAll('.train-cargo-badge').forEach(el => el.remove());
+}
+
+function updateCargoHUD() {
+  const el = document.getElementById('cargo-count');
+  if (el) el.textContent = '📦 Cargo: ' + cargoState.delivered;
+}
+
+// Returns true when a pickup or delivery happened, false otherwise.
+function handleTrainAtCargoStation(anim, row, col) {
+  if (!state.playing) return false;
+  const piece = state.grid[row][col];
+  if (!piece || piece.type !== 'station' || !piece.cargoType) return false;
+  const trainColor = anim.color;
+  const onboard = cargoState.onboard[trainColor] || null;
+  const cfg = CARGO_TYPES[piece.cargoType];
+  if (!cfg) return false;
+
+  // Delivery: train carrying matching cargo arrives at delivery station
+  if (piece.cargoRole === 'delivery' && onboard === piece.cargoType) {
+    cargoState.onboard[trainColor] = null;
+    cargoState.delivered++;
+    incrementStat('cargoDelivered', 1);
+    SFX.passengerDeliver();
+    showToast(cfg.emoji + ' ' + cfg.label + ' delivered!');
+    triggerMiniConfetti(row, col);
+    refreshTrainCargoBadge(anim);
+    updateCargoHUD();
+    return true;
+  }
+
+  // Pickup: train empty at pickup station
+  if (piece.cargoRole === 'pickup' && !onboard) {
+    cargoState.onboard[trainColor] = piece.cargoType;
+    SFX.passengerBoard();
+    showToast(cfg.emoji + ' ' + cfg.label + ' loaded!');
+    refreshTrainCargoBadge(anim);
+    return true;
+  }
+
+  return false;
+}
+
+function refreshTrainCargoBadge(anim) {
+  const cargo = cargoState.onboard[anim.color];
+  if (!cargo) {
+    if (anim.cargoBadgeEl) {
+      anim.cargoBadgeEl.remove();
+      anim.cargoBadgeEl = null;
+    }
+    return;
+  }
+  if (!anim.cargoBadgeEl) {
+    anim.cargoBadgeEl = document.createElement('div');
+    anim.cargoBadgeEl.className = 'train-cargo-badge';
+    const gc = document.getElementById('grid-container');
+    if (gc) gc.appendChild(anim.cargoBadgeEl);
+  }
+  anim.cargoBadgeEl.textContent = CARGO_TYPES[cargo].emoji;
+}
+
+// ============================================================
 // ============================================================
 // PROGRESSION & UNLOCKS SYSTEM
 // ============================================================
@@ -10060,6 +10322,7 @@ let gameStats = {
   loopsCompleted: 0,
   puzzlesSolved: 0,
   passengersDelivered: 0,
+  cargoDelivered: 0,
   crashCount: 0,
 };
 
@@ -10228,6 +10491,7 @@ function renderStatsContent() {
     loopsCompleted: { label: '🔁 Loops Completed', val: gameStats.loopsCompleted },
     puzzlesSolved: { label: '🧩 Puzzles Solved', val: gameStats.puzzlesSolved },
     passengersDelivered: { label: '🧑 Passengers Delivered', val: gameStats.passengersDelivered },
+    cargoDelivered: { label: '📦 Cargo Delivered', val: gameStats.cargoDelivered },
     crashCount: { label: '💥 Crashes', val: gameStats.crashCount },
   };
 
