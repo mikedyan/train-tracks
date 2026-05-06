@@ -1392,7 +1392,8 @@ body.night-mode .cell.has-tunnel svg {
 #shortcuts-overlay,
 #settings-overlay,
 #share-overlay,
-#train-names-overlay {
+#train-names-overlay,
+#track-replay-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,0.5);
@@ -1405,11 +1406,13 @@ body.night-mode .cell.has-tunnel svg {
 #shortcuts-overlay.open,
 #settings-overlay.open,
 #share-overlay.open,
-#train-names-overlay.open { display: flex; }
+#train-names-overlay.open,
+#track-replay-overlay.open { display: flex; }
 
 #settings-modal,
 #share-modal,
-#train-names-modal {
+#train-names-modal,
+#track-replay-modal {
   background: #FFF;
   border-radius: 16px;
   padding: 24px;
@@ -1422,19 +1425,69 @@ body.night-mode .cell.has-tunnel svg {
 }
 body.night-mode #settings-modal,
 body.night-mode #share-modal,
-body.night-mode #train-names-modal { background: #263238; color: #ECEFF1; }
+body.night-mode #train-names-modal,
+body.night-mode #track-replay-modal { background: #263238; color: #ECEFF1; }
 #settings-modal h2,
 #share-modal h2,
-#train-names-modal h2 { font-size: 20px; color: #3E2723; margin-bottom: 16px; text-align: center; }
+#train-names-modal h2,
+#track-replay-modal h2 { font-size: 20px; color: #3E2723; margin-bottom: 16px; text-align: center; }
 body.night-mode #settings-modal h2,
 body.night-mode #share-modal h2,
-body.night-mode #train-names-modal h2 { color: #ECEFF1; }
+body.night-mode #train-names-modal h2,
+body.night-mode #track-replay-modal h2 { color: #ECEFF1; }
 #settings-modal .close-btn,
 #share-modal .close-btn,
-#train-names-modal .close-btn { position: absolute; top: 12px; right: 14px; background: none; border: none; font-size: 22px; cursor: pointer; color: #999; line-height: 1; }
+#train-names-modal .close-btn,
+#track-replay-modal .close-btn { position: absolute; top: 12px; right: 14px; background: none; border: none; font-size: 22px; cursor: pointer; color: #999; line-height: 1; }
 #settings-modal .close-btn:hover,
 #share-modal .close-btn:hover,
-#train-names-modal .close-btn:hover { color: #333; }
+#train-names-modal .close-btn:hover,
+#track-replay-modal .close-btn:hover { color: #333; }
+
+/* Day 47: Track Replay modal + REC indicator */
+.tr-status { font-size: 14px; color: #455A64; text-align: center; padding: 10px 12px; margin-bottom: 14px; background: #ECEFF1; border-radius: 10px; }
+body.night-mode .tr-status { background: #1B262C; color: #B0BEC5; }
+.tr-status.recording { background: #FFEBEE; color: #C62828; font-weight: 600; }
+body.night-mode .tr-status.recording { background: #4E1313; color: #FFCDD2; }
+.tr-status.has-replay { background: #E8F5E9; color: #2E7D32; font-weight: 600; }
+body.night-mode .tr-status.has-replay { background: #1B3A1F; color: #C8E6C9; }
+.track-replay-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.track-replay-actions .btn { flex: 1 1 100px; padding: 10px 12px; font-weight: 600; border-radius: 10px; min-height: 44px; }
+.track-replay-actions .btn-primary { background: #FF9800; color: white; }
+.track-replay-actions .btn-primary:hover:not(:disabled) { background: #F57C00; }
+.track-replay-actions .btn-primary.recording { background: #D32F2F; }
+.track-replay-actions .btn-primary.recording:hover { background: #B71C1C; }
+.track-replay-actions .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.replay-indicator {
+  position: fixed;
+  top: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 250;
+  background: rgba(211, 47, 47, 0.95);
+  color: #FFF;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+  font-family: 'Trebuchet MS', system-ui, sans-serif;
+}
+.replay-indicator.hidden { display: none; }
+.replay-indicator.ghost-mode { background: rgba(124, 77, 255, 0.95); }
+.replay-indicator .replay-dot { width: 10px; height: 10px; border-radius: 50%; background: #FFF; box-shadow: 0 0 6px #FFF; animation: replayDotPulse 1s ease-in-out infinite; }
+.replay-indicator.ghost-mode .replay-dot { background: #FFF; box-shadow: 0 0 8px #E1BEE7; }
+@keyframes replayDotPulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.45; transform: scale(0.7); } }
+@media (prefers-reduced-motion: reduce) { .replay-indicator .replay-dot { animation: none; } }
+
+body.replay-active #grid, body.replay-active #sidebar, body.replay-active #drawer-content, body.replay-active #toolbar, body.replay-active #trash-zone { pointer-events: none !important; }
+body.replay-active #grid { filter: saturate(0.85); }
 
 /* Day 44: Train Name Labels */
 .train-name-row { display: flex; align-items: center; gap: 10px; padding: 8px 4px; border-bottom: 1px solid rgba(0,0,0,0.06); }
@@ -2468,6 +2521,7 @@ body.night-mode .weather-snow #weather-overlay {
       <button class="btn settings-item" onclick="closeSettingsMenu(); toggleFullscreen();" title="Fullscreen"><span class="si-icon">⛶</span><span class="si-label">Fullscreen</span></button>
       <button class="btn settings-item" onclick="closeSettingsMenu(); openTrainNamesModal();" title="Name your trains"><span class="si-icon">🏷️</span><span class="si-label">Name Your Trains</span></button>
       <button class="btn settings-item" onclick="closeSettingsMenu(); toggleBigGrid();" title="Switch between 12×8 and 16×10 grid"><span class="si-icon">🟦</span><span class="si-label" id="settings-biggrid-label">Big Grid: 12×8</span></button>
+      <button class="btn settings-item" onclick="closeSettingsMenu(); openTrackReplayModal();" title="Record building your track and replay it"><span class="si-icon">👻</span><span class="si-label" id="settings-replay-label">Track Replay</span></button>
     </div>
     <div class="settings-music-volume">
       <span style="font-size:13px;color:#777;">Music volume</span>
@@ -2475,6 +2529,23 @@ body.night-mode .weather-snow #weather-overlay {
     </div>
   </div>
 </div>
+
+<!-- Track Replay Modal (Day 47 — Cycle 2 Build Day 4) -->
+<div id="track-replay-overlay" onclick="closeTrackReplayModalOutside(event)">
+  <div id="track-replay-modal">
+    <button class="close-btn" onclick="closeTrackReplayModal()">✕</button>
+    <h2>👻 Track Replay</h2>
+    <p style="font-size:13px;color:#777;text-align:center;margin:-8px 0 12px;">Press 🔴 Record, then build your track. Press ▶️ Replay and a ghost rebuilds it for you!</p>
+    <div id="track-replay-status" class="tr-status">No replay saved yet.</div>
+    <div class="track-replay-actions">
+      <button id="tr-btn-record" class="btn btn-primary" onclick="toggleReplayRecording()">🔴 Record</button>
+      <button id="tr-btn-play" class="btn btn-primary" onclick="playReplay()">▶️ Replay</button>
+      <button id="tr-btn-clear" class="btn" onclick="clearReplay()">🗑️ Clear</button>
+    </div>
+  </div>
+</div>
+<!-- REC indicator pill (Day 47) -->
+<div id="replay-rec-indicator" class="replay-indicator hidden" aria-live="polite"><span class="replay-dot"></span><span id="replay-rec-text">REC • 0 steps</span></div>
 
 <!-- Train Names Modal (Day 44 — Cycle 2 Build Day 1) -->
 <div id="train-names-overlay" onclick="closeTrainNamesModalOutside(event)">
@@ -3983,6 +4054,10 @@ const state = {
   redoStack: [],
   switchStates: {}, // "row,col" -> true (branch) | absent (straight/default)
   bigGrid: false, // Day 45: 16x10 grid mode toggle (default 12x8)
+  // Day 47 — Track Replay / Ghost Train
+  replayRecording: false,    // when true, every place/remove/rotate/placeTrain is appended
+  replayActions: [],         // [{kind:'place'|'remove'|'rotate'|'placeTrain'|'clearAll', row, col, type, rotation, color}]
+  replayBaseline: null,      // {grid, trains, switchStates, bigGrid} captured when recording starts; null = no replay saved
 };
 
 let cellSize = 60;
@@ -5103,6 +5178,7 @@ function placePiece(row, col, type, rotation = 0) {
   if (puzzleState.active && !SCENERY_TYPES.includes(type) && !canPlacePuzzlePiece(type)) {
     showToast('❌ No more ' + type + ' pieces!'); return;
   }
+  logReplayAction({ kind: 'place', row, col, type, rotation }); // Day 47
   saveUndo();
   if (type !== 'tjunction') delete state.switchStates[row + ',' + col];
   state.grid[row][col] = { type, rotation };
@@ -5136,6 +5212,7 @@ function placePiece(row, col, type, rotation = 0) {
 function removePiece(row, col) {
   if (isPuzzleLocked(row, col)) { showToast('🔒 Locked!'); return; }
   const _removedPiece = state.grid[row][col];
+  logReplayAction({ kind: 'remove', row, col }); // Day 47
   saveUndo();
   SFX.remove();
   hapticRemove();
@@ -5163,6 +5240,7 @@ function rotatePiece(row, col) {
   if (isPuzzleLocked(row, col)) return;
   const piece = state.grid[row][col];
   if (!piece || SCENERY_TYPES.includes(piece.type)) return;
+  logReplayAction({ kind: 'rotate', row, col }); // Day 47
   saveUndo();
   SFX.rotate();
   piece.rotation = (piece.rotation + 90) % 360;
@@ -5179,6 +5257,7 @@ function placeTrain(row, col, color) {
   color = color || 'red';
   const piece = state.grid[row][col];
   if (!piece || SCENERY_TYPES.includes(piece.type)) return;
+  logReplayAction({ kind: 'placeTrain', row, col, color }); // Day 47
   saveUndo();
   // Check if this train color already placed — move it
   const existing = getTrainByColor(color);
@@ -5203,6 +5282,7 @@ function placeTrain(row, col, color) {
 function clearAll() {
   if (puzzleState.active) { showToast('🧩 Exit puzzle first!'); return; }
   if (state.playing) stopPlay();
+  logReplayAction({ kind: 'clearAll' }); // Day 47
   saveUndo();
   SFX.clear();
   state.grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
@@ -7263,7 +7343,16 @@ function toggleMute() {
 function openSettingsMenu() {
   updateMusicSettingsLabel();
   updateBigGridLabel();
+  updateReplaySettingsLabel();
   document.getElementById('settings-overlay').classList.add('open');
+}
+function updateReplaySettingsLabel() {
+  const lbl = document.getElementById('settings-replay-label');
+  if (!lbl) return;
+  const n = state.replayActions ? state.replayActions.length : 0;
+  if (state.replayRecording) lbl.textContent = '🔴 Recording (' + n + ')';
+  else if (state.replayBaseline && n > 0) lbl.textContent = 'Replay (' + n + ' steps)';
+  else lbl.textContent = 'Track Replay';
 }
 function closeSettingsMenu() {
   document.getElementById('settings-overlay').classList.remove('open');
@@ -7405,6 +7494,274 @@ function normalizeTrainsName() {
   if (!Array.isArray(state.trains)) return;
   for (const t of state.trains) {
     if (typeof t.name !== 'string') t.name = '';
+  }
+}
+
+// ============================================================
+// TRACK REPLAY / GHOST TRAIN (Day 47 — Cycle 2 Build Day 4)
+// ============================================================
+// Kid pitch: Press 🔴 Record, build your track. Press ▶️ Replay,
+// a ghost rebuilds it for you piece-by-piece, then the train auto-runs.
+// Coding-lite. Mark replays his masterpiece for dad.
+//
+// Implementation:
+// - When recording, every placePiece / removePiece / rotatePiece /
+//   placeTrain / clearAll appends an action record to state.replayActions.
+//   Recording also captures a baseline snapshot of the grid so replay
+//   can restore the exact starting state.
+// - During replay we set replayApplying=true so action hooks don't
+//   re-record, then we re-call the same low-level functions on a fixed
+//   600ms cadence (kids can follow it; honors prefers-reduced-motion by
+//   collapsing to 200ms). After the last step, if any train is placed,
+//   startPlay() runs automatically.
+// - Persists across reload via localStorage. Disabled while a puzzle is
+//   active (puzzles already lock most of the grid; conflicting flow).
+const REPLAY_KEY = 'trainTracks_replay';
+const REPLAY_STEP_MS = 600;
+const REPLAY_STEP_MS_REDUCED = 200;
+let replayApplying = false;          // suppresses re-logging during ghost playback
+let replayCancelTokenId = 0;          // bumped to cancel an in-flight replay
+
+function snapshotForReplayBaseline() {
+  return {
+    grid: state.grid.map(r => r.map(c => c ? { ...c } : null)),
+    trains: state.trains.map(t => ({ ...t, cars: Array.isArray(t.cars) ? t.cars.map(c => ({ ...c })) : [] })),
+    switchStates: { ...(state.switchStates || {}) },
+    bigGrid: !!state.bigGrid,
+  };
+}
+
+function restoreReplayBaseline(b) {
+  if (!b) return;
+  // Big grid switch up-front so dims match before we slot pieces in.
+  if (typeof b.bigGrid === 'boolean' && b.bigGrid !== !!state.bigGrid) {
+    setBigGrid(b.bigGrid);
+  }
+  state.grid = (b.grid || []).map(r => (r || []).map(c => c ? { ...c } : null));
+  state.trains = (b.trains || []).map(t => ({ ...t, cars: Array.isArray(t.cars) ? t.cars.map(c => ({ ...c })) : [] }));
+  state.switchStates = { ...(b.switchStates || {}) };
+  normalizeTrainsName();
+  normalizeStateGridToCurrent();
+  renderAllCells();
+}
+
+function logReplayAction(action) {
+  if (!state.replayRecording || replayApplying) return;
+  if (puzzleState && puzzleState.active) return; // safety: should be blocked already
+  state.replayActions.push(action);
+  updateReplayRecIndicator();
+  persistReplay();
+}
+
+function persistReplay() {
+  try {
+    if (state.replayBaseline && Array.isArray(state.replayActions) && state.replayActions.length > 0) {
+      localStorage.setItem(REPLAY_KEY, JSON.stringify({
+        baseline: state.replayBaseline,
+        actions: state.replayActions,
+      }));
+    } else {
+      localStorage.removeItem(REPLAY_KEY);
+    }
+  } catch (e) { /* localStorage full / unavailable */ }
+}
+
+function restoreReplayFromStorage() {
+  try {
+    const raw = localStorage.getItem(REPLAY_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (data && data.baseline && Array.isArray(data.actions)) {
+      state.replayBaseline = data.baseline;
+      state.replayActions = data.actions;
+    }
+  } catch (e) { /* ignore */ }
+}
+
+function showReplayRecIndicator() {
+  const el = document.getElementById('replay-rec-indicator');
+  if (!el) return;
+  el.classList.remove('hidden', 'ghost-mode');
+  updateReplayRecIndicator();
+}
+function updateReplayRecIndicator() {
+  const el = document.getElementById('replay-rec-text');
+  if (!el) return;
+  const n = state.replayActions ? state.replayActions.length : 0;
+  el.textContent = 'REC • ' + n + ' step' + (n === 1 ? '' : 's');
+}
+function showReplayGhostIndicator(i, total) {
+  const wrap = document.getElementById('replay-rec-indicator');
+  const txt = document.getElementById('replay-rec-text');
+  if (!wrap || !txt) return;
+  wrap.classList.remove('hidden');
+  wrap.classList.add('ghost-mode');
+  txt.textContent = '👻 Replaying • ' + i + '/' + total;
+}
+function hideReplayIndicator() {
+  const el = document.getElementById('replay-rec-indicator');
+  if (!el) return;
+  el.classList.add('hidden');
+  el.classList.remove('ghost-mode');
+}
+
+function openTrackReplayModal() {
+  if (puzzleState && puzzleState.active) {
+    showToast('🧩 Exit puzzle first!');
+    return;
+  }
+  document.getElementById('track-replay-overlay').classList.add('open');
+  refreshTrackReplayModal();
+}
+function closeTrackReplayModal() {
+  document.getElementById('track-replay-overlay').classList.remove('open');
+}
+function closeTrackReplayModalOutside(e) {
+  if (e.target === document.getElementById('track-replay-overlay')) closeTrackReplayModal();
+}
+
+function refreshTrackReplayModal() {
+  const status = document.getElementById('track-replay-status');
+  const recBtn = document.getElementById('tr-btn-record');
+  const playBtn = document.getElementById('tr-btn-play');
+  const clearBtn = document.getElementById('tr-btn-clear');
+  if (!status || !recBtn || !playBtn || !clearBtn) return;
+  const n = state.replayActions ? state.replayActions.length : 0;
+  const has = state.replayBaseline && n > 0;
+  status.classList.remove('recording', 'has-replay');
+  if (state.replayRecording) {
+    status.textContent = '🔴 Recording... ' + n + ' step' + (n === 1 ? '' : 's') + ' so far';
+    status.classList.add('recording');
+  } else if (has) {
+    status.textContent = '💾 Saved replay: ' + n + ' step' + (n === 1 ? '' : 's');
+    status.classList.add('has-replay');
+  } else {
+    status.textContent = 'No replay saved yet. Press 🔴 Record to start!';
+  }
+  recBtn.classList.toggle('recording', !!state.replayRecording);
+  recBtn.innerHTML = state.replayRecording ? '⏹️ Stop Recording' : '🔴 Record';
+  playBtn.disabled = !has || state.replayRecording;
+  clearBtn.disabled = !has && !state.replayRecording;
+}
+
+function toggleReplayRecording() {
+  if (state.replayRecording) {
+    stopReplayRecording();
+  } else {
+    startReplayRecording();
+  }
+}
+
+function startReplayRecording() {
+  if (puzzleState && puzzleState.active) { showToast('🧩 Exit puzzle first!'); return; }
+  if (state.playing) stopPlay();
+  state.replayBaseline = snapshotForReplayBaseline();
+  state.replayActions = [];
+  state.replayRecording = true;
+  showReplayRecIndicator();
+  refreshTrackReplayModal();
+  closeTrackReplayModal();
+  showToast('🔴 Recording — build your track!');
+  persistReplay();
+}
+
+function stopReplayRecording() {
+  if (!state.replayRecording) return;
+  state.replayRecording = false;
+  hideReplayIndicator();
+  const n = state.replayActions ? state.replayActions.length : 0;
+  if (n === 0) {
+    state.replayBaseline = null;
+    showToast('No actions recorded.');
+  } else {
+    showToast('💾 Replay saved! ' + n + ' step' + (n === 1 ? '' : 's'));
+  }
+  persistReplay();
+  refreshTrackReplayModal();
+}
+
+function clearReplay() {
+  if (state.replayRecording) stopReplayRecording();
+  state.replayActions = [];
+  state.replayBaseline = null;
+  hideReplayIndicator();
+  persistReplay();
+  refreshTrackReplayModal();
+  showToast('🗑️ Replay cleared');
+}
+
+function applyReplayAction(a) {
+  if (!a || !a.kind) return;
+  switch (a.kind) {
+    case 'place':
+      placePiece(a.row, a.col, a.type, a.rotation || 0);
+      break;
+    case 'remove':
+      removePiece(a.row, a.col);
+      break;
+    case 'rotate':
+      rotatePiece(a.row, a.col);
+      break;
+    case 'placeTrain':
+      placeTrain(a.row, a.col, a.color || 'red');
+      break;
+    case 'clearAll':
+      // Inline (skip clearAll() because it would log + show toast); we need silent rebuild.
+      state.grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+      state.trains = [];
+      state.switchStates = {};
+      cleanupChimneySmoke();
+      renderAllCells();
+      break;
+  }
+}
+
+async function playReplay() {
+  if (state.replayRecording) stopReplayRecording();
+  const actions = Array.isArray(state.replayActions) ? state.replayActions : [];
+  if (!state.replayBaseline || actions.length === 0) {
+    showToast('Nothing to replay yet!');
+    return;
+  }
+  if (puzzleState && puzzleState.active) { showToast('🧩 Exit puzzle first!'); return; }
+  if (state.playing) stopPlay();
+  closeTrackReplayModal();
+
+  // Restore baseline silently (no log, no autosave bloat)
+  replayApplying = true;
+  try { restoreReplayBaseline(state.replayBaseline); } catch (e) { /* swallow */ }
+  document.body.classList.add('replay-active');
+
+  const myToken = ++replayCancelTokenId;
+  const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const stepMs = reduced ? REPLAY_STEP_MS_REDUCED : REPLAY_STEP_MS;
+
+  showReplayGhostIndicator(0, actions.length);
+  showToast('👻 Ghost rebuilding track...');
+
+  const sleep = (ms) => new Promise(res => setTimeout(res, ms));
+
+  for (let i = 0; i < actions.length; i++) {
+    if (myToken !== replayCancelTokenId) break;
+    try { applyReplayAction(actions[i]); } catch (e) { /* keep going */ }
+    showReplayGhostIndicator(i + 1, actions.length);
+    await sleep(stepMs);
+  }
+
+  document.body.classList.remove('replay-active');
+  hideReplayIndicator();
+  replayApplying = false;
+
+  if (myToken !== replayCancelTokenId) { showToast('Replay stopped.'); return; }
+
+  // Auto-run train if any train placed at the end.
+  if (Array.isArray(state.trains) && state.trains.length > 0) {
+    setTimeout(() => {
+      try { startPlay(); } catch (e) { /* ignore if not runnable */ }
+    }, 500);
+    showToast('🚂 Track rebuilt — here we go!');
+  } else {
+    showToast('👻 Replay finished!');
   }
 }
 
@@ -8972,6 +9329,10 @@ function handleKeyDown(e) {
       closeTrainNamesModal();
       return;
     }
+    if (document.getElementById('track-replay-overlay').classList.contains('open')) {
+      closeTrackReplayModal();
+      return;
+    }
     if (document.getElementById('save-overlay').classList.contains('open')) {
       closeSaveModal();
       return;
@@ -8992,6 +9353,7 @@ function handleKeyDown(e) {
   if (document.getElementById('screenshot-overlay').classList.contains('open')) return;
   if (document.getElementById('stats-overlay').classList.contains('open')) return;
   if (document.getElementById('train-names-overlay').classList.contains('open')) return;
+  if (document.getElementById('track-replay-overlay').classList.contains('open')) return;
 
   const key = e.key;
 
@@ -10701,6 +11063,9 @@ function init() {
   checkReturningPlayer();
   checkAndUnlockMilestones();
   refreshPaletteLocks();
+
+  // Day 47: Restore saved track replay (so the kid's last recording survives reload)
+  restoreReplayFromStorage();
 
   // Tutorial: show on first visit (after a brief delay so UI settles)
   if (!isTutorialDone() && !restored) {
