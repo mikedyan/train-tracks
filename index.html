@@ -2522,6 +2522,7 @@ body.night-mode .weather-snow #weather-overlay {
       <button class="btn settings-item" onclick="closeSettingsMenu(); openTrainNamesModal();" title="Name your trains"><span class="si-icon">🏷️</span><span class="si-label">Name Your Trains</span></button>
       <button class="btn settings-item" onclick="closeSettingsMenu(); toggleBigGrid();" title="Switch between 12×8 and 16×10 grid"><span class="si-icon">🟦</span><span class="si-label" id="settings-biggrid-label">Big Grid: 12×8</span></button>
       <button class="btn settings-item" onclick="closeSettingsMenu(); openTrackReplayModal();" title="Record building your track and replay it"><span class="si-icon">👻</span><span class="si-label" id="settings-replay-label">Track Replay</span></button>
+      <button class="btn settings-item" onclick="cycleSoundPack();" title="Switch the train whistle, chug, and horn sound pack"><span class="si-icon">🔊</span><span class="si-label" id="settings-soundpack-label">Sound: Classic</span></button>
     </div>
     <div class="settings-music-volume">
       <span style="font-size:13px;color:#777;">Music volume</span>
@@ -2699,6 +2700,83 @@ let volumeLevel = 0.8;
 let soundState = 'full'; // 'full' | 'low' | 'mute'
 const VOLUME_KEY = 'trainTracks_volume';
 const SOUND_STATE_KEY = 'trainTracks_soundState';
+
+// ============================================================
+// SOUND PACKS (Day 48 — Cycle 2 Build Day 5)
+// Three timbral palettes for whistle/chug/horn/station. All synthesized,
+// no audio assets. Pack picks waveforms, frequency multipliers, and gains —
+// the SFX functions themselves stay shared. Persisted in localStorage.
+// ============================================================
+const SOUND_PACK_KEY = 'trainTracks_soundPack';
+const SOUND_PACK_ORDER = ['classic', 'toy', 'diesel'];
+const SOUND_PACKS = {
+  classic: {
+    name: 'Classic',
+    icon: '🚂',
+    short: 'Classic',
+    // SFX.whistle two-tone
+    whistle: { f1: 880, f2: 784, type: 'sine', vol1: 0.12, vol2: 0.10, dur1: 0.4, dur2: 0.5, delay2: 0.15 },
+    // playChugWithEcho noise + accent note
+    chug:    { filterFreq: 800, filterQ: 0.5, vol: 0.05, accentLow: 90, accentHigh: 110, accentVolLow: 0.025, accentVolHigh: 0.04, accentType: 'square' },
+    // playHornSound: multiply HORN_PITCHES.base/sweep, swap waveforms
+    horn:    { mul: 1.0, mainType: 'triangle', harmonicMul: 2.0, harmonicType: 'sine', noiseFreq: 2000, noiseVol: 0.04 },
+    // SFX.station two-tone + harmonic overtone
+    station: { tone1Type: 'triangle', tone2Type: 'triangle', overtoneType: 'sawtooth', overtoneVol: 0.03 }
+  },
+  toy: {
+    name: 'Toy Steamer',
+    icon: '🧸',
+    short: 'Toy',
+    whistle: { f1: 1320, f2: 1175, type: 'sine', vol1: 0.10, vol2: 0.09, dur1: 0.32, dur2: 0.4, delay2: 0.12 },
+    chug:    { filterFreq: 1400, filterQ: 1.4, vol: 0.04, accentLow: 200, accentHigh: 260, accentVolLow: 0.022, accentVolHigh: 0.032, accentType: 'sine' },
+    horn:    { mul: 1.6, mainType: 'sine', harmonicMul: 3.0, harmonicType: 'triangle', noiseFreq: 3500, noiseVol: 0.02 },
+    station: { tone1Type: 'sine', tone2Type: 'sine', overtoneType: 'triangle', overtoneVol: 0.025 }
+  },
+  diesel: {
+    name: 'Modern Diesel',
+    icon: '🚆',
+    short: 'Diesel',
+    whistle: { f1: 392, f2: 330, type: 'sawtooth', vol1: 0.10, vol2: 0.09, dur1: 0.55, dur2: 0.7, delay2: 0.18 },
+    chug:    { filterFreq: 360, filterQ: 0.8, vol: 0.07, accentLow: 55, accentHigh: 70, accentVolLow: 0.045, accentVolHigh: 0.055, accentType: 'sawtooth' },
+    horn:    { mul: 0.7, mainType: 'sawtooth', harmonicMul: 1.5, harmonicType: 'square', noiseFreq: 1200, noiseVol: 0.06 },
+    station: { tone1Type: 'sawtooth', tone2Type: 'square', overtoneType: 'sine', overtoneVol: 0.04 }
+  }
+};
+let currentSoundPack = 'classic';
+function getSoundPack() {
+  return SOUND_PACKS[currentSoundPack] || SOUND_PACKS.classic;
+}
+function restoreSoundPack() {
+  try {
+    const saved = localStorage.getItem(SOUND_PACK_KEY);
+    if (saved && SOUND_PACKS[saved]) currentSoundPack = saved;
+  } catch (e) { /* swallow */ }
+}
+function setSoundPack(name, opts) {
+  if (!SOUND_PACKS[name]) return;
+  currentSoundPack = name;
+  try { localStorage.setItem(SOUND_PACK_KEY, name); } catch (e) { /* swallow */ }
+  updateSoundPackSettingsLabel();
+  if (!opts || opts.toast !== false) {
+    const p = SOUND_PACKS[name];
+    showToast(p.icon + ' Sound Pack: ' + p.name);
+  }
+  if (!opts || opts.preview !== false) {
+    // Tiny preview blow so the kid hears the change instantly
+    try { SFX.whistle(); } catch (e) { /* swallow */ }
+  }
+}
+function cycleSoundPack() {
+  const idx = SOUND_PACK_ORDER.indexOf(currentSoundPack);
+  const next = SOUND_PACK_ORDER[(idx + 1) % SOUND_PACK_ORDER.length];
+  setSoundPack(next);
+}
+function updateSoundPackSettingsLabel() {
+  const lbl = document.getElementById('settings-soundpack-label');
+  if (!lbl) return;
+  const p = getSoundPack();
+  lbl.textContent = 'Sound: ' + p.short;
+}
 
 // MUSIC ENGINE — Ambient Background Music (Web Audio API)
 // ============================================================
@@ -3018,9 +3096,10 @@ const SFX = {
     playNote(300, 0.08, 'sine', 0.06, 0.04);
   },
   whistle() {
-    // Train whistle — two-tone
-    playNote(880, 0.4, 'sine', 0.12);
-    playNote(784, 0.5, 'sine', 0.10, 0.15);
+    // Train whistle — two-tone (Day 48: timbre per active sound pack)
+    const w = getSoundPack().whistle;
+    playNote(w.f1, w.dur1, w.type, w.vol1);
+    playNote(w.f2, w.dur2, w.type, w.vol2, w.delay2);
   },
   chug() {
     // Single chug beat
@@ -3028,13 +3107,15 @@ const SFX = {
   },
   station() {
     // Two-tone train horn with frequency sweep at stations
+    // Day 48: waveforms + overtone level driven by active sound pack
     if (!soundEnabled) return;
     const ctx = getAudioCtx();
     const mg = getMasterGain();
-    // First horn tone: triangle wave with downward sweep
+    const sp = getSoundPack().station;
+    // First horn tone with downward sweep
     const osc1 = ctx.createOscillator();
     const gain1 = ctx.createGain();
-    osc1.type = 'triangle';
+    osc1.type = sp.tone1Type;
     osc1.frequency.setValueAtTime(520, ctx.currentTime);
     osc1.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.4);
     gain1.gain.setValueAtTime(0.12, ctx.currentTime);
@@ -3047,7 +3128,7 @@ const SFX = {
     // Second horn tone: lower, overlapping
     const osc2 = ctx.createOscillator();
     const gain2 = ctx.createGain();
-    osc2.type = 'triangle';
+    osc2.type = sp.tone2Type;
     osc2.frequency.setValueAtTime(392, ctx.currentTime + 0.15);
     osc2.frequency.exponentialRampToValueAtTime(349, ctx.currentTime + 0.65);
     gain2.gain.setValueAtTime(0, ctx.currentTime);
@@ -3061,10 +3142,10 @@ const SFX = {
     // Harmonic overtone for richness
     const osc3 = ctx.createOscillator();
     const gain3 = ctx.createGain();
-    osc3.type = 'sawtooth';
+    osc3.type = sp.overtoneType;
     osc3.frequency.setValueAtTime(520, ctx.currentTime);
     osc3.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.4);
-    gain3.gain.setValueAtTime(0.03, ctx.currentTime);
+    gain3.gain.setValueAtTime(sp.overtoneVol, ctx.currentTime);
     gain3.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
     osc3.connect(gain3);
     gain3.connect(mg);
@@ -3485,6 +3566,8 @@ function playChugWithEcho() {
   if (!soundEnabled) return;
   const ctx = getAudioCtx();
   const mg = getMasterGain();
+  // Day 48: chug timbre per active sound pack
+  const cp = getSoundPack().chug;
 
   // Create chug noise
   const bufferSize = ctx.sampleRate * 0.06;
@@ -3496,9 +3579,9 @@ function playChugWithEcho() {
   const gain = ctx.createGain();
   const filter = ctx.createBiquadFilter();
   filter.type = 'bandpass';
-  filter.frequency.value = 800;
-  filter.Q.value = 0.5;
-  gain.gain.setValueAtTime(0.05, ctx.currentTime);
+  filter.frequency.value = cp.filterFreq;
+  filter.Q.value = cp.filterQ;
+  gain.gain.setValueAtTime(cp.vol, ctx.currentTime);
   gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
   src.connect(filter);
   filter.connect(gain);
@@ -3525,9 +3608,11 @@ function startChugLoop() {
     playChugWithEcho();
 
     // Alternating accent: stronger beat on even, weaker on odd (choo-CHOO pattern)
-    const accentPitch = chugBeat % 2 === 0 ? 90 : 110;
-    const accentVol = chugBeat % 2 === 0 ? 0.025 : 0.04;
-    playNote(accentPitch, 0.04, 'square', accentVol);
+    // Day 48: pitches/volume/waveform per active sound pack
+    const ap = getSoundPack().chug;
+    const accentPitch = chugBeat % 2 === 0 ? ap.accentLow : ap.accentHigh;
+    const accentVol = chugBeat % 2 === 0 ? ap.accentVolLow : ap.accentVolHigh;
+    playNote(accentPitch, 0.04, ap.accentType, accentVol);
 
     chugBeat++;
 
@@ -6155,15 +6240,19 @@ function playHornSound(color) {
   const mg = getMasterGain();
   const pitch = HORN_PITCHES[color] || HORN_PITCHES.red;
   const now = ctx.currentTime;
+  // Day 48: horn timbre + pitch shift per active sound pack
+  const hp = getSoundPack().horn;
+  const baseF = pitch.base * hp.mul;
+  const sweepF = pitch.sweep * hp.mul;
 
-  // Main horn tone: triangle wave with characteristic frequency sweep
+  // Main horn tone with characteristic frequency sweep
   const osc1 = ctx.createOscillator();
   const gain1 = ctx.createGain();
-  osc1.type = 'triangle';
-  osc1.frequency.setValueAtTime(pitch.base * 1.5, now);
-  osc1.frequency.exponentialRampToValueAtTime(pitch.base, now + 0.15);
-  osc1.frequency.setValueAtTime(pitch.base, now + 0.5);
-  osc1.frequency.exponentialRampToValueAtTime(pitch.sweep, now + 0.8);
+  osc1.type = hp.mainType;
+  osc1.frequency.setValueAtTime(baseF * 1.5, now);
+  osc1.frequency.exponentialRampToValueAtTime(baseF, now + 0.15);
+  osc1.frequency.setValueAtTime(baseF, now + 0.5);
+  osc1.frequency.exponentialRampToValueAtTime(sweepF, now + 0.8);
   gain1.gain.setValueAtTime(0.18, now);
   gain1.gain.setValueAtTime(0.18, now + 0.5);
   gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
@@ -6175,9 +6264,9 @@ function playHornSound(color) {
   // Harmonic overtone for richness
   const osc2 = ctx.createOscillator();
   const gain2 = ctx.createGain();
-  osc2.type = 'sine';
-  osc2.frequency.setValueAtTime(pitch.base * 2, now);
-  osc2.frequency.exponentialRampToValueAtTime(pitch.sweep * 2, now + 0.8);
+  osc2.type = hp.harmonicType;
+  osc2.frequency.setValueAtTime(baseF * hp.harmonicMul, now);
+  osc2.frequency.exponentialRampToValueAtTime(sweepF * hp.harmonicMul, now + 0.8);
   gain2.gain.setValueAtTime(0.06, now);
   gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
   osc2.connect(gain2);
@@ -6185,7 +6274,7 @@ function playHornSound(color) {
   osc2.start(now);
   osc2.stop(now + 0.85);
 
-  // Breathy noise burst for steam hiss
+  // Breathy noise burst for steam hiss / diesel grit
   const bufLen = ctx.sampleRate * 0.3;
   const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
   const data = buf.getChannelData(0);
@@ -6195,9 +6284,9 @@ function playHornSound(color) {
   const noiseGain = ctx.createGain();
   const noiseFilter = ctx.createBiquadFilter();
   noiseFilter.type = 'bandpass';
-  noiseFilter.frequency.value = 2000;
+  noiseFilter.frequency.value = hp.noiseFreq;
   noiseFilter.Q.value = 0.8;
-  noiseGain.gain.setValueAtTime(0.04, now + 0.05);
+  noiseGain.gain.setValueAtTime(hp.noiseVol, now + 0.05);
   noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
   noiseSrc.connect(noiseFilter);
   noiseFilter.connect(noiseGain);
@@ -7344,6 +7433,7 @@ function openSettingsMenu() {
   updateMusicSettingsLabel();
   updateBigGridLabel();
   updateReplaySettingsLabel();
+  updateSoundPackSettingsLabel();
   document.getElementById('settings-overlay').classList.add('open');
 }
 function updateReplaySettingsLabel() {
@@ -10985,6 +11075,9 @@ function init() {
 
   // Restore audio settings
   restoreAudioSettings();
+
+  // Day 48: Restore Sound Pack preference
+  restoreSoundPack();
 
   // Restore music settings (starts paused, waits for user interaction)
   restoreMusicSettings();
