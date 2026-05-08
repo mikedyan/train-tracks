@@ -447,3 +447,69 @@ Four-day audit cycle (Days 34-37) produced exactly **one** P2 bug (BUG-014: miss
 **Ship-ready.** The deployed game is rock-solid: zero open bugs, zero console errors, all 38 days of features intact, save/share/puzzle/sandbox modes all functional. Codebase is balanced, free of duplicates, and stayed exactly flat in line count this week (no feature creep).
 
 Tomorrow (Day 39) opens **PRUNE Week 1** — the cycle's first simplification pass.
+
+---
+
+## Harden Week 2 — Full Feature Audit (Day 49)
+
+### Audit Date: Fri May 8, 2026
+
+**Testing Environment:** Desktop (1200×834 viewport), Chromium-based browser, https://mikedyan.github.io/train-tracks/?v=49
+**Goal:** Black-box regression audit of every system after Cycle 2 BUILD week shipped 5 new features (Train Names D44, Big Grid D45, Cargo Missions D46, Track Replay D47, Sound Packs D48).
+
+### Systematic Test Results
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Page Load (cleared LS) | ✅ PASS | Tutorial overlay auto-opens; 96 cells render; zero console errors |
+| All 9 piece types place | ✅ PASS | straight, curve, tjunction, crossover, bridge, tunnel, station, crossing, rainbow — all `placePiece()` succeed |
+| All 5 train colors place | ✅ PASS | red, blue, green, yellow, purple — all 5 land via `placeTrain()` (yellow/purple still palette-locked but API accepts; lock is UI gating only) |
+| All 9 scenery types place | ✅ PASS | tree, flower, house, duck, cow, sheep, rock, etc. all accept |
+| Random Generator | ✅ PASS | 8 runs: each produced valid track + auto-placed train + scenery (16 track + 39 scenery + 1 station + 2 tunnels typical) |
+| Random Cargo Pair Rate | ✅ PASS | 6/8 runs (~75%) had matched cargo pickup+delivery — within Day-46 spec (~70%) |
+| Play / Stop | ✅ PASS | `startPlay` populates `animStates`; `.animated-train` element renders with `position:absolute`, opacity/transform live-update; train traverses loop to completion (Full Loop! state) |
+| Train Animation (tunnel) | ✅ PASS | Train opacity drops to 0 inside tunnel cell, scale shrinks to 0.3 — visual fade intact |
+| Day / Night Toggle | ✅ PASS | `night-mode` body class flips; persists to LS (`trainTracks_nightMode`) |
+| Biome Cycle (4 states) | ✅ PASS | spring → summer → autumn → winter → spring round-trip clean |
+| Weather Cycle (3 states) | ✅ PASS | sunny → rain → snow → sunny round-trip; `currentWeather` global advances |
+| Sound Packs (Day 48) | ✅ PASS | classic→toy→diesel→classic cycle; whistle f1 (880/1320/392), horn type (triangle/sine/sawtooth), filter freq all swap; persists to `trainTracks_soundPack` |
+| Big Grid Toggle (Day 45) | ✅ PASS | 8×12 ↔ 10×16; cell count 96 ↔ 160; ROWS/COLS update; persists to `trainTracks_bigGrid` |
+| Cargo Missions (Day 46) | ✅ PASS | Stations gain `cargoType`/`cargoRole`; `.station-cargo-badge` renders; metadata survives reload (autosave round-trip verified) |
+| Track Replay (Day 47) | ✅ PASS | startReplayRecording captures baseline; 5 actions (4 place + 1 placeTrain) logged; stopReplayRecording persists to `trainTracks_replay`; clearAll + playReplay reproduces all 4 curves + train identically |
+| Train Names (Day 44) | ✅ PASS | name field stored on train; persists through reload via autosave (verified: 'SPARK' restored after navigate) |
+| Share Link Encoding | ✅ PASS | encodeGridState → 140-char hash 'AggM…' (v2 prefix 02, dims 8×12); decodeGridState round-trips piece types byte-identical |
+| Undo / Redo | ✅ PASS | undo() reverses placement; redo() reapplies; rotation undo restores prior rotation (0→90→0) |
+| Auto-Save Persistence | ✅ PASS | Reload preserves: 4 pieces incl. cargo metadata, sound pack 'diesel', train name 'SPARK', biome, big-grid setting, all LS keys |
+| Modal — Tutorial | ✅ PASS | `showTutorial()` opens `#tutorial-overlay` |
+| Modal — Settings | ✅ PASS | `openSettingsMenu()` opens `#settings-overlay` |
+| Modal — Share | ✅ PASS | `openShareMenu()` opens `#share-overlay` |
+| Modal — Puzzle | ✅ PASS | `openPuzzleModal()` opens `#puzzle-overlay` (10 cards) |
+| Modal — Save/Load | ✅ PASS | `openSaveModal()` opens `#save-overlay` (3 slots) |
+| Modal — Train Names | ✅ PASS | `openTrainNamesModal()` opens `#train-names-overlay` |
+| Modal — Track Replay | ✅ PASS | `openTrackReplayModal()` opens `#track-replay-overlay` (Record/Replay/Clear buttons present) |
+| Modal — Screenshot | ✅ PASS | `openScreenshotModal()` opens `#screenshot-overlay` |
+| Modal — Stats | ✅ PASS | `openStatsModal()` opens `#stats-overlay` |
+| Modal — Shortcuts | ✅ PASS | `openShortcutsModal()` opens `#shortcuts-overlay` |
+| All 10 Puzzles Load | ✅ PASS | loadPuzzle(1)…(10) all succeed without throw; gridFilled varies 1–10 pieces; exitPuzzle restores cleanly |
+| HONK Button | ✅ PASS | `#btn-horn` 📯 visible during play, `blowHorn()` callable |
+| Toolbar Buttons | ✅ PASS | 47 enabled buttons total: play, undo, redo, mute, night, weather, biome, passengers, help, horn, replay, settings, share, etc. |
+
+### Code Health Check
+- **JS Syntax:** ✅ Clean (`new Function(js)` parses 297,639 bytes inline script)
+- **HTML Tags:** ✅ All balanced — div: 170/170, span: 101/101, button: 53/53, script: 1/1, style: 1/1
+- **Duplicate Functions:** ✅ All key functions appear exactly once. `placeTrain` vs `placeTrainOnLoop` are intentionally distinct (same as Day 37 baseline).
+- **File Size:** 11,192 lines (unchanged from Day 48 — Harden mandate satisfied: zero growth)
+- **Console Errors During Audit:** ZERO across full session (random gen, play, replay, big grid swap, sound pack cycle, modal opens, reload)
+
+### Known Limitations (Not Bugs — Documented Trade-offs)
+1. **Train names not in share-link** (Day 44 design decision — would inflate hash)
+2. **Cargo metadata not in share-link** (Day 46 design decision — same reason)
+3. **Sound pack not in share-link** (Day 48 — pack is a per-device preference, not a layout property)
+4. **Big-grid replay played back on small grid** silently drops out-of-bounds steps (Day 47 documented behavior)
+
+### Bugs Found Today: 0
+
+### Summary
+Clean sheet. Cycle 2 BUILD week's 5 features (Train Names, Big Grid, Cargo Missions, Track Replay, Sound Packs) all integrate cleanly with the existing codebase: zero console errors, zero broken interactions, all autosave/reload paths intact, all 10 puzzles load, all 10 modals open, file size held flat at 11,192 lines. Codebase remains balanced, deduplicated, and parseable.
+
+Tomorrow (Day 50, weekDay 2) = Harden Week 2 Day 2: Puzzle & Mode Testing (deep dive on each of the 10 puzzles, passenger delivery end-to-end, progression/unlocks, share-link round-trip, screenshot/download).
