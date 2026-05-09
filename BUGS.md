@@ -513,3 +513,109 @@ Tomorrow (Day 39) opens **PRUNE Week 1** — the cycle's first simplification pa
 Clean sheet. Cycle 2 BUILD week's 5 features (Train Names, Big Grid, Cargo Missions, Track Replay, Sound Packs) all integrate cleanly with the existing codebase: zero console errors, zero broken interactions, all autosave/reload paths intact, all 10 puzzles load, all 10 modals open, file size held flat at 11,192 lines. Codebase remains balanced, deduplicated, and parseable.
 
 Tomorrow (Day 50, weekDay 2) = Harden Week 2 Day 2: Puzzle & Mode Testing (deep dive on each of the 10 puzzles, passenger delivery end-to-end, progression/unlocks, share-link round-trip, screenshot/download).
+
+---
+
+## Day 50 — Harden Week 2 Day 2: Puzzle & Mode Testing
+
+**Date:** 2026-05-09 (Saturday)
+**Tester:** QA Agent (Mochi 🐯)
+**Testing Environment:** Desktop (1200×834 viewport), Chromium-based browser, https://mikedyan.github.io/train-tracks/?v=50&fresh=1
+**Goal:** Deep-dive on the puzzle system and supporting modes — verify every puzzle loads correctly, that completion logic awards the right stars, that passenger delivery, progression/unlocks, share links, and screenshot all work end-to-end. ZERO new features (Harden mandate).
+
+### Test 1 — All 10 Puzzles Load (with localStorage cleared)
+
+| # | Name | Locked Track | Scenery | Trains | Status |
+|---|------|--------------|---------|--------|--------|
+| 1 | First Loop | 4 ✓ | — | — | ✅ |
+| 2 | Around the Lake | 4 ✓ | 6 (water — placed via direct `placePiece` not `scenery` field) | — | ✅ |
+| 3 | Figure Eight | 1 ✓ (crossover) | — | — | ✅ |
+| 4 | Tunnel Run | 4 ✓ | 4 (water) | — | ✅ |
+| 5 | Grand Station | 3 ✓ (stations) | — | — | ✅ |
+| 6 | Switchyard | 5 ✓ (4 curves + 1 station) | — | — | ✅ |
+| 7 | Speed Run | 4 ✓ | — | — | ✅ |
+| 8 | Cow Pasture | 4 ✓ | 4 ✓ (cows) | — | ✅ |
+| 9 | Night Express | 5 ✓ (4 curves + 1 tunnel) | — | — | ✅ |
+| 10 | Twin Loops | 8 ✓ | — | 2 ✓ (red + blue) | ✅ |
+
+For every puzzle: `puzzleState.active=true`, `puzzleState.puzzleId=N`, `#puzzle-hud` has `.active` class, `puzzleState.lockedCells` map size matches locked track count, `state.trains.length` matches puzzle.trains count. `exitPuzzle()` cleans state between loads and restores sandbox.
+
+### Test 2 — End-to-End Solves with Star Awarding
+
+| Puzzle | Player Pieces | par/optimal | Expected Stars | Got Stars |
+|--------|---------------|-------------|----------------|-----------|
+| 1 First Loop | 4 straights | 4/4 | 3 ⭐⭐⭐ | **3 ⭐⭐⭐** ✅ |
+| 2 Around the Lake | 10 straights | 10/10 | 3 ⭐⭐⭐ | **3 ⭐⭐⭐** ✅ |
+| 8 Cow Pasture | 12 straights | 14/12 | 3 ⭐⭐⭐ | **3 ⭐⭐⭐** ✅ |
+
+- "Full Loop!" toast fires on auto-detect after final placement.
+- `checkPuzzleSolution()` correctly rejects empty/incomplete: `❌ 4 disconnected edges! Check your connections.`
+- Completion path runs `incrementStat('puzzlesSolved')`, `SFX.celebrate()`, confetti at avg-track-cell.
+- LS persistence verified: `localStorage['trainTracks_puzzleProgress']` = `{"1":{"stars":3},"2":{"stars":3},"8":{"stars":3}}` ✓
+
+### Test 3 — Passenger Delivery End-to-End
+
+- Default `passengerState.enabled = false` (toggle via 🧑 button).
+- After `togglePassengers()` → `enabled = true`, persisted to `trainTracks_passengersEnabled`.
+- Built test loop with 2 stations + red train, called `startPlay`, then `spawnPassengers()`.
+- Passengers DOM rendered: 2 `.station-passenger` elements (one per station, count=1 each).
+- 12 seconds of running animation → **2 deliveries completed** (passengerState.delivered = 2, gameStats.passengersDelivered = 2).
+- HUD `#passenger-hud` had `.active` class throughout play, count visible.
+- `stopPlay()` cleans up (resetPassengerState clears stations + onboard).
+
+### Test 4 — Progression / Unlocks (10 Milestones)
+
+Default unlocked pieces (6): straight, curve, tree, house, cow, train-red.
+
+Pumped `gameStats` to all milestone thresholds and called `checkAndUnlockMilestones()`:
+
+| Milestone | Stat | Threshold | Unlocks | Triggered |
+|-----------|------|-----------|---------|-----------|
+| 🔨 Builder | tracksPlaced | 10 | tjunction | ✅ |
+| 📐 Architect | tracksPlaced | 25 | crossover | ✅ |
+| 🏗️ Engineer | tracksPlaced | 50 | bridge | ✅ |
+| ⛏️ Miner | tracksPlaced | 75 | tunnel | ✅ |
+| 🚂 Conductor | trainsRun | 3 | station, crossing, freight, passenger, caboose | ✅ |
+| 🔁 Loop Master | loopsCompleted | 1 | train-blue, train-green | ✅ |
+| 🌿 Naturalist | sceneryPlaced | 15 | water, flower, sheep | ✅ |
+| 🧩 Explorer | puzzlesSolved | 1 | horse, duck-land, people | ✅ |
+| 🌈 Rainbow Fleet | passengersDelivered | 10 | train-yellow, train-purple | ✅ |
+| ✨ Magician | puzzlesSolved | 3 | rainbow | ✅ |
+
+→ All 10 milestones fire correctly. **19 new pieces unlocked**, persisted to `trainTracks_unlocks` LS key. `isPieceUnlocked()` correctly gates locked pieces. `unlockEverything()` flag works (sets `allUnlocked=true`, all `isPieceUnlocked` returns true).
+
+### Test 5 — Share Link Round-Trip Across Fresh Session
+
+- Built complex layout: 12-piece rectangle loop + 1 station + 1 tunnel + 2 scenery (tree, cow) + 1 red train = **17 pieces**.
+- `encodeGridState()` → **140-char hash** prefixed `AggM…` (v2 byte 02, rows 8, cols 12 — Day 45 format).
+- Wiped state.grid + state.trains + state.switchStates (simulated fresh page load).
+- `decodeGridState(hash)` → `decodeOK = true`.
+- **Grid byte-identical** after decode (`gridIdentical = true`) — all 17 pieces incl. station rotation 90, tunnel rotation 0, scenery rotations preserved.
+- Train decoded at correct (1,1) red.
+- Trains object differs only in custom name field (Day 44 known limitation — names not encoded), and cargoType/cargoRole metadata not encoded (Day 46 known limitation). These are documented trade-offs, not bugs.
+
+### Test 6 — Screenshot / Download Feature
+
+- `openScreenshotModal()` renders `#screenshot-preview` canvas at **2924×1948 px** (4× scale of 731×487 grid container).
+- `canvas.toDataURL('image/png')` returns valid 292,898-byte PNG (`data:image/png;base64,…`).
+- Center-pixel sample has alpha > 0 (non-transparent — actual content rendered).
+- `closeScreenshotModal()` removes `.open` class cleanly.
+- `downloadScreenshot()` and `copyScreenshot()` handlers wired (per code inspection, not invoked in this test to avoid file-system writes).
+
+### Console Errors During Full Audit
+
+**ZERO** errors logged during the entire test session — random gen, puzzle load/exit, end-to-end solve cycles, play/stop, passenger delivery loop, milestone triggering, share encode/decode, screenshot canvas render.
+
+### Code Health Check
+
+- **File size:** 11,192 lines — **UNCHANGED** from Day 48 + Day 49 (Harden mandate: zero growth).
+- **No new features added today** (Harden mandate satisfied).
+- **No bugs to fix.**
+
+### Bugs Found Today: 0
+### Bugs Fixed Today: 0
+
+### Summary
+The puzzle system is rock-solid. All 10 puzzles load with the correct locked pieces, scenery, water, and pre-placed trains. End-to-end solves on Puzzles 1, 2, and 8 awarded 3 stars each, persisted to localStorage, and triggered the completion celebration. The supporting modes — passenger delivery (board + deliver, HUD updates, stats tracking), progression/unlocks (all 10 milestones fire correctly with proper piece gating), share links (140-char v2 hash byte-identical round-trip across fresh session), and screenshot (4× scale 2924×1948 canvas with valid PNG output) — all work as designed. The 4 Day-49 known limitations (names/cargo/sound-pack not in share-link, big-grid→small-grid replay drop) remain documented trade-offs, not regressions.
+
+Tomorrow (Day 51, weekDay 3) = Harden Week 2 Day 3: Platform & Edge Cases (mobile viewport 375px, pinch-to-zoom, bottom drawer, keyboard-only nav, high-contrast, reduced-motion, all 4 biomes × night, fresh localStorage, rapid-placement stress).
