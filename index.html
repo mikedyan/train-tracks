@@ -9347,7 +9347,7 @@ function handleGridKeyAction() {
     piece.rotation = (piece.rotation + 90) % 360;
     renderCell(r, c);
     ['N','S','E','W'].forEach(d => { const nb = getNeighbor(r, c, d); if (nb) updateConnectionDots(nb.row, nb.col); });
-    SFX.click();
+    SFX.rotate();
     hapticPlace();
     autoSave();
   } else if (selectedTool && !piece) {
