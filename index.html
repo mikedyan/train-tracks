@@ -9343,7 +9343,7 @@ function handleGridKeyAction() {
   if (piece && !SCENERY_TYPES.includes(piece.type)) {
     // Rotate existing track piece
     if (isPuzzleLocked(r, c)) { showToast('🔒 Locked piece!'); return; }
-    pushUndo();
+    saveUndo();
     piece.rotation = (piece.rotation + 90) % 360;
     renderCell(r, c);
     ['N','S','E','W'].forEach(d => { const nb = getNeighbor(r, c, d); if (nb) updateConnectionDots(nb.row, nb.col); });
@@ -9359,7 +9359,7 @@ function handleGridKeyAction() {
         return;
       }
     }
-    pushUndo();
+    saveUndo();
     const rotation = 0;
     state.grid[r][c] = { type: selectedTool, rotation };
     // Auto-connect
