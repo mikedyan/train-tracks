@@ -713,3 +713,73 @@ All work as expected (verified on live site after deploy):
 Two latent P1 keyboard-only-navigation crashes lurking in `handleGridKeyAction()` since before Day 14 — exposed by Day 51's platform-audit mandate. Both fixed same-day (`pushUndo`→`saveUndo`, `SFX.click`→`SFX.rotate`), zero LOC delta, deployed and verified on the live site. Mobile viewport, biome × night × high-contrast combinations, weather cycling, zoom, sidebar toggle, fresh-LS cold start, big-grid round-trip, rapid placement of 96 cells, and 5-color train placement all pass clean. Reduced-motion media query reads correctly. The Backspace-without-hover gap is documented design, not a bug.
 
 Tomorrow (Day 52, weekDay 4) = Harden Week 2 Day 4: Fix Everything — re-read BUGS.md for any open issues, prioritize P0→P1→P2, re-test each fix in the browser, hunt for duplicate code (this game has a history of it!), verify zero JS parse errors. With BUG-015/016 already closed today, Day 52 will also look for any *latent* issues we haven't tickled yet (e.g., gridFocus + Big-Grid edge cases, share-link hash with v2 prefix on legacy clients, undoStack at 50-entry cap behavior).
+
+---
+
+## Day 52 — Harden Week 2 Day 4: Fix Everything
+
+**Date:** Mon May 11, 2026
+**Tester:** Mochi (QA Agent)
+**Mission:** Hunt for *latent* bugs in the areas Day 51 flagged — gridFocus + Big-Grid edge cases, v1/v2 share-link cross-compatibility, undoStack 50-entry cap, duplicate-code grep. With 0 open bugs entering the day, this is a proactive hunt-and-fix session.
+
+### Hunt 1 — Duplicate Code Grep: ✅ CLEAN
+
+Grep'd `^function NAME\(` for 24 critical functions (placePiece, removePiece, rotatePiece, placeTrain, placeTrainOnLoop, saveUndo, undo, redo, selectTool, handleGridKeyAction, setGridFocus, clearGridFocus, startPlay, stopPlay, clearAll, generateRandomTrack, encodeGridState, decodeGridState, setBigGrid, applyGridSize, loadPuzzle, exitPuzzle, renderCell, renderAllCells). All exactly **1 definition each**. The two `function el(tag, attrs)` matches at lines 4606 and 4664 are intentional nested helpers inside `createTrainSVG` / `createCarSVG` (separate scopes), same as previous audits.
+
+### Hunt 2 — undoStack 50-Entry Cap: ✅ BEHAVES CORRECTLY
+
+Probed in browser console: pushed 60 fake undos (cap shifts to 50) → popped 50 → redoStack=50, undoStack=0 → redo all 50 → undoStack=50, redoStack=0 → next saveUndo trims to 50 again. No leak, no data loss. The cap-bypass via `redo()` push is self-healing on next normal saveUndo. Not a bug.
+
+### Hunt 3 — Share-Link v1/v2 Cross-Compatibility: ✅ CLEAN
+
+Reviewed `decodeGridState()` (line 9039): decoder accepts **both** version-1 (legacy fixed 12x8) and version-2 (explicit rows/cols + size whitelist). Encoder always emits v2 since Day 45. v1 hashes from pre-Day-45 deployments still decode correctly into the 12x8 grid; if user is on 16x10 when they receive a v1 hash, decoder calls `applyGridSize(false)` + `initGrid()` to swap first. v2 hashes only accept whitelisted dims (8x12 or 10x16) — corrupt/spoofed dims return false cleanly. **No regression hidden here.**
+
+### Hunt 4 — gridFocus + Big-Grid Edge Cases: 🐛 2 BUGS FOUND + FIXED
+
+Both bugs share a common root: **stale grid-coordinate state survives a Big-Grid shrink toggle** (16x10 → 12x8). The grid is rebuilt, but `gridFocusRow/Col` and `hoveredCell` global module vars still point at row 9 or col 15 — out of bounds for the now-smaller 8x12 array.
+
+#### BUG-017 | 🟢 FIXED | `handleGridKeyAction()` crashes on Enter after Big-Grid shrink
+
+- **Found:** Mon May 11 — Mochi (Day 52 hunt)
+- **Fixed:** Mon May 11 (commit 52ab4dd)
+- **Severity:** P1 (functional — keyboard build flow crashes silently after Big-Grid toggle)
+- **Root cause:** `handleGridKeyAction()` line 9338 guards `if (gridFocusRow < 0 || gridFocusCol < 0) return;` but never checks the **upper** bound against current ROWS/COLS. After a Big-Grid 16x10 → 12x8 toggle (via Settings, share-link decode of a small-grid hash while on big grid, or loadPuzzle's auto-shrink path), `gridFocusRow=9 / gridFocusCol=15` are now out-of-bounds. The next `Enter` press reads `state.grid[9][15]` → `state.grid[9]` is `undefined` → `TypeError: Cannot read properties of undefined (reading '15')`. The piece is never placed and the action silently aborts.
+- **Reproduction:**
+  1. Open game, toggle Big Grid ON in Settings.
+  2. Arrow-key to a far-corner cell (row 9, col 15).
+  3. Toggle Big Grid OFF.
+  4. Press Enter → console throws, no placement.
+- **Fix:** Extend the existing one-line guard to clamp upper bounds: `if (gridFocusRow < 0 || gridFocusCol < 0 || gridFocusRow >= ROWS || gridFocusCol >= COLS) return;`. **Zero LOC delta** (same line, longer condition).
+- **Verification:** Live test on deployed site post-push: trigger sequence reproduced exactly — before fix: TypeError. After fix: `threw=null`, no console errors, normal arrow-key recovery clamps focus back into bounds on next keypress.
+
+#### BUG-018 | 🟢 FIXED | `handleRemoveCell()` crashes on Delete/Backspace via stale hoveredCell after Big-Grid shrink
+
+- **Found:** Mon May 11 — Mochi (Day 52 hunt, surfaced while investigating BUG-017)
+- **Fixed:** Mon May 11 (commit 52ab4dd, same commit as BUG-017)
+- **Severity:** P1 (functional — Delete crashes after Big-Grid toggle if user hovered a far-corner cell first)
+- **Root cause:** Same shape as BUG-017 but via the mouse path. `handleRemoveCell(row, col)` line 5401 guards `if (state.playing) return;` but no bounds check. The Delete/Backspace key handler passes `hoveredCell.row, hoveredCell.col` directly. `hoveredCell` is set by `mouseover` events on real DOM cells (always valid at time of set), but the value **persists in module-level state** until the next mouseover/mouseleave. If the user hovered (9,15) on Big Grid, toggled to Small Grid, then pressed Delete *before any mouse move*, `state.grid[9][15]` throws.
+- **Reproduction:**
+  1. Big Grid ON, hover the bottom-right corner cell (9,15).
+  2. Open Settings, toggle Big Grid OFF.
+  3. Press Delete without moving the mouse → console TypeError.
+- **Fix:** Extend the existing one-line guard: `if (state.playing || row < 0 || col < 0 || row >= ROWS || col >= COLS) return;`. **Zero LOC delta**.
+- **Verification:** Live test post-push: pre-fix threw, post-fix `threw=null`. Happy path (deleting an in-bounds piece) still works — piece removed, autoSave fires, no errors.
+
+### Code Health
+
+- **File size before fix:** 11,192 lines
+- **File size after fix:** **11,192 lines** (🎉 zero LOC delta — both fixes extend existing single-line guards)
+- **JS parse:** clean via `new Function(js)` on 297,740 bytes
+- **Harden mandate (net code growth ≤ 0):** ✅ satisfied exactly (0 delta)
+- **No new features added.**
+
+### Bugs Found Today: 2 (BUG-017, BUG-018)
+### Bugs Fixed Today: 2 (both same-day)
+
+### Summary
+
+Day 52's hunt was rewarded — the gridFocus + Big-Grid combo Day 51 flagged turned out to harbor two latent P1 crashes, both stemming from the same root cause (stale grid coordinates surviving a dimension shrink). Symmetrical fixes added bounds-clamping to `handleGridKeyAction` (keyboard) and `handleRemoveCell` (mouse) at zero LOC cost — each fix just extended the existing early-return guard's condition. The duplicate-code grep, undoStack cap behavior, and share-link v1/v2 cross-compatibility audits all came back clean.
+
+Three paths now triggered the BUG-017 scenario in my testing: Settings toggle, share-link decode (Big→Small via v2 hash), and `loadPuzzle()` auto-shrink. The single guard fix covers all three (and any future code path that might invalidate gridFocus).
+
+Tomorrow (Day 53, weekDay 5) = Harden Week 2 Day 5: Regression Pass — final ship-readiness check against the original Day-1 promise (build, play, save, share) plus full Cycle-2-feature coverage (train names, big grid, cargo, replay, sound packs).
