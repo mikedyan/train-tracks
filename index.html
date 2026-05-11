@@ -5399,7 +5399,7 @@ function showPoofEffect(row, col) {
 }
 
 function handleRemoveCell(row, col) {
-  if (state.playing) return;
+  if (state.playing || row < 0 || col < 0 || row >= ROWS || col >= COLS) return;
   if (isPuzzleLocked(row, col)) { showToast('🔒 Locked!'); return; }
 
   // Check if this cell has a car from any train (takes priority over track removal)
@@ -9335,7 +9335,7 @@ function clearGridFocus() {
 }
 
 function handleGridKeyAction() {
-  if (gridFocusRow < 0 || gridFocusCol < 0) return;
+  if (gridFocusRow < 0 || gridFocusCol < 0 || gridFocusRow >= ROWS || gridFocusCol >= COLS) return;
   if (state.playing) return; // No placement during play
   const r = gridFocusRow, c = gridFocusCol;
   const piece = state.grid[r][c];
