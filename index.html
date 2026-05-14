@@ -1537,6 +1537,8 @@ body.night-mode .settings-item { background: #37474F !important; color: #ECEFF1 
 body.night-mode .settings-item:hover { background: #455A64 !important; }
 .settings-item .si-icon { font-size: 28px; line-height: 1; }
 .settings-item .si-label { font-size: 13px; font-weight: 600; text-align: center; }
+.settings-section-header { grid-column: 1 / -1; font-size: 11px; font-weight: 700; color: #607D8B; text-transform: uppercase; letter-spacing: 0.6px; margin: 4px 2px -2px; }
+body.night-mode .settings-section-header { color: #B0BEC5; }
 .settings-music-volume { margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 body.night-mode .settings-music-volume { border-top-color: rgba(255,255,255,0.1); }
 
@@ -2514,15 +2516,16 @@ body.night-mode .weather-snow #weather-overlay {
     <button class="close-btn" onclick="closeSettingsMenu()">✕</button>
     <h2>⚙️ Settings</h2>
     <div class="settings-grid">
+      <div class="settings-section-header">🔊 Audio</div>
       <button class="btn settings-item" onclick="closeSettingsMenu(); toggleMusic();" title="Background music"><span class="si-icon">🎵</span><span class="si-label" id="settings-music-label">Music: Off</span></button>
-      <button class="btn settings-item" onclick="closeSettingsMenu(); toggleHighContrast();" title="High contrast mode"><span class="si-icon">♿</span><span class="si-label">High Contrast</span></button>
-      <button class="btn settings-item" onclick="closeSettingsMenu(); openStatsModal();" title="Stats and milestones"><span class="si-icon">📊</span><span class="si-label">Stats &amp; Milestones</span></button>
-      <button class="btn settings-item" onclick="closeSettingsMenu(); openShortcutsModal();" title="Keyboard shortcuts"><span class="si-icon">⌨️</span><span class="si-label">Keyboard Shortcuts</span></button>
-      <button class="btn settings-item" onclick="closeSettingsMenu(); toggleFullscreen();" title="Fullscreen"><span class="si-icon">⛶</span><span class="si-label">Fullscreen</span></button>
-      <button class="btn settings-item" onclick="closeSettingsMenu(); openTrainNamesModal();" title="Name your trains"><span class="si-icon">🏷️</span><span class="si-label">Name Your Trains</span></button>
-      <button class="btn settings-item" onclick="closeSettingsMenu(); toggleBigGrid();" title="Switch between 12×8 and 16×10 grid"><span class="si-icon">🟦</span><span class="si-label" id="settings-biggrid-label">Big Grid: 12×8</span></button>
-      <button class="btn settings-item" onclick="closeSettingsMenu(); openTrackReplayModal();" title="Record building your track and replay it"><span class="si-icon">👻</span><span class="si-label" id="settings-replay-label">Track Replay</span></button>
       <button class="btn settings-item" onclick="cycleSoundPack();" title="Switch the train whistle, chug, and horn sound pack"><span class="si-icon">🔊</span><span class="si-label" id="settings-soundpack-label">Sound: Classic</span></button>
+      <div class="settings-section-header">🖼️ Display</div>
+      <button class="btn settings-item" onclick="closeSettingsMenu(); toggleHighContrast();" title="High contrast mode"><span class="si-icon">♿</span><span class="si-label">High Contrast</span></button>
+      <button class="btn settings-item" onclick="closeSettingsMenu(); toggleBigGrid();" title="Switch between 12×8 and 16×10 grid"><span class="si-icon">🟦</span><span class="si-label" id="settings-biggrid-label">Big Grid: 12×8</span></button>
+      <div class="settings-section-header">🎮 Game</div>
+      <button class="btn settings-item" onclick="closeSettingsMenu(); openTrainNamesModal();" title="Name your trains"><span class="si-icon">🏷️</span><span class="si-label">Name Your Trains</span></button>
+      <button class="btn settings-item" onclick="closeSettingsMenu(); openTrackReplayModal();" title="Record building your track and replay it"><span class="si-icon">👻</span><span class="si-label" id="settings-replay-label">Track Replay</span></button>
+      <button class="btn settings-item" onclick="closeSettingsMenu(); openStatsModal();" title="Stats and milestones"><span class="si-icon">📊</span><span class="si-label">Stats &amp; Milestones</span></button>
     </div>
     <div class="settings-music-volume">
       <span style="font-size:13px;color:#777;">Music volume</span>
@@ -2681,6 +2684,7 @@ body.night-mode .weather-snow #weather-overlay {
     <div class="tutorial-desc" id="tutorial-step-desc"></div>
     <div class="tutorial-dots" id="tutorial-dots"></div>
     <div class="tutorial-actions">
+      <button class="btn-tutorial-skip" onclick="skipTutorial(); openShortcutsModal();" title="Keyboard shortcuts" aria-label="Keyboard shortcuts" style="margin-right:auto;font-size:18px;padding:6px 10px;">⌨️</button>
       <button class="btn-tutorial-skip" onclick="skipTutorial()">Skip</button>
       <button class="btn-tutorial-next" id="btn-tutorial-next" onclick="nextTutorialStep()">Next →</button>
     </div>
