@@ -2502,7 +2502,7 @@ body.night-mode .weather-snow #weather-overlay {
 </div>
 
 <!-- Save/Load Modal -->
-<div id="save-overlay" onclick="closeSaveModalOutside(event)">
+<div id="save-overlay" onclick="if(event.target===this)closeSaveModal()">
   <div id="save-modal">
     <button class="close-btn" onclick="closeSaveModal()">✕</button>
     <h2>💾 Save & Load</h2>
@@ -2511,7 +2511,7 @@ body.night-mode .weather-snow #weather-overlay {
 </div>
 
 <!-- Settings Menu (groups power-user toggles) -->
-<div id="settings-overlay" onclick="closeSettingsMenuOutside(event)">
+<div id="settings-overlay" onclick="if(event.target===this)closeSettingsMenu()">
   <div id="settings-modal">
     <button class="close-btn" onclick="closeSettingsMenu()">✕</button>
     <h2>⚙️ Settings</h2>
@@ -2535,7 +2535,7 @@ body.night-mode .weather-snow #weather-overlay {
 </div>
 
 <!-- Track Replay Modal (Day 47 — Cycle 2 Build Day 4) -->
-<div id="track-replay-overlay" onclick="closeTrackReplayModalOutside(event)">
+<div id="track-replay-overlay" onclick="if(event.target===this)closeTrackReplayModal()">
   <div id="track-replay-modal">
     <button class="close-btn" onclick="closeTrackReplayModal()">✕</button>
     <h2>👻 Track Replay</h2>
@@ -2552,7 +2552,7 @@ body.night-mode .weather-snow #weather-overlay {
 <div id="replay-rec-indicator" class="replay-indicator hidden" aria-live="polite"><span class="replay-dot"></span><span id="replay-rec-text">REC • 0 steps</span></div>
 
 <!-- Train Names Modal (Day 44 — Cycle 2 Build Day 1) -->
-<div id="train-names-overlay" onclick="closeTrainNamesModalOutside(event)">
+<div id="train-names-overlay" onclick="if(event.target===this)closeTrainNamesModal()">
   <div id="train-names-modal">
     <button class="close-btn" onclick="closeTrainNamesModal()">✕</button>
     <h2>🏷️ Name Your Trains</h2>
@@ -2565,7 +2565,7 @@ body.night-mode .weather-snow #weather-overlay {
 </div>
 
 <!-- Share Menu (combines copy-link + screenshot) -->
-<div id="share-overlay" onclick="closeShareMenuOutside(event)">
+<div id="share-overlay" onclick="if(event.target===this)closeShareMenu()">
   <div id="share-modal">
     <button class="close-btn" onclick="closeShareMenu()">✕</button>
     <h2>📤 Share Your Track</h2>
@@ -2577,7 +2577,7 @@ body.night-mode .weather-snow #weather-overlay {
 </div>
 
 <!-- Keyboard Shortcuts Modal -->
-<div id="shortcuts-overlay" onclick="closeShortcutsModalOutside(event)">
+<div id="shortcuts-overlay" onclick="if(event.target===this)closeShortcutsModal()">
   <div id="shortcuts-modal">
     <button class="close-btn" onclick="closeShortcutsModal()">✕</button>
     <h2>⌨️ Keyboard Shortcuts</h2>
@@ -2642,7 +2642,7 @@ body.night-mode .weather-snow #weather-overlay {
 </div>
 
 <!-- Puzzle Select Modal -->
-<div id="puzzle-overlay" onclick="closePuzzleModalOutside(event)">
+<div id="puzzle-overlay" onclick="if(event.target===this)closePuzzleModal()">
   <div id="puzzle-modal">
     <button class="close-btn" onclick="closePuzzleModal()">✕</button>
     <h2>🧩 Challenge Puzzles</h2>
@@ -2651,7 +2651,7 @@ body.night-mode .weather-snow #weather-overlay {
 </div>
 
 <!-- Screenshot Modal -->
-<div id="screenshot-overlay" onclick="closeScreenshotModalOutside(event)">
+<div id="screenshot-overlay" onclick="if(event.target===this)closeScreenshotModal()">
   <div id="screenshot-modal">
     <button class="close-btn" onclick="closeScreenshotModal()">✕</button>
     <h2>📸 Screenshot</h2>
@@ -2664,7 +2664,7 @@ body.night-mode .weather-snow #weather-overlay {
 </div>
 
 <!-- Stats & Milestones Modal -->
-<div id="stats-overlay" onclick="closeStatsModalOutside(event)">
+<div id="stats-overlay" onclick="if(event.target===this)closeStatsModal()">
   <div id="stats-modal">
     <button class="close-btn" onclick="closeStatsModal()">✕</button>
     <h2>📊 Stats & Milestones</h2>
@@ -7451,19 +7451,12 @@ function updateReplaySettingsLabel() {
 function closeSettingsMenu() {
   document.getElementById('settings-overlay').classList.remove('open');
 }
-function closeSettingsMenuOutside(e) {
-  if (e.target === document.getElementById('settings-overlay')) closeSettingsMenu();
-}
 function openShareMenu() {
   document.getElementById('share-overlay').classList.add('open');
 }
 function closeShareMenu() {
   document.getElementById('share-overlay').classList.remove('open');
 }
-function closeShareMenuOutside(e) {
-  if (e.target === document.getElementById('share-overlay')) closeShareMenu();
-}
-
 // ============================================================
 // TRAIN NAME LABELS (Day 44 — Cycle 2 Build Day 1)
 // ============================================================
@@ -7516,9 +7509,6 @@ function openTrainNamesModal() {
 }
 function closeTrainNamesModal() {
   document.getElementById('train-names-overlay').classList.remove('open');
-}
-function closeTrainNamesModalOutside(e) {
-  if (e.target === document.getElementById('train-names-overlay')) closeTrainNamesModal();
 }
 function saveTrainNames() {
   const inputs = document.querySelectorAll('#train-names-list .tn-input');
@@ -7710,10 +7700,6 @@ function openTrackReplayModal() {
 function closeTrackReplayModal() {
   document.getElementById('track-replay-overlay').classList.remove('open');
 }
-function closeTrackReplayModalOutside(e) {
-  if (e.target === document.getElementById('track-replay-overlay')) closeTrackReplayModal();
-}
-
 function refreshTrackReplayModal() {
   const status = document.getElementById('track-replay-status');
   const recBtn = document.getElementById('tr-btn-record');
@@ -7913,7 +7899,7 @@ function generateRandomTrack() {
   state.trains = [];
   renderAllCells();
   // Day 46: clear any stale cargo badges before re-render
-  cleanupStationCargoBadges();
+  document.querySelectorAll('.station-cargo-badge').forEach(el => el.remove());
   
   SFX.generate();
   showToast('🎲 Generating track...');
@@ -8594,11 +8580,6 @@ function closeSaveModal() {
   document.getElementById('save-overlay').classList.remove('open');
 }
 
-function closeSaveModalOutside(e) {
-  if (e.target === document.getElementById('save-overlay')) {
-    closeSaveModal();
-  }
-}
 
 
 // ============================================================
@@ -8909,11 +8890,6 @@ function closeScreenshotModal() {
   screenshotCanvas = null;
 }
 
-function closeScreenshotModalOutside(e) {
-  if (e.target === document.getElementById('screenshot-overlay')) {
-    closeScreenshotModal();
-  }
-}
 
 function downloadScreenshot() {
   if (!screenshotCanvas) return;
@@ -9633,11 +9609,6 @@ function closeShortcutsModal() {
   document.getElementById('shortcuts-overlay').classList.remove('open');
 }
 
-function closeShortcutsModalOutside(e) {
-  if (e.target === document.getElementById('shortcuts-overlay')) {
-    closeShortcutsModal();
-  }
-}
 
 
 // ============================================================
@@ -9910,8 +9881,6 @@ function openPuzzleModal() {
   document.getElementById('puzzle-overlay').classList.add('open');
 }
 function closePuzzleModal() { document.getElementById('puzzle-overlay').classList.remove('open'); }
-function closePuzzleModalOutside(e) { if (e.target === document.getElementById('puzzle-overlay')) closePuzzleModal(); }
-
 function loadPuzzle(id) {
   const puzzle = PUZZLES.find(p => p.id === id);
   if (!puzzle) return;
@@ -10461,7 +10430,7 @@ function resetPassengerState() {
   passengerState.onboard = {};
   passengerState.delivered = 0;
   stopPassengerSpawn();
-  cleanupStationPassengers();
+  document.querySelectorAll('.station-passenger').forEach(el => el.remove());
   document.getElementById('passenger-hud').classList.remove('active');
 }
 
@@ -10536,10 +10505,6 @@ function renderStationPassengers(stationKey) {
     emoji.style.animationDelay = (i * 0.3) + 's';
     cell.appendChild(emoji);
   }
-}
-
-function cleanupStationPassengers() {
-  document.querySelectorAll('.station-passenger').forEach(el => el.remove());
 }
 
 function handleTrainAtStation(anim, row, col) {
@@ -10655,7 +10620,7 @@ let cargoState = {
 function resetCargoState() {
   cargoState.onboard = {};
   cargoState.delivered = 0;
-  cleanupTrainCargoBadges();
+  document.querySelectorAll('.train-cargo-badge').forEach(el => el.remove());
   const hud = document.getElementById('cargo-hud');
   if (hud) hud.classList.remove('active');
   // NOTE: station cargo badges are *not* cleaned here — they are
@@ -10705,14 +10670,6 @@ function renderStationCargo(row, col) {
   badge.textContent = cfg.emoji;
   badge.title = (piece.cargoRole === 'delivery' ? 'Deliver: ' : 'Pickup: ') + cfg.label;
   cell.appendChild(badge);
-}
-
-function cleanupStationCargoBadges() {
-  document.querySelectorAll('.station-cargo-badge').forEach(el => el.remove());
-}
-
-function cleanupTrainCargoBadges() {
-  document.querySelectorAll('.train-cargo-badge').forEach(el => el.remove());
 }
 
 function updateCargoHUD() {
@@ -10939,10 +10896,6 @@ function openStatsModal() {
 
 function closeStatsModal() {
   document.getElementById('stats-overlay').classList.remove('open');
-}
-
-function closeStatsModalOutside(e) {
-  if (e.target === document.getElementById('stats-overlay')) closeStatsModal();
 }
 
 function renderStatsContent() {
