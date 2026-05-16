@@ -2524,7 +2524,7 @@ body.night-mode .weather-snow #weather-overlay {
       <button class="btn settings-item" onclick="closeSettingsMenu(); toggleBigGrid();" title="Switch between 12×8 and 16×10 grid"><span class="si-icon">🟦</span><span class="si-label" id="settings-biggrid-label">Big Grid: 12×8</span></button>
       <div class="settings-section-header">🎮 Game</div>
       <button class="btn settings-item" onclick="closeSettingsMenu(); openTrainNamesModal();" title="Name your trains"><span class="si-icon">🏷️</span><span class="si-label">Name Your Trains</span></button>
-      <button class="btn settings-item" onclick="closeSettingsMenu(); openTrackReplayModal();" title="Record building your track and replay it"><span class="si-icon">👻</span><span class="si-label" id="settings-replay-label">Track Replay</span></button>
+      <button class="btn settings-item" onclick="closeSettingsMenu(); openTrackReplayModal();" title="Record building your track and replay it"><span class="si-icon">🎬</span><span class="si-label" id="settings-replay-label">Track Replay</span></button>
       <button class="btn settings-item" onclick="closeSettingsMenu(); openStatsModal();" title="Stats and milestones"><span class="si-icon">📊</span><span class="si-label">Stats &amp; Milestones</span></button>
     </div>
     <div class="settings-music-volume">
@@ -2538,7 +2538,7 @@ body.night-mode .weather-snow #weather-overlay {
 <div id="track-replay-overlay" onclick="if(event.target===this)closeTrackReplayModal()">
   <div id="track-replay-modal">
     <button class="close-btn" onclick="closeTrackReplayModal()">✕</button>
-    <h2>👻 Track Replay</h2>
+    <h2>🎬 Track Replay</h2>
     <p style="font-size:13px;color:#777;text-align:center;margin:-8px 0 12px;">Press 🔴 Record, then build your track. Press ▶️ Replay and a ghost rebuilds it for you!</p>
     <div id="track-replay-status" class="tr-status">No replay saved yet.</div>
     <div class="track-replay-actions">
@@ -7890,9 +7890,11 @@ function stopPlay() {
 // ============================================================
 // RANDOM TRACK GENERATOR (Feature #4)
 // ============================================================
+let randomTrackCount = 0;
 function generateRandomTrack() {
   if (puzzleState.active) { showToast('🧩 Exit puzzle first!'); return; }
   if (state.playing) stopPlay();
+  randomTrackCount++;
   
   // Clear board
   state.grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
@@ -7930,8 +7932,11 @@ function generateRandomTrack() {
   if (Math.random() < 0.25) promote('rainbow');
 
   // Day 46: Cargo Delivery — promote a 2nd straight to a station and pair them
-  // as a cargo pickup + delivery. ~70% chance, only if 2+ straights remain.
-  if (Math.random() < 0.7) {
+  // as a cargo pickup + delivery. ~70% chance normally; Day 57 delight polish:
+  // first random of a fresh session is near-guaranteed (95%) so the very first
+  // "magical" moment a kid sees has a cargo mission to discover.
+  const cargoChance = randomTrackCount === 0 ? 0.95 : 0.7;
+  if (Math.random() < cargoChance) {
     const moreCandidates = path.filter(c => c.type === 'straight');
     if (moreCandidates.length >= 1) {
       const pickup = moreCandidates[Math.floor(Math.random() * moreCandidates.length)];
@@ -10228,7 +10233,7 @@ const TUTORIAL_STEPS = [
   {
     emoji: '🚂',
     title: 'Press ▶ to Go!',
-    desc: 'Place a train on the tracks, then hit Play to watch it ride! Build loops for endless fun.',
+    desc: 'Place a train on the tracks, hit Play, then tap 📯 to honk! Build loops for endless fun.',
     targetSelector: '#btn-play',
     arrowDir: 'down',
     spotlightPadding: 10,
