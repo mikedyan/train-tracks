@@ -7894,7 +7894,8 @@ let randomTrackCount = 0;
 function generateRandomTrack() {
   if (puzzleState.active) { showToast('🧩 Exit puzzle first!'); return; }
   if (state.playing) stopPlay();
-  randomTrackCount++;
+  // Note: randomTrackCount is incremented AFTER the cargo check below so the
+  // first invocation of the session sees randomTrackCount === 0 (95% cargo).
   
   // Clear board
   state.grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
@@ -7936,6 +7937,7 @@ function generateRandomTrack() {
   // first random of a fresh session is near-guaranteed (95%) so the very first
   // "magical" moment a kid sees has a cargo mission to discover.
   const cargoChance = randomTrackCount === 0 ? 0.95 : 0.7;
+  randomTrackCount++;
   if (Math.random() < cargoChance) {
     const moreCandidates = path.filter(c => c.type === 'straight');
     if (moreCandidates.length >= 1) {
