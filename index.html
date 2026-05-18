@@ -2324,6 +2324,75 @@ body.night-mode .weather-snow #weather-overlay {
   background: rgba(100,120,150,0.1);
 }
 
+/* DAY 59 (Cycle 3 Build Day 1) — Time-of-Day sky cycle during play.
+   A sun (☀️) or moon (🌙) arcs across the viewport while a gentle gradient
+   shifts through sunrise → noon → sunset over 60s. Pure CSS, no JS loop. */
+#sky-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  border-radius: 12px;
+  background: transparent;
+  transition: opacity 0.8s ease;
+}
+#grid-viewport.sky-cycling #sky-overlay {
+  opacity: 1;
+  animation: sky-tint-cycle 60s linear infinite;
+}
+body.night-mode #grid-viewport.sky-cycling #sky-overlay {
+  animation: sky-tint-cycle-night 60s linear infinite;
+}
+@keyframes sky-tint-cycle {
+  0%   { background: linear-gradient(to bottom, rgba(255,180,140,0.24), transparent 55%); }
+  20%  { background: linear-gradient(to bottom, rgba(180,220,255,0.16), transparent 60%); }
+  50%  { background: linear-gradient(to bottom, rgba(160,210,255,0.08), transparent 50%); }
+  75%  { background: linear-gradient(to bottom, rgba(255,200,150,0.22), transparent 55%); }
+  92%  { background: linear-gradient(to bottom, rgba(255,140,120,0.28), transparent 55%); }
+  100% { background: linear-gradient(to bottom, rgba(255,180,140,0.24), transparent 55%); }
+}
+@keyframes sky-tint-cycle-night {
+  0%   { background: linear-gradient(to bottom, rgba(80,60,140,0.32), transparent 55%); }
+  50%  { background: linear-gradient(to bottom, rgba(40,40,100,0.42), transparent 55%); }
+  100% { background: linear-gradient(to bottom, rgba(80,60,140,0.32), transparent 55%); }
+}
+#sky-sun {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin-left: -14px;
+  font-size: 28px;
+  line-height: 1;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  filter: drop-shadow(0 0 8px rgba(255,220,120,0.6));
+  transition: opacity 0.6s ease;
+  will-change: transform, top, left;
+}
+#grid-viewport.sky-cycling #sky-sun {
+  animation: sky-arc 60s linear infinite;
+}
+body.night-mode #grid-viewport.sky-cycling #sky-sun {
+  filter: drop-shadow(0 0 10px rgba(200,220,255,0.85));
+}
+@keyframes sky-arc {
+  0%   { left: -3%;  top: 50px; opacity: 0; }
+  8%   { opacity: 1; top: 30px; }
+  25%  { left: 25%;  top: 8px; }
+  50%  { left: 50%;  top: 2px; }
+  75%  { left: 75%;  top: 8px; }
+  92%  { opacity: 1; top: 30px; }
+  100% { left: 103%; top: 50px; opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #grid-viewport.sky-cycling #sky-overlay,
+  #grid-viewport.sky-cycling #sky-sun {
+    animation-duration: 180s;
+  }
+}
+
 
 /* RAINBOW TRACK */
 @keyframes rainbow-shimmer {
@@ -2474,6 +2543,8 @@ body.night-mode .weather-snow #weather-overlay {
         <div id="train-headlight"></div>
       </div>
       <div id="weather-overlay"></div>
+      <div id="sky-overlay"></div>
+      <div id="sky-sun" aria-hidden="true">☀️</div>
       <div id="zoom-indicator">1.0×</div>
     </div>
     <div id="controls">
@@ -3654,9 +3725,29 @@ function toggleNightMode() {
   updateHouseGlows();
   // Update headlight visibility
   updateHeadlightVisibility();
+  // Day 59: keep the sky-cycle sun emoji in sync with night mode
+  updateSkySunEmoji();
   try { localStorage.setItem(NIGHT_MODE_KEY, night ? '1' : '0'); } catch (e) {}
   // Update music tempo for night mode change
   updateMusicTempo();
+}
+
+// Day 59 (Cycle 3 Build Day 1) — Time-of-Day sky cycle helpers.
+// Pure CSS animation does the heavy lifting; JS just toggles a class and the
+// sun/moon emoji. Active only during play, auto-respects night mode.
+function startSkyCycle() {
+  const vp = document.getElementById('grid-viewport');
+  if (!vp) return;
+  updateSkySunEmoji();
+  vp.classList.add('sky-cycling');
+}
+function stopSkyCycle() {
+  const vp = document.getElementById('grid-viewport');
+  if (vp) vp.classList.remove('sky-cycling');
+}
+function updateSkySunEmoji() {
+  const sun = document.getElementById('sky-sun');
+  if (sun) sun.textContent = isNightMode() ? '🌙' : '☀️';
 }
 
 function restoreNightMode() {
@@ -6866,6 +6957,9 @@ function startPlay() {
   document.getElementById('btn-play').innerHTML = '⏹️ Stop';
   document.getElementById('btn-play').className = 'btn btn-stop';
 
+  // Day 59: kick off Time-of-Day sky cycle (sun/moon arc + tint).
+  startSkyCycle();
+
   // Update music tempo for play state
   updateMusicTempo();
 
@@ -7863,6 +7957,9 @@ function stopPlay() {
   // Day 46: Stop cargo system
   resetCargoState();
   state.playing = false;
+
+  // Day 59: stop the Time-of-Day sky cycle.
+  stopSkyCycle();
 
   // Update music tempo for idle state
   updateMusicTempo();
