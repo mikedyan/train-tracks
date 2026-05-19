@@ -1896,6 +1896,48 @@ body.night-mode .station-cargo-badge[data-cargo-role="delivery"] { border-color:
 }
 body.night-mode .train-cargo-badge { background: rgba(38, 50, 56, 0.95); border-color: #FFD54F; }
 body.high-contrast .train-cargo-badge { background: #000; color: #FFF; border-color: #FFF; }
+/* Day 60: Animal Passengers — green wiggly badge that hovers above the loco */
+.train-animal-badge {
+  position: absolute;
+  pointer-events: none;
+  z-index: 52;
+  font-size: 15px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(232, 245, 233, 0.95);
+  border: 2px solid #43A047;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+  transform: translate(-50%, -50%) rotate(0deg);
+  animation: animal-badge-wiggle 1.6s ease-in-out infinite;
+}
+@keyframes animal-badge-wiggle {
+  0%, 100% { transform: translate(-50%, -50%) rotate(-7deg); }
+  50%      { transform: translate(-50%, -50%) rotate(7deg); }
+}
+body.night-mode .train-animal-badge { background: rgba(38, 50, 56, 0.95); border-color: #A5D6A7; }
+body.high-contrast .train-animal-badge { background: #000; color: #FFF; border-color: #FFF; }
+/* Boarded animal: original scenery cell goes faded so kids see "it left" */
+.cell[data-animal-boarded="1"] .scenery-emoji {
+  opacity: 0.22;
+  filter: grayscale(0.85);
+  transition: opacity 0.35s ease, filter 0.35s ease;
+}
+/* Hint shimmer on animals adjacent to a station — only while playing */
+@keyframes animal-hint-pulse {
+  0%, 100% { filter: drop-shadow(0 0 0 rgba(67,160,71,0)); }
+  50%      { filter: drop-shadow(0 0 6px rgba(67,160,71,0.65)); }
+}
+.cell[data-animal-hint="1"] .scenery-emoji {
+  animation: animal-hint-pulse 1.8s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .train-animal-badge { animation: none; }
+  .cell[data-animal-hint="1"] .scenery-emoji { animation: none; }
+}
 #cargo-hud {
   position: fixed;
   top: 110px;
@@ -7103,6 +7145,8 @@ function startPlay() {
   startPassengerSystem();
   // Day 46: Start cargo system (auto-on if any cargo stations exist on the grid)
   startCargoSystem();
+  // Day 60: Animal passengers — always on, hint shimmer on station-adjacent animals
+  startAnimalSystem();
   requestAnimationFrame(animateFrame);
 }
 
@@ -7264,7 +7308,12 @@ function advanceTrainAnim(anim, timestamp) {
       // Handle passenger pickup/delivery
       if (passengerState.enabled) {
         handleTrainAtStation(anim, nextPos.row, nextPos.col);
-      } else if (!didCargoEvent) {
+      }
+      // Day 60: Animal passengers — independent of passenger toggle.
+      // Pickup or drop-off (never both in one visit). Suppresses the
+      // default "Toot toot!" toast so we don't double-announce.
+      const didAnimalEvent = handleTrainAtAnimalStation(anim, nextPos.row, nextPos.col);
+      if (!passengerState.enabled && !didCargoEvent && !didAnimalEvent) {
         showToast('🚉 Toot toot!');
       }
     }
@@ -7378,6 +7427,15 @@ function renderTrainAtProgress(anim) {
     anim.cargoBadgeEl.style.left = (locoX + badgeOffsetX) + 'px';
     anim.cargoBadgeEl.style.top = (locoY + badgeOffsetY) + 'px';
     anim.cargoBadgeEl.style.opacity = locoOpacity;
+  }
+
+  // Day 60: Position animal-passenger badge (top-LEFT of loco, opposite cargo)
+  if (anim.animalBadgeEl) {
+    const aOffsetX = -(cellSize * 0.32);
+    const aOffsetY = -(cellSize * 0.32);
+    anim.animalBadgeEl.style.left = (locoX + aOffsetX) + 'px';
+    anim.animalBadgeEl.style.top = (locoY + aOffsetY) + 'px';
+    anim.animalBadgeEl.style.opacity = locoOpacity;
   }
 
   // Rainbow glow timer check + sparkle trail
@@ -7956,6 +8014,8 @@ function stopPlay() {
   resetPassengerState();
   // Day 46: Stop cargo system
   resetCargoState();
+  // Day 60: Stop animal passenger system (re-shows boarded animals)
+  resetAnimalState();
   state.playing = false;
 
   // Day 59: stop the Time-of-Day sky cycle.
@@ -7973,6 +8033,7 @@ function stopPlay() {
     if (anim.headlightEl) anim.headlightEl.remove();
     if (anim.nameLabelEl) anim.nameLabelEl.remove();
     if (anim.cargoBadgeEl) anim.cargoBadgeEl.remove();
+    if (anim.animalBadgeEl) anim.animalBadgeEl.remove();
     if (anim.carEls) anim.carEls.forEach(el => el.remove());
   }
 
@@ -10835,6 +10896,149 @@ function refreshTrainCargoBadge(anim) {
 }
 
 // ============================================================
+// ANIMAL PASSENGERS SYSTEM (Day 60)
+// ============================================================
+// Cows, sheep, ducks (and horses!) adjacent to stations can hop aboard a
+// passing train. They moo/baa/quack when they board, ride in a little badge
+// next to the locomotive, and hop off at the next station the train reaches.
+//
+// Reuses Day 25's station-pickup model and Day 30's animal SFX. Unlike
+// cargo, animal-passengers need ZERO setup — any animal scenery next to any
+// station is automatically boardable while a train is running. The whole
+// system is auto-on; nothing to enable, nothing to configure.
+const ANIMAL_PASSENGERS = {
+  'cow':       { emoji: '🐄', sfx: () => SFX.moo(),       label: 'Cow'   },
+  'sheep':     { emoji: '🐑', sfx: () => SFX.sheep(),     label: 'Sheep' },
+  'duck-land': { emoji: '🦆', sfx: () => SFX.duckQuack(), label: 'Duck'  },
+  'horse':     { emoji: '🐴', sfx: () => SFX.horse(),     label: 'Horse' },
+};
+
+let animalState = {
+  onboard: {},    // trainColor -> { type, fromRow, fromCol }
+  boarded: {},    // "row,col" -> true (cell currently has an animal on a train)
+  delivered: 0,
+};
+
+function resetAnimalState() {
+  // Restore any boarded cells before clearing state
+  for (const key of Object.keys(animalState.boarded)) {
+    const [r, c] = key.split(',').map(Number);
+    const cell = getCellEl(r, c);
+    if (cell) delete cell.dataset.animalBoarded;
+  }
+  document.querySelectorAll('.cell[data-animal-hint]').forEach(
+    el => delete el.dataset.animalHint
+  );
+  document.querySelectorAll('.train-animal-badge').forEach(el => el.remove());
+  animalState.onboard = {};
+  animalState.boarded = {};
+  animalState.delivered = 0;
+}
+
+function isAdjacentToStation(row, col) {
+  const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+  for (const [dr, dc] of dirs) {
+    const r = row + dr, c = col + dc;
+    if (r < 0 || r >= ROWS || c < 0 || c >= COLS) continue;
+    const p = state.grid[r]?.[c];
+    if (p && p.type === 'station') return true;
+  }
+  return false;
+}
+
+// On startPlay, mark every station-adjacent animal cell so kids see a gentle
+// halo — "hey, that cow can hop on the train." Recomputed each play; tracks
+// can change between runs.
+function startAnimalSystem() {
+  resetAnimalState();
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const piece = state.grid[r]?.[c];
+      if (!piece || !ANIMAL_PASSENGERS[piece.type]) continue;
+      if (!isAdjacentToStation(r, c)) continue;
+      const cell = getCellEl(r, c);
+      if (cell) cell.dataset.animalHint = '1';
+    }
+  }
+}
+
+function findBoardableAnimal(stationRow, stationCol) {
+  const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+  for (const [dr, dc] of dirs) {
+    const r = stationRow + dr, c = stationCol + dc;
+    if (r < 0 || r >= ROWS || c < 0 || c >= COLS) continue;
+    const p = state.grid[r]?.[c];
+    if (!p || !ANIMAL_PASSENGERS[p.type]) continue;
+    if (animalState.boarded[r + ',' + c]) continue;
+    return { row: r, col: c, type: p.type };
+  }
+  return null;
+}
+
+// Returns true when an animal pickup or drop-off happened. Pickup and
+// drop-off never co-occur in the same visit (drop-off wins so kids see the
+// arrival celebration), matching the cargo system's behavior.
+function handleTrainAtAnimalStation(anim, row, col) {
+  if (!state.playing) return false;
+  const trainColor = anim.color;
+  const onboard = animalState.onboard[trainColor];
+
+  // Drop-off: train carrying an animal arrives at any station.
+  if (onboard) {
+    const cfg = ANIMAL_PASSENGERS[onboard.type];
+    animalState.onboard[trainColor] = null;
+    delete animalState.boarded[onboard.fromRow + ',' + onboard.fromCol];
+    const homeCell = getCellEl(onboard.fromRow, onboard.fromCol);
+    if (homeCell) delete homeCell.dataset.animalBoarded;
+    animalState.delivered++;
+    incrementStat('animalsDelivered', 1);
+    if (cfg) cfg.sfx();
+    triggerAnimalReaction(row, col, onboard.type);
+    triggerMiniConfetti(row, col);
+    showToast(cfg.emoji + ' ' + cfg.label + ' hopped off!');
+    refreshTrainAnimalBadge(anim);
+    return true;
+  }
+
+  // Pickup: scan 4-neighbor cells for an unboarded animal.
+  const found = findBoardableAnimal(row, col);
+  if (!found) return false;
+  const cfg = ANIMAL_PASSENGERS[found.type];
+  animalState.onboard[trainColor] = {
+    type: found.type, fromRow: found.row, fromCol: found.col
+  };
+  animalState.boarded[found.row + ',' + found.col] = true;
+  const homeCell = getCellEl(found.row, found.col);
+  if (homeCell) {
+    homeCell.dataset.animalBoarded = '1';
+    delete homeCell.dataset.animalHint;
+  }
+  if (cfg) cfg.sfx();
+  triggerAnimalReaction(found.row, found.col, found.type);
+  refreshTrainAnimalBadge(anim);
+  showToast(cfg.emoji + ' ' + cfg.label + ' climbed aboard!');
+  return true;
+}
+
+function refreshTrainAnimalBadge(anim) {
+  const onboard = animalState.onboard[anim.color];
+  if (!onboard) {
+    if (anim.animalBadgeEl) {
+      anim.animalBadgeEl.remove();
+      anim.animalBadgeEl = null;
+    }
+    return;
+  }
+  if (!anim.animalBadgeEl) {
+    anim.animalBadgeEl = document.createElement('div');
+    anim.animalBadgeEl.className = 'train-animal-badge';
+    const gc = document.getElementById('grid-container');
+    if (gc) gc.appendChild(anim.animalBadgeEl);
+  }
+  anim.animalBadgeEl.textContent = ANIMAL_PASSENGERS[onboard.type].emoji;
+}
+
+// ============================================================
 // ============================================================
 // PROGRESSION & UNLOCKS SYSTEM
 // ============================================================
@@ -10849,6 +11053,7 @@ let gameStats = {
   puzzlesSolved: 0,
   passengersDelivered: 0,
   cargoDelivered: 0,
+  animalsDelivered: 0,
   crashCount: 0,
 };
 
@@ -11014,6 +11219,7 @@ function renderStatsContent() {
     puzzlesSolved: { label: '🧩 Puzzles Solved', val: gameStats.puzzlesSolved },
     passengersDelivered: { label: '🧑 Passengers Delivered', val: gameStats.passengersDelivered },
     cargoDelivered: { label: '📦 Cargo Delivered', val: gameStats.cargoDelivered },
+    animalsDelivered: { label: '🐄 Animals Hauled', val: gameStats.animalsDelivered },
     crashCount: { label: '💥 Crashes', val: gameStats.crashCount },
   };
 
