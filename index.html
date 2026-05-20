@@ -2895,6 +2895,41 @@ function updateSoundPackSettingsLabel() {
   lbl.textContent = 'Sound: ' + p.short;
 }
 
+// ============================================================
+// WHISTLE SONGS (Day 61 — Cycle 3 Build Day 3)
+// Each train color sings a tiny 4-note pentatonic melody at
+// stations, right after the horn fades. Gives every train a
+// recognizable musical voice. Pentatonic-only so the songs
+// layer gracefully over the ambient music engine. Timbre is
+// tied to the color (not the sound pack) — the color *is* the
+// identity. Volume kept low so it sits under the horn tail.
+// ============================================================
+const WHISTLE_SONG_OFFSET = 0.60; // start after station horn body
+const WHISTLE_SONG_NOTE_DUR = 0.24;
+const WHISTLE_SONG_STEP = 0.19;   // note-to-note spacing (slight overlap → legato)
+const WHISTLE_SONG_VOL = 0.075;
+const WHISTLE_SONGS = {
+  // notes: pentatonic frequencies (Hz); type: oscillator waveform
+  red:    { notes: [783.99, 659.25, 783.99, 523.25], type: 'sawtooth', label: 'Bold' },     // G5 E5 G5 C5 — brassy descend
+  blue:   { notes: [523.25, 659.25, 783.99, 659.25], type: 'sine',     label: 'Mellow' },   // C5 E5 G5 E5 — soft arch
+  green:  { notes: [587.33, 783.99, 880.00, 659.25], type: 'triangle', label: 'Pastoral' }, // D5 G5 A5 E5 — folksy lilt
+  yellow: { notes: [880.00, 1046.50, 1318.51, 1046.50], type: 'sine',  label: 'Chirpy' },   // A5 C6 E6 C6 — bright skip
+  purple: { notes: [440.00, 587.33, 698.46, 880.00],   type: 'triangle', label: 'Mystery' } // A4 D5 F5 A5 — minor-tinged climb
+};
+function playWhistleSong(color) {
+  if (!soundEnabled) return;
+  const song = WHISTLE_SONGS[color] || WHISTLE_SONGS.red;
+  for (let i = 0; i < song.notes.length; i++) {
+    playNote(
+      song.notes[i],
+      WHISTLE_SONG_NOTE_DUR,
+      song.type,
+      WHISTLE_SONG_VOL,
+      WHISTLE_SONG_OFFSET + i * WHISTLE_SONG_STEP
+    );
+  }
+}
+
 // MUSIC ENGINE — Ambient Background Music (Web Audio API)
 // ============================================================
 const MUSIC_ENABLED_KEY = 'trainTracks_musicEnabled';
@@ -7300,6 +7335,8 @@ function advanceTrainAnim(anim, timestamp) {
 
     if (nextPiece.type === 'station') {
       SFX.station();
+      // Day 61: Per-color whistle song right after the horn
+      playWhistleSong(anim.color);
       let didCargoEvent = false;
       // Day 46: Cargo pickup/delivery (independent of passenger toggle)
       if (nextPiece.cargoType) {
