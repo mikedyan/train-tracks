@@ -1,13 +1,13 @@
 {
   "project": "Train Tracks",
-  "currentDay": 61,
+  "currentDay": 62,
   "status": "active",
   "weekType": "build",
-  "weekDay": 3,
+  "weekDay": 4,
   "cycleNumber": 3,
-  "cycleDay": 3,
-  "lastRun": "2026-05-20T09:30:00-07:00",
-  "lastRunDate": "2026-05-20",
+  "cycleDay": 4,
+  "lastRun": "2026-05-21T09:30:00-07:00",
+  "lastRunDate": "2026-05-21",
   "completedDays": [
     1,
     2,
@@ -68,9 +68,11 @@
     57,
     58,
     59,
-    60
+    60,
+    61,
+    62
   ],
-  "nextDay": 62,
+  "nextDay": 63,
   "phase": "90-Day Cycle (Apr 18 - Jul 16, 2026)",
   "roadmap": "roadmaps/cycle-3-build.md",
   "review": "reviews/prune-cycle-2-review.md",
@@ -446,6 +448,12 @@
       "day": 61,
       "date": "2026-05-20",
       "feature": "Cycle 3 Build Day 3: Whistle Songs \ud83c\udfb5 \u2014 per-color 4-note pentatonic melodies fire at every station arrival, layered after SFX.station horn tail. Each color gets its own waveform + 4-note phrase (Red sawtooth bold G5-E5-G5-C5, Blue sine mellow C5-E5-G5-E5, Green triangle pastoral D5-G5-A5-E5, Yellow sine chirpy A5-C6-E6-C6, Purple triangle minor-tinged A4-D5-F5-A5). Pentatonic-only so they layer cleanly over the ambient music engine. Auto-on, no toggle. Independent of sound packs (color is the identity). +37 LOC (11,459\u219211,497, 393 KB), 0 bugs, JS clean, all 5 colors + fallback verified live on deploy.",
+      "status": "complete"
+    },
+    {
+      "day": 62,
+      "date": "2026-05-21",
+      "feature": "Cycle 3 Build Day 4: Replay Sharing \ud83c\udfac \u2014 new v3 share-link format encodes a saved Track Replay (Day 47) into the URL hash. Friends opening the link see the baseline state, then watch the ghost auto-rebuild the track after a 1.5s beat. v3 layout: [version=3, rows, cols, grid (1 byte/cell), trains, switches, 2-byte action count, per-action bytes] where each action is 1-byte kind + 0-3 bytes payload (place=3, remove/rotate=2, placeTrain=3, clearAll=0). Backward-compatible: v1 (legacy 12x8) and v2 (rows/cols) links keep working untouched, decoders branch on the version byte. Share modal gains a third button \ud83c\udfac Replay Link beside \ud83d\udd17 Copy Link and \ud83d\udcf8 Save Image; guarded against empty/recording state with friendly toasts. Decoder side-channels via pendingReplayFromShare flag that init() consumes to trigger playReplay() after a 1.5s delay so the visitor sees the baseline first. Round-trip test: 8-action replay = 178 char base64 URL, decodes to same actions + baseline. +160 LOC (11,497\u219211,656, 412 KB), 0 bugs, JS clean, v2 backward compat verified live on deploy.",
       "status": "complete"
     }
   ],
