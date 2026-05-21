@@ -2684,6 +2684,7 @@ body.night-mode #grid-viewport.sky-cycling #sky-sun {
     <h2>📤 Share Your Track</h2>
     <div class="share-grid">
       <button class="btn settings-item" onclick="closeShareMenu(); copyShareLink();" title="Copy share link"><span class="si-icon">🔗</span><span class="si-label">Copy Link</span></button>
+      <button class="btn settings-item" onclick="closeShareMenu(); copyReplayShareLink();" title="Share a link that replays how you built it (record a replay first)"><span class="si-icon">🎬</span><span class="si-label">Replay Link</span></button>
       <button class="btn settings-item" onclick="closeShareMenu(); openScreenshotModal();" title="Save as image"><span class="si-icon">📸</span><span class="si-label">Save Image</span></button>
     </div>
   </div>
@@ -7794,6 +7795,7 @@ const REPLAY_STEP_MS = 600;
 const REPLAY_STEP_MS_REDUCED = 200;
 let replayApplying = false;          // suppresses re-logging during ghost playback
 let replayCancelTokenId = 0;          // bumped to cancel an in-flight replay
+let pendingReplayFromShare = false;   // Day 62: v3 share-link decoded a replay; autoplay after init
 
 function snapshotForReplayBaseline() {
   return {
@@ -9223,12 +9225,12 @@ function decodeGridState(hash) {
     const bytes = b64urlDecode(hash);
     let idx = 0;
 
-    // Version check (v1 = fixed 12x8, v2 = explicit rows/cols)
+    // Version check (v1 = fixed 12x8, v2 = explicit rows/cols, v3 = v2 + replay action log)
     const version = bytes[idx++];
-    if (version !== 1 && version !== 2) return false;
+    if (version !== 1 && version !== 2 && version !== 3) return false;
 
     let decodedRows, decodedCols;
-    if (version === 2) {
+    if (version === 2 || version === 3) {
       decodedRows = bytes[idx++];
       decodedCols = bytes[idx++];
       // Sanity: only accept the two supported sizes
@@ -9241,7 +9243,7 @@ function decodeGridState(hash) {
     }
 
     // Need at least header + grid bytes
-    const headerLen = (version === 2) ? 3 : 1;
+    const headerLen = (version === 1) ? 1 : 3;
     if (bytes.length < headerLen + decodedRows * decodedCols) return false;
 
     // Switch the live grid mode to match the share before decoding into state.
@@ -9302,12 +9304,60 @@ function decodeGridState(hash) {
       }
     }
     
+    // Day 62: v3 also carries a replay action log (2-byte count + per-action bytes).
+    // The grid/trains/switches we just decoded ARE the replay baseline.
+    let decodedReplay = null;
+    if (version === 3 && idx + 2 <= bytes.length) {
+      const actionCount = bytes[idx++] | (bytes[idx++] << 8);
+      const kindNames = ['place', 'remove', 'rotate', 'placeTrain', 'clearAll'];
+      const colorNames = ['red', 'blue', 'green', 'yellow', 'purple'];
+      const actions = [];
+      for (let i = 0; i < actionCount; i++) {
+        if (idx >= bytes.length) break;
+        const kind = kindNames[bytes[idx++]];
+        if (!kind) break;
+        if (kind === 'place') {
+          if (idx + 3 > bytes.length) break;
+          const ar = bytes[idx++], ac = bytes[idx++], packed = bytes[idx++];
+          const t = SHARE_TYPE_REVERSE[packed >> 2];
+          if (t) actions.push({ kind: 'place', row: ar, col: ac, type: t, rotation: idxToRot(packed & 3) });
+        } else if (kind === 'remove' || kind === 'rotate') {
+          if (idx + 2 > bytes.length) break;
+          actions.push({ kind: kind, row: bytes[idx++], col: bytes[idx++] });
+        } else if (kind === 'placeTrain') {
+          if (idx + 3 > bytes.length) break;
+          actions.push({ kind: 'placeTrain', row: bytes[idx++], col: bytes[idx++], color: colorNames[bytes[idx++]] || 'red' });
+        } else if (kind === 'clearAll') {
+          actions.push({ kind: 'clearAll' });
+        }
+      }
+      if (actions.length > 0) {
+        decodedReplay = {
+          baseline: {
+            grid: newGrid.map(r => r.map(c => c ? { ...c } : null)),
+            trains: newTrains.map(t => ({ ...t, cars: (t.cars || []).map(c => ({ ...c })) })),
+            switchStates: { ...newSwitchStates },
+            bigGrid: (decodedRows === BIG_GRID.rows && decodedCols === BIG_GRID.cols),
+          },
+          actions: actions,
+        };
+      }
+    }
+
     // Apply state
     state.grid = newGrid;
     state.trains = newTrains;
     state.switchStates = newSwitchStates;
     state.undoStack = [];
     state.redoStack = [];
+
+    // If a v3 replay rode along, install it as the saved replay + flag for autoplay.
+    if (decodedReplay) {
+      state.replayBaseline = decodedReplay.baseline;
+      state.replayActions = decodedReplay.actions;
+      pendingReplayFromShare = true;
+      try { persistReplay(); } catch (e) { /* ignore */ }
+    }
     return true;
   } catch (e) {
     return false;
@@ -9323,6 +9373,105 @@ function copyShareLink() {
     navigator.clipboard.writeText(url).then(function() {
       SFX.place();
       showToast('🔗 Link copied!');
+    }).catch(function() {
+      fallbackCopyShareLink(url);
+    });
+  } else {
+    fallbackCopyShareLink(url);
+  }
+}
+
+// Day 62 — Replay Sharing. Encodes the saved replay (baseline + action log)
+// into a v3 share-link byte format. Friends opening the link will see the
+// baseline state and watch the ghost rebuild the track automatically.
+function encodeReplayShareState() {
+  if (!state.replayBaseline || !Array.isArray(state.replayActions) || state.replayActions.length === 0) return null;
+  const b = state.replayBaseline;
+  const grid = b.grid || [];
+  const rows = grid.length;
+  const cols = (grid[0] || []).length;
+  // Only the two supported grid sizes round-trip cleanly.
+  const okSmall = rows === SMALL_GRID.rows && cols === SMALL_GRID.cols;
+  const okBig = rows === BIG_GRID.rows && cols === BIG_GRID.cols;
+  if (!okSmall && !okBig) return null;
+
+  const cells = [];
+  cells.push(3); // version: v3 = baseline grid + replay action log
+  cells.push(rows);
+  cells.push(cols);
+
+  // Baseline grid (same packing as v2: 1 byte per cell, type<<2 | rot)
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const piece = grid[r][c];
+      if (!piece) { cells.push(0); continue; }
+      const typeId = SHARE_TYPE_MAP[piece.type] || 0;
+      cells.push((typeId << 2) | rotToIdx(piece.rotation || 0));
+    }
+  }
+
+  // Baseline trains
+  const colorToIdx = { red: 0, blue: 1, green: 2, yellow: 3, purple: 4 };
+  const carTypeToIdx = { freight: 0, passenger: 1, caboose: 2 };
+  const baseTrains = b.trains || [];
+  cells.push(baseTrains.length);
+  for (const t of baseTrains) {
+    cells.push(t.row); cells.push(t.col);
+    cells.push(colorToIdx[t.color] || 0);
+    const cars = t.cars || [];
+    cells.push(cars.length);
+    for (const car of cars) cells.push(carTypeToIdx[car.type] || 0);
+  }
+
+  // Baseline switch states
+  const sw = Object.entries(b.switchStates || {});
+  cells.push(sw.length);
+  for (const [k, v] of sw) {
+    const parts = k.split(',');
+    cells.push(Number(parts[0])); cells.push(Number(parts[1]));
+    cells.push(v ? 1 : 0);
+  }
+
+  // Action log: 2-byte count (little-endian) + per-action bytes.
+  const kindToIdx = { place: 0, remove: 1, rotate: 2, placeTrain: 3, clearAll: 4 };
+  const actions = state.replayActions;
+  const n = Math.min(actions.length, 0xFFFF);
+  cells.push(n & 0xFF); cells.push((n >> 8) & 0xFF);
+  for (let i = 0; i < n; i++) {
+    const a = actions[i];
+    const k = kindToIdx[a.kind];
+    if (k === undefined) continue;
+    cells.push(k);
+    if (a.kind === 'place') {
+      cells.push(a.row); cells.push(a.col);
+      cells.push(((SHARE_TYPE_MAP[a.type] || 0) << 2) | rotToIdx(a.rotation || 0));
+    } else if (a.kind === 'remove' || a.kind === 'rotate') {
+      cells.push(a.row); cells.push(a.col);
+    } else if (a.kind === 'placeTrain') {
+      cells.push(a.row); cells.push(a.col);
+      cells.push(colorToIdx[a.color] || 0);
+    }
+    // clearAll: no payload
+  }
+  return b64urlEncode(new Uint8Array(cells));
+}
+
+function copyReplayShareLink() {
+  if (puzzleState.active) { showToast('🧩 Exit puzzle first!'); return; }
+  if (state.replayRecording) { showToast('⏹️ Stop recording first!'); return; }
+  const n = Array.isArray(state.replayActions) ? state.replayActions.length : 0;
+  if (!state.replayBaseline || n === 0) {
+    showToast('🎬 Record a replay first (Settings → Track Replay)');
+    return;
+  }
+  const hash = encodeReplayShareState();
+  if (!hash) { showToast('Could not build replay link.'); return; }
+  const url = window.location.origin + window.location.pathname + '#s=' + hash;
+  const toastMsg = '🎬 Replay link copied! (' + n + ' step' + (n === 1 ? '' : 's') + ')';
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(function() {
+      SFX.place();
+      showToast(toastMsg);
     }).catch(function() {
       fallbackCopyShareLink(url);
     });
@@ -11400,7 +11549,11 @@ function init() {
   renderAllCells();
 
   if (sharedLayout) {
-    showToast('📂 Loaded shared layout!');
+    if (pendingReplayFromShare) {
+      showToast('🎬 Shared replay loaded — watch it build!');
+    } else {
+      showToast('📂 Loaded shared layout!');
+    }
   } else if (restored) {
     showToast('Welcome back! 🚂');
   }
@@ -11463,6 +11616,13 @@ function init() {
 
   // Day 47: Restore saved track replay (so the kid's last recording survives reload)
   restoreReplayFromStorage();
+
+  // Day 62: If we arrived via a v3 share-link replay, autoplay it after a beat
+  // so the visitor sees the baseline first and then watches it rebuild.
+  if (pendingReplayFromShare) {
+    pendingReplayFromShare = false;
+    setTimeout(() => { try { playReplay(); } catch (e) { /* ignore */ } }, 1500);
+  }
 
   // Tutorial: show on first visit (after a brief delay so UI settles)
   if (!isTutorialDone() && !restored) {
