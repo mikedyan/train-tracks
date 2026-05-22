@@ -2036,6 +2036,58 @@ body.night-mode .milestone-bar { background: #455A64; }
 .milestone-unlocks { font-size: 11px; color: #9E9E9E; margin-top: 4px; }
 body.night-mode .milestone-unlocks { color: #78909C; }
 
+/* Sticker Book Modal (Day 63 — Cycle 3 Build Day 5) */
+#sticker-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6); z-index: 300;
+  display: none; align-items: center; justify-content: center;
+  backdrop-filter: blur(3px);
+}
+#sticker-overlay.open { display: flex; }
+#sticker-modal {
+  background: #FFF; border-radius: 16px; padding: 24px;
+  width: 520px; max-width: 94vw; max-height: 85vh;
+  overflow-y: auto; box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+  position: relative;
+}
+body.night-mode #sticker-modal { background: #263238; color: #ECEFF1; }
+#sticker-modal h2 { font-size: 20px; color: #3E2723; margin-bottom: 14px; text-align: center; }
+body.night-mode #sticker-modal h2 { color: #ECEFF1; }
+#sticker-modal .close-btn { position: absolute; top: 12px; right: 14px; background: none; border: none; font-size: 22px; cursor: pointer; color: #999; line-height: 1; }
+#sticker-modal .close-btn:hover { color: #333; }
+.sticker-progress { text-align: center; margin-bottom: 14px; }
+.sticker-progress-text { font-size: 13px; color: #5D4037; font-weight: 700; }
+body.night-mode .sticker-progress-text { color: #B0BEC5; }
+.sticker-progress-bar { height: 8px; background: #E0E0E0; border-radius: 4px; overflow: hidden; margin-top: 6px; }
+body.night-mode .sticker-progress-bar { background: #455A64; }
+.sticker-progress-fill { height: 100%; background: linear-gradient(90deg, #FFB300, #FF6F00); border-radius: 4px; transition: width 0.4s ease; }
+.sticker-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+@media (max-width: 480px) { .sticker-grid { grid-template-columns: repeat(3, 1fr); } }
+.sticker-cell {
+  background: #F5F5F5; border-radius: 12px; padding: 10px 6px;
+  text-align: center; min-height: 96px;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+  filter: grayscale(0.95); opacity: 0.55;
+  transition: transform 0.15s ease, filter 0.25s ease, opacity 0.25s ease, background 0.25s ease;
+}
+body.night-mode .sticker-cell { background: #37474F; }
+.sticker-cell.earned {
+  background: linear-gradient(180deg, #FFF8E1, #FFE0B2);
+  filter: none; opacity: 1;
+  box-shadow: 0 2px 8px rgba(255,179,0,0.35);
+}
+body.night-mode .sticker-cell.earned { background: linear-gradient(180deg, #4E342E, #5D4037); box-shadow: 0 2px 10px rgba(255,193,7,0.25); }
+.sticker-cell.earned:hover { transform: translateY(-2px) scale(1.04); }
+.sticker-emoji { font-size: 32px; line-height: 1.1; margin-bottom: 4px; }
+.sticker-cell.earned .sticker-emoji { animation: stickerPop 0.5s ease-out; }
+@keyframes stickerPop { 0% { transform: scale(0.4) rotate(-15deg); } 70% { transform: scale(1.2) rotate(8deg); } 100% { transform: scale(1) rotate(0); } }
+.sticker-name { font-size: 11px; font-weight: 700; color: #3E2723; line-height: 1.1; }
+body.night-mode .sticker-name { color: #ECEFF1; }
+.sticker-cell:not(.earned) .sticker-name { color: #9E9E9E; }
+body.night-mode .sticker-cell:not(.earned) .sticker-name { color: #78909C; }
+.sticker-desc { font-size: 9px; color: #777; margin-top: 3px; line-height: 1.2; }
+body.night-mode .sticker-desc { color: #90A4AE; }
+
 /* SCREENSHOT MODAL */
 #screenshot-overlay {
   position: fixed;
@@ -2639,6 +2691,7 @@ body.night-mode #grid-viewport.sky-cycling #sky-sun {
       <button class="btn settings-item" onclick="closeSettingsMenu(); openTrainNamesModal();" title="Name your trains"><span class="si-icon">🏷️</span><span class="si-label">Name Your Trains</span></button>
       <button class="btn settings-item" onclick="closeSettingsMenu(); openTrackReplayModal();" title="Record building your track and replay it"><span class="si-icon">🎬</span><span class="si-label" id="settings-replay-label">Track Replay</span></button>
       <button class="btn settings-item" onclick="closeSettingsMenu(); openStatsModal();" title="Stats and milestones"><span class="si-icon">📊</span><span class="si-label">Stats &amp; Milestones</span></button>
+      <button class="btn settings-item" onclick="closeSettingsMenu(); openStickerBook();" title="Collect milestone stickers"><span class="si-icon">⭐</span><span class="si-label">Sticker Book</span></button>
     </div>
     <div class="settings-music-volume">
       <span style="font-size:13px;color:#777;">Music volume</span>
@@ -2786,6 +2839,15 @@ body.night-mode #grid-viewport.sky-cycling #sky-sun {
   </div>
 </div>
 
+<!-- Sticker Book Modal (Day 63 — Cycle 3 Build Day 5) -->
+<div id="sticker-overlay" onclick="if(event.target===this)closeStickerBook()">
+  <div id="sticker-modal">
+    <button class="close-btn" onclick="closeStickerBook()">✕</button>
+    <h2>⭐ Sticker Book</h2>
+    <div id="sticker-content"></div>
+  </div>
+</div>
+
 <div id="ghost"></div>
 <div id="trash-zone">🗑️</div>
 <div id="toast"></div>
@@ -2875,6 +2937,8 @@ function setSoundPack(name, opts) {
   currentSoundPack = name;
   try { localStorage.setItem(SOUND_PACK_KEY, name); } catch (e) { /* swallow */ }
   updateSoundPackSettingsLabel();
+  // Day 63: DJ sticker — record every distinct pack the kid switches into
+  try { recordSoundPackTried(name); } catch (e) {}
   if (!opts || opts.toast !== false) {
     const p = SOUND_PACKS[name];
     showToast(p.icon + ' Sound Pack: ' + p.name);
@@ -3799,6 +3863,8 @@ function toggleNightMode() {
   const night = !isNightMode();
   document.body.classList.toggle('night-mode', night);
   document.getElementById('btn-night').textContent = night ? '🌙' : '☀️';
+  // Day 63: Night Owl sticker — record once when user explicitly enters night mode
+  if (night) { try { recordNightToggled(); } catch (e) {} }
   // Update house glows
   updateHouseGlows();
   // Update headlight visibility
@@ -9734,6 +9800,10 @@ function handleKeyDown(e) {
       closeStatsModal();
       return;
     }
+    if (document.getElementById('sticker-overlay').classList.contains('open')) {
+      closeStickerBook();
+      return;
+    }
     if (document.getElementById('shortcuts-overlay').classList.contains('open')) {
       closeShortcutsModal();
       return;
@@ -9773,6 +9843,7 @@ function handleKeyDown(e) {
   if (document.getElementById('share-overlay').classList.contains('open')) return;
   if (document.getElementById('screenshot-overlay').classList.contains('open')) return;
   if (document.getElementById('stats-overlay').classList.contains('open')) return;
+  if (document.getElementById('sticker-overlay').classList.contains('open')) return;
   if (document.getElementById('train-names-overlay').classList.contains('open')) return;
   if (document.getElementById('track-replay-overlay').classList.contains('open')) return;
 
@@ -11345,6 +11416,8 @@ function incrementStat(key, amount) {
   gameStats[key] += (amount || 1);
   saveGameStats();
   checkAndUnlockMilestones();
+  // Day 63: also re-evaluate sticker awards on every stat change
+  try { checkAndAwardStickers(); } catch (e) {}
 }
 
 function unlockEverything() {
@@ -11441,6 +11514,144 @@ function renderStatsContent() {
     html += '<div style="text-align:center;color:#4CAF50;font-weight:700;font-size:14px;margin-top:8px;">🔓 All pieces unlocked!</div>';
   }
 
+  container.innerHTML = html;
+}
+
+// ============================================================
+// STICKER BOOK (Day 63 — Cycle 3 Build Day 5)
+// ~12 collectible stickers in a 4×3 grid. Earned ones light up
+// in full color; unearned are grayed silhouettes with a `?`.
+// Auto-checks after every stat increment + sound pack switch +
+// night-mode toggle. Persists in localStorage. No new mechanics
+// — reuses existing gameStats counters plus two tiny flags.
+// ============================================================
+const STICKER_STORAGE_KEY = 'trainTracks_stickers';
+
+let stickerState = {
+  earned: {},            // { [stickerId]: ISOdate }
+  soundPacksTried: [],   // ['classic','toy','diesel']
+  nightToggled: false,
+};
+
+const STICKERS = [
+  { id: 'first-train',    emoji: '🚂', name: 'First Steps',    desc: 'Run your first train',     check: function () { return gameStats.trainsRun >= 1; } },
+  { id: 'builder',        emoji: '🔨', name: 'Builder',        desc: 'Place 25 tracks',          check: function () { return gameStats.tracksPlaced >= 25; } },
+  { id: 'master-builder', emoji: '🏗️', name: 'Master Builder', desc: 'Place 100 tracks',         check: function () { return gameStats.tracksPlaced >= 100; } },
+  { id: 'loop-maker',     emoji: '🔁', name: 'Loop Maker',     desc: 'Complete 10 loops',        check: function () { return gameStats.loopsCompleted >= 10; } },
+  { id: 'puzzler',        emoji: '🧩', name: 'Puzzler',        desc: 'Solve 3 puzzles',          check: function () { return gameStats.puzzlesSolved >= 3; } },
+  { id: 'puzzle-star',    emoji: '🌟', name: 'Puzzle Star',    desc: 'Solve every puzzle (10)',  check: function () { return gameStats.puzzlesSolved >= 10; } },
+  { id: 'delivery',       emoji: '📦', name: 'Delivery Pro',   desc: 'Deliver 10 cargo',         check: function () { return gameStats.cargoDelivered >= 10; } },
+  { id: 'animal-friend',  emoji: '🐄', name: 'Animal Friend',  desc: 'Haul 5 animal passengers', check: function () { return gameStats.animalsDelivered >= 5; } },
+  { id: 'decorator',      emoji: '🎨', name: 'Decorator',      desc: 'Place 25 scenery items',   check: function () { return gameStats.sceneryPlaced >= 25; } },
+  { id: 'night-owl',      emoji: '🌙', name: 'Night Owl',      desc: 'Drive at night',           check: function () { return stickerState.nightToggled; } },
+  { id: 'dj',             emoji: '🎵', name: 'DJ',             desc: 'Try every sound pack',     check: function () { return stickerState.soundPacksTried.length >= 3; } },
+  { id: 'train-master',   emoji: '⭐', name: 'Train Master',   desc: 'Earn every other sticker', check: function () {
+      // Special: earned only after every other sticker is in the book
+      return STICKERS.every(function (s) { return s.id === 'train-master' || stickerState.earned[s.id]; });
+    } },
+];
+
+function loadStickerState() {
+  try {
+    const raw = localStorage.getItem(STICKER_STORAGE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object') {
+      if (parsed.earned && typeof parsed.earned === 'object') stickerState.earned = parsed.earned;
+      if (Array.isArray(parsed.soundPacksTried)) stickerState.soundPacksTried = parsed.soundPacksTried.slice(0, 8);
+      if (typeof parsed.nightToggled === 'boolean') stickerState.nightToggled = parsed.nightToggled;
+    }
+  } catch (e) { /* swallow */ }
+}
+
+function saveStickerState() {
+  try { localStorage.setItem(STICKER_STORAGE_KEY, JSON.stringify(stickerState)); } catch (e) { /* swallow */ }
+}
+
+function recordSoundPackTried(packId) {
+  if (!packId) return;
+  if (stickerState.soundPacksTried.indexOf(packId) !== -1) return;
+  stickerState.soundPacksTried.push(packId);
+  saveStickerState();
+  checkAndAwardStickers();
+}
+
+function recordNightToggled() {
+  if (stickerState.nightToggled) return;
+  stickerState.nightToggled = true;
+  saveStickerState();
+  checkAndAwardStickers();
+}
+
+function checkAndAwardStickers() {
+  const newlyEarned = [];
+  // First pass: every sticker except the meta "Train Master"
+  for (const s of STICKERS) {
+    if (s.id === 'train-master') continue;
+    if (stickerState.earned[s.id]) continue;
+    let ok = false;
+    try { ok = !!s.check(); } catch (e) { /* swallow */ }
+    if (ok) {
+      stickerState.earned[s.id] = new Date().toISOString();
+      newlyEarned.push(s);
+    }
+  }
+  // Second pass: meta sticker only after everyone else is earned
+  const finalSticker = STICKERS.find(function (s) { return s.id === 'train-master'; });
+  if (finalSticker && !stickerState.earned[finalSticker.id]) {
+    let ok = false;
+    try { ok = !!finalSticker.check(); } catch (e) { /* swallow */ }
+    if (ok) {
+      stickerState.earned[finalSticker.id] = new Date().toISOString();
+      newlyEarned.push(finalSticker);
+    }
+  }
+  if (newlyEarned.length === 0) return;
+  saveStickerState();
+  // Refresh modal if open so the new sticker pops live
+  const ov = document.getElementById('sticker-overlay');
+  if (ov && ov.classList.contains('open')) renderStickerContent();
+  // Celebrate — staggered so two-at-once doesn't smash the toast queue
+  newlyEarned.forEach(function (s, i) {
+    setTimeout(function () {
+      showToast('⭐ New sticker: ' + s.emoji + ' ' + s.name + '!');
+      try { SFX.celebrate(); } catch (e) { /* swallow */ }
+    }, i * 1400);
+  });
+}
+
+function openStickerBook() {
+  renderStickerContent();
+  const ov = document.getElementById('sticker-overlay');
+  if (ov) ov.classList.add('open');
+}
+
+function closeStickerBook() {
+  const ov = document.getElementById('sticker-overlay');
+  if (ov) ov.classList.remove('open');
+}
+
+function renderStickerContent() {
+  const container = document.getElementById('sticker-content');
+  if (!container) return;
+  const total = STICKERS.length;
+  const earnedCount = STICKERS.filter(function (s) { return !!stickerState.earned[s.id]; }).length;
+  const pct = Math.floor((earnedCount / total) * 100);
+  let html = '<div class="sticker-progress">';
+  html += '<span class="sticker-progress-text">' + earnedCount + ' / ' + total + ' stickers earned</span>';
+  html += '<div class="sticker-progress-bar"><div class="sticker-progress-fill" style="width:' + pct + '%"></div></div>';
+  html += '</div>';
+  html += '<div class="sticker-grid">';
+  for (const s of STICKERS) {
+    const earned = !!stickerState.earned[s.id];
+    const title = earned ? (s.name + ' — ' + s.desc) : ('Locked: ' + s.desc);
+    html += '<div class="sticker-cell' + (earned ? ' earned' : '') + '" title="' + escapeAttr(title) + '">';
+    html += '<div class="sticker-emoji">' + (earned ? s.emoji : '❓') + '</div>';
+    html += '<div class="sticker-name">' + (earned ? s.name : '???') + '</div>';
+    html += '<div class="sticker-desc">' + s.desc + '</div>';
+    html += '</div>';
+  }
+  html += '</div>';
   container.innerHTML = html;
 }
 
@@ -11613,6 +11824,12 @@ function init() {
   checkReturningPlayer();
   checkAndUnlockMilestones();
   refreshPaletteLocks();
+
+  // Day 63: Sticker Book — load state, seed implicit "tried" markers, award any backlog
+  loadStickerState();
+  try { recordSoundPackTried(currentSoundPack); } catch (e) {}
+  if (isNightMode()) { try { recordNightToggled(); } catch (e) {} }
+  checkAndAwardStickers();
 
   // Day 47: Restore saved track replay (so the kid's last recording survives reload)
   restoreReplayFromStorage();
