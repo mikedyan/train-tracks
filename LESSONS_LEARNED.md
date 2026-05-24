@@ -390,3 +390,30 @@
 - LESSON-DAY64-C: **Sticker side-effects make Day-60 + Day-63 audit a two-for-one.** The `first-train` and `animal-friend` stickers auto-earned during a single 9-second play session of the random-generated track, without my needing to construct controlled scenarios. Reading the post-play `localStorage.trainTracks_stickers.earned` keys is a single assertion that proves *both* the sticker hook system (Day 63) AND the underlying stat-tracking it observes (`trainsRun` count, `animalsDelivered` count from Day 60). When two features are layered as "tracker → reactor," audit the reactor — passing the reactor implies the tracker fired correctly.
 - LESSON-DAY64-D: **Replay-share v3 round-trip is identifiable by base64 first byte.** `encodeReplayShareState()` produces a hash starting with `Aw…` — first byte 0x03 in base64 is `A` (most-significant bits 000000) followed by `w` (next 6 bits 110000), giving the byte `00000011` = 3. Quick parse: read the version byte directly with `hash.charCodeAt(0)` is wrong (that's the *char* code of the base64 letter, not the decoded byte); instead `b64urlDecode(hash.slice(0,2))[0]` gives the actual version byte. For sanity, just eyeballing `Aw…` as the v3 prefix vs `Ag…` as v2 vs `AQ…` as v1 works for fast visual identification of which decoder branch a hash will take.
 - LESSON-DAY64-E: **All 11 modal overlays now exist in DOM** (was 10 through Day 53). Sticker Book (Day 63) added `#sticker-overlay` as the 11th. Modal-presence audit should keep a running inventory — when a new modal lands in a build day, the next Harden audit's modal-list grows by 1. If it *doesn't* grow, that's a smell (modal was inlined into another overlay, or its overlay element name doesn't match the project convention). Project convention is strict: `<feature-name>-overlay` for every modal. Day 63 followed it (`sticker-overlay`); future builds should too.
+
+
+---
+
+## Day 65 — Harden Week 3 Day 2: Puzzle & Mode Testing
+
+### Lesson — Puzzle 5 "Grand Station" topology is non-obvious
+
+The naive rectangle-perimeter solution for Puzzle 5 needs 13 straights + 4 curves, but the puzzle budget is 9 straights + 8 curves. **The actual solution is a small rectangle on rows 2-3 (visiting both top stations) with a vertical stem dropping through cols 4 and 6 to capture the row-5 station** — uses all 8 curves and exactly 9 straights for a total of 17 player pieces. This is the only puzzle where the optimal topology isn't a rectangle.
+
+For future audits: if "Puzzle 5 unsolvable" comes up, it's NOT a bug — re-read the topology above. The puzzle is intentionally hard ("Hard" difficulty in puzzle data) and forces creative use of curves to avoid the straight-budget bottleneck.
+
+### Lesson — `setCell()` direct-write bypasses puzzle budget
+
+When verifying puzzle solvability via console, using `state.grid[r][c] = {type, rotation}` directly bypasses `puzzleState.pieceCounts` accounting. This is fine for "does the validator accept the topology" tests but can hide budget-fit issues. **Always validate the final solution by re-running with `placePiece()` (which enforces budget)** to confirm the puzzle is actually solvable within its `available` constraints.
+
+### Lesson — Station rotation matters
+
+Stations have `BASE_CONNECTIONS = ['N','S']`. Most puzzles ship stations with `rotation: 90`, which rotates to `['E','W']` — i.e., **stations are HORIZONTAL** in puzzles 5 and 6 (and most cases). The path must enter and exit horizontally. T-junctions (puzzle 6) bridge the station from W/E sides via row-3 horizontal corridor — not from N/S.
+
+### Lesson — Toast `openEnds` is halved in the displayed message
+
+`checkPuzzleSolution()` increments `openEnds` once per direction-mismatch (each broken edge is counted twice — once from each side). The user-facing toast shows `Math.floor(openEnds/2)`. So "1 disconnected edges" means 2-3 raw `openEnds`. Good to know when debugging puzzle failures from a console replay of the validator.
+
+### Lesson — Auto-solver verification approach
+
+For puzzle-batch verification: build a generic auto-solver that places obvious-topology solutions for rectangular puzzles, then iteratively refine for special cases (figure-8, tunnel-substitutes, T-junctions). The validator's `openEnds` count + `toast.match(/(\d+) disconnected/)` is the fastest signal — each mismatch points at a specific cell pair that doesn't connect. Iterate by inspecting cell connections vs neighbors in a single pass; the issue is almost always a wrong rotation on a curve (a curve at the wrong rotation looks identical to a correct one in the UI but mismatches direction). The systematic approach is 10× faster than guess-and-check.

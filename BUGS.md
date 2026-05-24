@@ -898,3 +898,116 @@ Tomorrow Day 54 = **Prune Week 2 Day 1: Fresh Eyes Audit** — open the game as 
 Clean sheet. Cycle 3 BUILD week's 5 features (Time-of-Day Sky, Animal Passengers, Whistle Songs, Replay Sharing v3, Sticker Book) all integrate cleanly with the existing codebase: zero console errors, zero broken interactions, all autosave/sticker LS paths intact, all 10 puzzles load, all 11 modals open (including the new Sticker Book), file size held flat at 11,873 lines. The v3 share-link version byte (0x03) is correctly emitted; the v2/v1 backward-compat decoder paths are untouched and still in place from Cycle 2's Day 52 audit. Sticker hooks fired on the very first play session — `first-train` (1 train run) and `animal-friend` (5 animals delivered) both auto-earned, confirming the `incrementStat`-triggered re-evaluation path is wired end-to-end.
 
 Tomorrow (Day 65, weekDay 2) = Harden Week 3 Day 2: Puzzle & Mode Testing (deep dive on each of the 10 puzzles, animal-passenger end-to-end with controlled track, whistle-song timing audit, replay-share decoder edge cases, sticker-book unlock walk-through).
+
+
+---
+
+## Day 65 — Harden Week 3 Day 2: Puzzle & Mode Testing
+
+**Date:** Sun May 24, 2026
+**Tester:** Mochi (QA Agent)
+**Testing Environment:** Desktop, Chromium-based browser, https://mikedyan.github.io/train-tracks/?v=65&fresh=2
+**Goal:** Deep dive on each of 10 puzzles, passenger delivery e2e, progression/unlocks, share-link round-trip (v2 + v3), screenshot/download.
+
+### All 10 Puzzles — Auto-Solved Within Official Budget
+
+Each puzzle was solved programmatically by placing pieces via `placePiece()` (which respects `puzzleState.pieceCounts` budget). All 10 solutions earned **3 stars** (player pieces ≤ `optimal`).
+
+| # | Name | Difficulty | Budget | Solution Topology | Stars |
+|---|---|---|---|---|---|
+| 1 | First Loop | Easy | 4s | 4-cell rectangle perimeter | ⭐⭐⭐ |
+| 2 | Around the Lake | Easy | 10s | 10-cell rectangle perimeter (around 6 water cells) | ⭐⭐⭐ |
+| 3 | Figure Eight | Medium | 6c | 6 curves around crossover at (3,5), N-S + E-W routes used | ⭐⭐⭐ |
+| 4 | Tunnel Run | Medium | 6s + 2t | Rectangle perimeter, 2 tunnels in left column | ⭐⭐⭐ |
+| 5 | **Grand Station** | Hard | 9s + 8c | **Small rect rows 2-3 + vertical stem cols 4 & 6 down to (5,5) station — uses all 8 curves and all 9 straights** | ⭐⭐⭐ |
+| 6 | Switchyard | Medium | 7s + 2tj | Rectangle perimeter + T-junctions at (3,4) & (3,7) bridging horizontal station via (3,6) | ⭐⭐⭐ |
+| 7 | Speed Run | Medium | 20s | Large rectangle (1,2)→(5,9), 18 straights used (par=20, optimal=18) | ⭐⭐⭐ |
+| 8 | Cow Pasture | Easy | 14s | Rectangle perimeter around 4 cow scenery cells | ⭐⭐⭐ |
+| 9 | Night Express | Hard | 8s + 1t | Rectangle (1,4)→(4,8), straights everywhere + tunnel substitution at (3,4) (since (2,4) tunnel locked) | ⭐⭐⭐ |
+| 10 | Twin Loops | Hard | 8s | Two separate 2×2 loops (puzzle's `trains.length=2` permits 2 components) | ⭐⭐⭐ |
+
+**Key finding — Puzzle 5:** The "obvious" rectangle perimeter solution requires 13 straights + 4 curves, which exceeds the 9-straight budget. The actual fits-in-budget solution is non-rectangular: a small rect on rows 2-3 (visiting both top stations) with a 5-cell vertical stem dropping down through cols 4 and 6 to capture the row-5 station — uses all 8 curves and exactly 9 straights. **This is the only puzzle where the optimal solution is topologically non-obvious** — worth documenting in case a future audit gets confused (auto-solver took multiple attempts).
+
+### Star Logic Validation
+
+For each puzzle, `puzzleState.completed[id]` was inspected after `checkPuzzleSolution()`:
+- All 10 received `{stars: 3}` because player-pieces ≤ `optimal`.
+- Validator correctly counts non-locked track cells (verified by manual count vs. `playerPieces`).
+- Star upgrade gating works (re-solving with fewer pieces would upgrade; never downgrade since `if (stars > prev)`).
+
+### Passenger Delivery System — End-to-End
+
+Setup: cleared grid, built a 2-station rectangle loop with one red train placed.
+
+| Check | Result |
+|---|---|
+| `passengerState.enabled` toggle | ✅ Enables system |
+| `startPassengerSystem()` registers stations | ✅ Both stations added to `passengerState.stations` |
+| Passengers spawn during play (70% chance per station per `PASSENGER_SPAWN_INTERVAL_MS`) | ✅ 2 passengers visible at station after ~15s play |
+| Train picks up + delivers | ✅ `onboard.red = 1`, `passengerState.delivered = 2`, `gameStats.passengersDelivered = 2` |
+| HUD `#passenger-hud` activates + updates | ✅ Shows "🧑 Delivered: 2 🏆 Best: 2" |
+| LocalStorage persists stats | ✅ `trainTracks_stats.passengersDelivered = 3` after subsequent runs |
+| DOM `.station-passenger` elements render | ✅ 2 visible passenger emojis on waiting station |
+
+### Progression & Unlock System
+
+Initial fresh-load unlocked: `straight, curve, tree, house, cow, train-red, horse, duck-land, people` (baseline 9 starter items).
+
+After session activity (tracks placed, puzzles solved, trains run, loops completed), unlocks expanded to: `+train-blue, train-green, tjunction, crossover, rainbow, bridge, tunnel` (= 7 milestone unlocks).
+
+| Check | Result |
+|---|---|
+| `isPieceUnlocked('straight')` | ✅ true |
+| `isPieceUnlocked('tunnel')` | ✅ true (after milestones triggered) |
+| `isPieceUnlocked('crossover')` | ✅ true |
+| `isPieceUnlocked('rainbow')` | ✅ true |
+| `isPieceUnlocked('bridge')` | ✅ true |
+| LocalStorage `trainTracks_unlocks` persists | ✅ Both `pieces` and `trains` arrays saved |
+| `checkAndUnlockMilestones()` callable without throw | ✅ No-op when no new milestones |
+
+### Share Links — v2 & v3 Round-Trip
+
+Built 8-cell loop + 1 train, encoded, wiped grid, decoded:
+- **v2 (default share link):** **140-char hash**, decode produced **8 cells + 1 train** byte-identical to original ✅
+- **v3 (Day 62 replay share):** **154-char hash** after recording 2 replay actions; first byte = `0x03` correctly identifies v3 format ✅
+
+### Sticker Book
+
+During this session (single test run), 6 stickers auto-earned via `incrementStat()`-triggered re-evaluation:
+- `builder` (25 tracks placed)
+- `master-builder` (100 tracks placed)
+- `puzzler` (3 puzzles solved)
+- `first-train` (1 train run)
+- `loop-maker` (10 loops completed)
+- `night-owl` (night-mode-flag carried over from earlier session)
+
+`openStickerBook()` opens `#sticker-overlay` modal cleanly. Earned stickers persist in `localStorage.trainTracks_stickers.earned`.
+
+### Screenshot / Download
+
+| Check | Result |
+|---|---|
+| `openScreenshotModal()` opens `#screenshot-overlay` | ✅ `.open` class added |
+| Canvas `#screenshot-preview` renders | ✅ 2924×1948 px |
+| Canvas has actual scene content (non-zero pixels) | ✅ 40,000+ non-zero pixels in sample 200×200 region |
+| PNG data URL exportable | ✅ `canvas.toDataURL('image/png')` returned 227,762 chars (valid PNG) |
+| `downloadScreenshot()`, `copyScreenshot()` defined | ✅ All 3 functions present |
+| `closeScreenshotModal()` removes `.open` | ✅ |
+
+### Console Errors
+
+`browser console` after the full session: **0 errors**. Only AudioContext-autoplay warnings (standard browser policy on first page load before user gesture — not a bug).
+
+### Code Health
+
+- **File size:** **11,873 lines** (unchanged from Day 63 ship and Day 64 audit — Harden zero-growth mandate held)
+- **JS parse:** clean
+- **All cells reachable, all puzzles solvable, all systems wired end-to-end**
+
+### Bugs Found Today: 0
+
+### Summary
+
+Clean sheet again. All 10 puzzles solve at 3⭐ within official `available` piece budget (puzzle 5's non-rectangular solution is documented above for posterity). Passenger system, progression/unlocks, share links (v2 + v3), screenshot, and sticker book all operational end-to-end. File size stable, console clean.
+
+Tomorrow (Day 66, weekDay 3) = **Harden Week 3 Day 3: Platform & Edge Cases** — mobile viewport, pinch-zoom, keyboard-only nav, high-contrast/reduced-motion, biomes × night × weather matrix, fresh localStorage start, rapid-placement stress test.
