@@ -1085,3 +1085,52 @@ Full session: **0 errors**, **17 AudioContext-autoplay warnings** (Chrome's pre-
 ### Summary
 
 Third clean day in a row. Platform/edge-case matrix shows the game is mobile-ready (375px iPhone width), keyboard-navigable, accessibility-aware (high-contrast + reduced-motion + night-mode), and robust under cold-boot + rapid-stress conditions. Biome×night×weather class composition is collision-free. Fresh-localStorage path triggers the tutorial correctly — new kids see the guided tour, not a blank green field. Ready for Day 67 ("Fix Everything") — bug queue is empty, so tomorrow can shift to **proactive code-health pass**: duplicate-code scan, dead-CSS hunt, and a recheck of any deferred minor cosmetics.
+
+---
+
+## Day 67 — 2026-05-26 — Harden Week 3 Day 4: Fix Everything (proactive code-health pass)
+
+**Live site:** https://mikedyan.github.io/train-tracks/ (post-commit `bf89c56`, file size now 11,866 lines / ~422 KB)
+
+Bug queue was empty at end of Day 66, so today shifted to the planned proactive code-health pass: duplicate-function scan + dead-CSS hunt. Net result: **-7 LOC, 0 bugs introduced, 0 new features, 0 console errors on deploy.**
+
+### Duplicate-Function Scan
+
+Ran a regex sweep over the `<script>` block looking for repeated `function NAME(` declarations:
+
+| Function name | Pre-Day-67 count | Post-Day-67 count |
+|---|---|---|
+| `el(tag, attrs)` | 2 | 0 (hoisted) |
+| All others | unique | unique |
+
+Both `el(tag, attrs)` inner helpers (inside `createTrainSVG` and `createCarSVG`) had byte-identical 4-line bodies and only existed because the outer functions each defined a local `ns` const. Refactor:
+
+1. Promoted the namespace and helper to module scope as `SVG_NS` + `svgEl(tag, attrs)`.
+2. Both outer functions now use `document.createElementNS(SVG_NS, 'svg')` for the root element.
+3. Inside each outer function, a single line `const el = svgEl;` aliases the hoisted helper so the 30-odd `el('rect', ...)` / `el('line', ...)` / `el('circle', ...)` call sites stay untouched. Zero risk of a typo'd rewrite.
+4. Browser smoke-test on deploy: `createTrainSVG('red')` returns a 20-child `<svg>`, `createCarSVG('freight')` returns an 11-child `<svg>`, and a direct `svgEl('circle', { cx:1, cy:2, r:3, fill:'red' })` probe produces the expected element with all 4 attributes set.
+
+### Dead-CSS Hunt
+
+Generated a list of all 217 unique class selectors in the main `<style>` block, then probed each against the rest of the document (HTML + JS string literals + dynamic class-name builders like `'biome-' + biome` and `'animal-react-' + animalType`). After excluding dynamic constructions, **2 truly-dead CSS rules** remained:
+
+| Removed rule | Why dead |
+|---|---|
+| `.puzzle-card-complete { font-size: 12px; color: #4CAF50; font-weight: 700; margin-top: 4px; }` | Declared in CSS but never applied. The puzzle-list template (`renderPuzzleList()`) emits `puzzle-card-header`, `-title`, `-desc`, `-stars` only — no `-complete` element. Verified on deploy: 10 puzzle cards render, none contain the class. |
+| `.station-passenger.arriving { animation: passenger-arrive 0.4s ease-out forwards; }` + its `@keyframes passenger-arrive { 0%/100% }` block | The `.boarding` sibling is live (added in `boardPassenger()`), but no code path ever calls `.classList.add('arriving')` on a station-passenger DOM node. The keyframes were orphaned alongside it. |
+
+### Code Health Numbers
+
+- **File size:** 11,873 → **11,866 lines** (-7 LOC). First sub-anchor reading of the Harden week — was zero-growth Days 64–66, now net-negative.
+- **JS parse:** clean (verified before commit AND on deployed site).
+- **Duplicate function declarations:** 1 → **0** (the cleanest the file has ever been on this metric).
+- **CSS rules removed:** 2 (1 plain selector + 1 selector + 1 `@keyframes` block).
+- **Console errors on deploy:** **0** (only standard AudioContext-autoplay warnings).
+- **Risk surface:** Train + car SVG render paths smoke-tested end-to-end on the live site. Puzzle modal also re-rendered to confirm no template path references the removed class.
+
+### Bugs Found Today: 0
+### Bugs Fixed Today: 0 (none in queue) — but 3 latent-clutter items removed (1 dup fn + 2 dead rules)
+
+### Summary
+
+Day 67 delivered exactly what the prompt requested for a clean Harden Thursday: no new features, a net-negative diff, and a measurable code-health improvement. The `svgEl` hoist eliminates the file's last duplicate function declaration; the dead-CSS removals shrink the stylesheet without affecting any rendered surface. Day 68 = Harden Week 3 Day 5 = full Regression Pass: rebuild a track end-to-end on the deployed site, smoke all the Cycle-3 features (Sky/Animals/Whistles/Replay-share/Stickers), verify share links and screenshots, confirm zero console errors. Then we close Harden Week 3 and transition into Prune Week 3 (Days 69-73), where the -7 from today becomes the first deposit toward the cycle's net-negative LOC target.
