@@ -1664,7 +1664,6 @@ body.night-mode .puzzle-card-title { color: #ECEFF1; }
 .difficulty-hard { background: #FFCDD2; color: #C62828; }
 .puzzle-card-desc { font-size: 12px; color: #757575; line-height: 1.4; }
 body.night-mode .puzzle-card-desc { color: #90A4AE; }
-.puzzle-card-complete { font-size: 12px; color: #4CAF50; font-weight: 700; margin-top: 4px; }
 .puzzle-card-stars { font-size: 14px; margin-top: 4px; letter-spacing: 2px; }
 .puzzle-card-stars .star-empty { opacity: 0.3; }
 #puzzle-hud { display: none; position: fixed; top: 8px; left: 50%; transform: translateX(-50%); z-index: 200; background: rgba(255,255,255,0.95); border-radius: 12px; padding: 8px 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); font-size: 13px; gap: 12px; align-items: center; backdrop-filter: blur(5px); }
@@ -1838,11 +1837,6 @@ body.night-mode #passenger-hud .passenger-best { color: #78909C; }
   100% { opacity: 0; transform: translate(-15px, -10px) scale(0.3); }
 }
 .station-passenger.boarding { animation: passenger-board 0.4s ease-in forwards; }
-@keyframes passenger-arrive {
-  0% { opacity: 0; transform: translate(-10px, -8px) scale(0.3); }
-  100% { opacity: 1; transform: translate(0, 0) scale(1); }
-}
-.station-passenger.arriving { animation: passenger-arrive 0.4s ease-out forwards; }
 .btn-passengers { background: #8D6E63; color: white; box-shadow: 0 3px 10px rgba(141,110,99,0.3); }
 .btn-passengers.enabled { background: #43A047; box-shadow: 0 3px 10px rgba(67,160,71,0.4); }
 
@@ -4834,19 +4828,23 @@ function createTrackSVG(type) {
   return svg;
 }
 
+// Shared SVG element helper (used by train + car SVG builders below).
+// Day 67 (Harden 3): hoisted from two byte-identical inner copies. -6 LOC.
+const SVG_NS = 'http://www.w3.org/2000/svg';
+function svgEl(tag, attrs) {
+  const e = document.createElementNS(SVG_NS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, String(v));
+  return e;
+}
+
 // Top-down train locomotive SVG (default: pointing NORTH/up)
 function createTrainSVG(color) {
   const tc = TRAIN_COLORS[color] || TRAIN_COLORS.red;
-  const ns = 'http://www.w3.org/2000/svg';
-  const svg = document.createElementNS(ns, 'svg');
+  const svg = document.createElementNS(SVG_NS, 'svg');
   svg.setAttribute('viewBox', '0 0 60 60');
   svg.setAttribute('fill', 'none');
 
-  function el(tag, attrs) {
-    const e = document.createElementNS(ns, tag);
-    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, String(v));
-    return e;
-  }
+  const el = svgEl;
 
   // Wheel trucks (dark rectangles visible under the body)
   svg.appendChild(el('rect', { x:17, y:12, width:6, height:10, rx:2, fill:'#37474F' }));
@@ -4895,16 +4893,11 @@ function createTrainSVG(color) {
 
 // Train car SVGs (top-down, matching locomotive style)
 function createCarSVG(carType) {
-  const ns = 'http://www.w3.org/2000/svg';
-  const svg = document.createElementNS(ns, 'svg');
+  const svg = document.createElementNS(SVG_NS, 'svg');
   svg.setAttribute('viewBox', '0 0 60 60');
   svg.setAttribute('fill', 'none');
 
-  function el(tag, attrs) {
-    const e = document.createElementNS(ns, tag);
-    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, String(v));
-    return e;
-  }
+  const el = svgEl;
 
   // Shared wheel trucks
   svg.appendChild(el('rect', { x:17, y:8, width:6, height:8, rx:2, fill:'#37474F' }));
