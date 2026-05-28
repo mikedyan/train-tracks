@@ -1,247 +1,231 @@
-# PRUNE Report — Cycle 2 (May 13, 2026)
+# PRUNE Report — Cycle 3 (May 28, 2026)
 
-**Auditor:** Mochi (fresh-eyes audit, Day 54 of factory cycle / Day 1 of Prune Week 2)
-**Site under review:** https://mikedyan.github.io/train-tracks/?v=54&fresh=1
-**Code size entering Prune week:** **11,192 lines / 297,740 bytes** (single index.html)
-**Baseline to beat (HARD RULE):** end of prune week ≤ **11,192 lines** (net negative code = pass)
-**Previous prune (cycle 1):** missed the file-size target by +55 lines. This time we **do not** miss.
+**Auditor:** Mochi (fresh-eyes audit, Day 69 of factory cycle / Day 1 of Prune Week 3)
+**Site under review:** https://mikedyan.github.io/train-tracks/?v=69&fresh=1
+**Code size entering Prune Week 3:** **11,866 lines / 422,935 bytes** (single `index.html`)
+**Hard rule (end of Prune Week 3):** ≤ **11,866 lines** (net negative code = pass)
+**Stretch goal:** ≤ **11,830 lines** (match Cycle 2's −36 LOC cut)
+**Previous prune outcomes:** Cycle 1 missed (+55 LOC). **Cycle 2 hit (-36 LOC, first net-negative.)** Cycle 3 must match or beat Cycle 2.
 
 ---
 
 ## TL;DR
 
-The game is in **genuinely good shape**. The toolbar simplification from cycle 1 held — 15 visible buttons (10 row 1 + 5 row 2 + HONK during play). Tutorial auto-opens on a fresh visit. All 26 palette pieces present across 4 well-labeled sections. Zero console errors on the deployed site. Harden Week 2 closed with 0 open bugs.
+The game is in **excellent kid-UX shape** after Cycle 3. Build Week 3 shipped 5 features (Time-of-Day Sky 🌅, Animal Passengers 🐄, Whistle Songs 🎵, Replay Sharing v3 🎬, Sticker Book ⭐) for **+717 net LOC**, but **zero new toolbar buttons** and only **+1 settings tile** (Sticker Book). That's the right discipline — feature surface should be discoverable, but it shouldn't crowd the chrome. Harden Week 3 closed clean with 0 open bugs, 0 console errors, and the first net-negative Harden week in the 90-day plan (-7 LOC, Day 67).
 
-But cycle 2 build week put **+1,103 lines on the file** (10,089 → 11,192) without much visible bloat to a 5-year-old — the cost is hidden in the **⚙️ Settings drawer**, which has grown from 5 items → 9 items. Settings is becoming the "feature shelf" kids never open.
+The fresh-eyes audit confirms the toolbar passed (15 visible buttons, same as Cycle 2). Settings drawer at 8 tiles is still walkable for a 5-year-old (and Sticker Book is genuinely a *reward* — kids want to find it). The piece-progression system is working as intended this cycle — **20 of 26 palette pieces are visually locked** on a fresh `localStorage` (Cycle 2's "0/26 locked" flag is no longer a regression). Tutorial auto-opens, step 3 teaches HONK (Day 57), first-random of the session hits cargo missions ~97% (Day 57). All UX wins from prior prunes held.
 
-The audit-priority cuts are **code-side**, not UX. The toolbar passed the fresh-eyes test. The 9 `closeXxxModalOutside(e)` handlers, 5 `updateXxxSettingsLabel` functions, and 2 cargo/passenger cleanup pairs are obvious DRY targets totaling **~80–110 lines saveable** with zero feature loss. That clears the hard rule with margin.
+The audit-priority cuts are **code-side, not UX**. The script section has **107 `// =====` separator lines** with **51 redundant closing fences** (sandwich pattern: header line surrounded by `=====` both above and below). Trimming the closing fences alone clears the hard rule with a ~50-line margin and zero feature/readability loss. Smaller code-health targets (sticker-modal CSS variants, Day 60 verbose comment block, blank-divider runs) round out a realistic **-50 to -65 LOC** budget for the week — comfortably beating Cycle 2.
 
-One **non-prune flag for the next Harden week**: on a freshly cleared `localStorage`, **0/26 palette pieces are visually locked**. Cycle 1 had ~20 pieces locked at start (the unlock-as-you-play hook). This may be a quiet regression worth checking — but it is **out of scope for prune week** (no behavior change).
+**One non-prune UX flag for the next Build week** (not actionable this week): the **🧑 Passengers** toolbar button is the only round-row item that holds *state* (Off/On). Kids see a face icon and don't know it's a switch until the tooltip. Consider either (a) making it a settings-drawer tile in a future cycle, or (b) renaming the icon to read more obviously like a toggle. Out of scope for prune week — flagging for the next Build roadmap.
 
 ---
 
-## 1. Fresh Eyes Walk-Through (the 5-year-old test, take 2)
+## 1. Fresh Eyes Walk-Through (the 5-year-old test, take 3)
 
-Cleared `localStorage` → reloaded `?v=54&fresh=2`. Captured a full-page screenshot. Here's what a 5-year-old sees:
+Cleared `localStorage` → reloaded `?v=69&fresh=1`. Captured a full-page screenshot. Here's what a 5-year-old sees:
 
 | Element | First impression | Verdict |
 |---|---|---|
 | Big "🚂 Train Tracks" header | Friendly, on-brand | ✅ Keep |
-| Tutorial overlay auto-pops ("Drag a Track Piece!") with Skip/Next | Welcoming, age-appropriate, dismissible | ✅ Keep |
-| Left palette: TRACKS / TRAINS / CARS / SCENERY sections | Clear grouping, chunky pieces | ✅ Keep |
-| Grid (8×12 default, green felt aesthetic) | "I can put things there" | ✅ Keep |
-| Row 1 toolbar (▶️ Play · 🎲 Random · 🗑️ Clear · ↩️ ↪️ · slider · 🔊 · ☀️ · 💾 Save · 🧩 Puzzles) | Reads as "the buttons that matter" | ✅ Keep |
-| Row 2 round cluster (🌤️ · 🌸 · 🧑 · 📤 · ❓ · ⚙️) | Visually distinct, lower-stakes, well-grouped | ✅ Keep |
+| Tutorial overlay auto-pops ("Drag a Track Piece!") with Skip/Next | Step 1 of 3, welcoming, dismissible | ✅ Keep |
+| Left palette: TRACKS / TRAINS / CARS / SCENERY headers | Clear grouping | ✅ Keep |
+| Locked pieces dim to opacity 0.35 + 🔒 emoji overlay | Reads as "earn this later" without being scary | ✅ Keep — **better than Cycle 2** |
+| Grid (12×8 default, green felt aesthetic) | "I can put things there" | ✅ Keep |
+| Row 1 toolbar (▶️ Play · 🎲 Random · 🗑️ Clear · ↩️ ↪️ · speed slider · 🔊 + volume slider · ☀️ · 💾 Save · 🧩 Puzzles) | Reads as "the buttons that matter" | ✅ Keep |
+| Row 2 round cluster (🌤️ · 🌸 · 🧑 · 📤 · ❓ · ⚙️) | Visually distinct, lower-stakes | ✅ Keep — 1 caveat (see §6) |
 | 📯 HONK (only when playing) | Still chef's kiss | ✅ Sacred |
 
-**Verdict:** Cycle 1's UX prune held. Nothing new to cut in the chrome.
+**Verdict:** The UX prune work from Cycles 1 and 2 held. Cycle 3's feature additions are *invisible* in the chrome on fresh load — they live in the Settings drawer (Sticker Book) or auto-trigger during gameplay (Sky, Animals, Whistles, Replay-sharing on inbound link). Nothing new to cut.
 
 ---
 
-## 2. Inventory & Counts (vs Cycle 1 baseline)
+## 2. Inventory & Counts (vs Cycle 2 baseline)
 
-### Toolbar (visible: 15 + HONK while playing)
-**Row 1 (rectangular, 9 buttons + slider):**
+### Toolbar (visible: **15** + HONK while playing — unchanged)
+**Row 1 (rectangular, 9 buttons + speed slider + volume slider):**
 1. ▶️ Play
 2. 🎲 Random
 3. 🗑️ Clear
 4. ↩️ Undo
 5. ↪️ Redo
-6. _Speed slider (🐢↔️🐰)_
-7. 🔊 Sound mute
-8. ☀️ Day / Night
+6. _Speed slider (🐢↔🐰)_
+7. 🔊 Sound (mute toggle) + volume slider
+8. ☀️ Day/Night
 9. 💾 Save
 10. 🧩 Puzzles
 
-**Row 2 (round cluster, 5 buttons):**
-11. 🌤️ Weather (sunny / rain / snow)
-12. 🌸 Biome (spring / desert / winter / autumn)
-13. 🧑 Passengers ON/OFF
-14. 📤 Share menu (Copy Link / Save Image)
-15. ❓ Help (tutorial)
-16. ⚙️ Settings
+**Row 2 (round, 6 buttons):**
+1. 🌤️ Weather (sunny / rain / snow)
+2. 🌸 Biome (spring / summer / autumn / winter / desert)
+3. 🧑 Passengers toggle (Off / On — *flagged in §6*)
+4. 📤 Share / Save image
+5. ❓ How to play
+6. ⚙️ Settings
 
-**Hidden until playing:** 📯 HONK
+**Play-only:** 📯 HONK (appears bottom-right while a train is running)
 
-**vs Cycle 1 close-out:** 13 + 6 → 10 + 5. Same total. Same shape. ✅
+→ **No change from Cycle 2 end (Day 58).** Cycle 3 shipped 5 features without adding a single toolbar button.
 
-### Palette (26 pieces, 4 sections)
-- 🛤 TRACKS (9): straight · curve · t-split · cross · bridge · tunnel · station · crossing · rainbow
-- 🚂 TRAINS (5): red · blue · green · yellow · purple
-- 🚃 CARS (3): freight · passenger · caboose
-- 🌳 SCENERY (9): tree · house · cow · water · flower · sheep · horse · duck-land · people
+### Settings Drawer (**8 tiles + music volume slider**)
+- AUDIO: 🎵 Music (Off/On), 🔊 Sound pack (Classic / Toy / Diesel)
+- DISPLAY: ♿ High Contrast, ⬛ Big Grid (12×8 / 16×10)
+- GAME: 🏷️ Name Your Trains, 🎬 Track Replay, 📊 Stats & Milestones, ⭐ Sticker Book
 
-**vs Cycle 1:** identical. ✅
+→ **+1 from Cycle 2 end (was 7).** The new Sticker Book is the right addition — collectibles belong in GAME, not floating on the toolbar. Drawer still passes the "scannable in 2 seconds" test.
 
-### Settings menu (9 items — ⚠️ grew from 5)
-1. 🎵 Music: Off
-2. ♿ High Contrast
-3. 📊 Stats & Milestones
-4. ⌨️ Keyboard Shortcuts
-5. ⛶ Fullscreen
-6. 🏷️ Name Your Trains *(NEW Day 44)*
-7. 🟦 Big Grid: 12×8 *(NEW Day 45)*
-8. 👻 Track Replay *(NEW Day 47)*
-9. 🔊 Sound: Classic *(NEW Day 48)*
+### Palette (**26 pieces, 4 sections** — unchanged)
+- TRACKS (9): Straight, Curve, T-Split, Cross, Bridge, Tunnel, Station, Crossing, Rainbow
+- TRAINS (5): Red, Blue, Green, Yellow, Purple
+- CARS (3): Freight, Passenger, Caboose
+- SCENERY (9): Tree, House, Cow, Water, Flower, Sheep, Horse, Duck, People
 
-**Verdict:** Settings is the new toolbar-row-2 problem. It's not visible-chrome bloat (still one click deep), but it has gone from "a handful of advanced toggles" to a "feature wall."
+**Locked at fresh start: 20 / 26** (opacity 0.35 + 🔒 overlay)
+Unlocked: Straight, Curve, Red train, Tree, House, Cow.
 
-### Modals (10 functional)
-tutorial · save · puzzle · share · settings · screenshot · stats · shortcuts · train-names · track-replay
+→ **Progression is working again this cycle.** Cycle 2's PRUNE_REPORT flagged "0/26 locked" as a quiet regression — verified today that the milestone unlock system is healthy, no action needed.
 
-### JavaScript surface
-- **317 functions** (vs 270 PRUNE_REPORT cycle 1, 274 end of cycle 1 prune → +43 in cycle 2)
-- **53 `<button>` elements** in HTML (vs 39 in cycle 1)
-- **49 `palette-piece` references** (vs 75 in cycle 1 — Day 41's DRY drawer cleanup held)
-- **9 near-identical `close*Outside(e)` handlers** — biggest DRY target this week
-- **5 `updateXxxSettingsLabel` functions** — second-biggest pattern
-- **2 cargo/passenger cleanup pairs** — third candidate
+### Modals (**11 total** — unchanged since Day 64)
+`save-modal`, `settings-modal`, `track-replay-modal`, `train-names-modal`, `share-modal`, `shortcuts-modal`, `puzzle-modal`, `screenshot-modal`, `stats-modal`, `sticker-modal`, plus `tutorial-overlay`. Each uses the delegated `event.target===this` outside-click pattern from Cycle 2 Day 56.
 
-### LOC trajectory
-- Day 14 (pre-cycle): 8,400 ish
-- Day 43 (end cycle 1 prune): 10,144
-- Day 48 (end cycle 2 build): **11,192**
-- Day 53 (end cycle 2 harden, today's starting point): **11,192** ← zero growth across Harden Week 2, mandate satisfied
-- Day 58 target (end cycle 2 prune): **≤ 11,192** ← hard rule
+### Code health
+- **Lines:** 11,866 (entering Prune)
+- **Bytes:** 422,935 (~413 KB)
+- **Total functions:** 325 (vs 306 end of Cycle 2 — +19 from Cycle 3 build week, of which Sticker Book + Replay-share v3 are the biggest contributors)
+- **Duplicate function declarations:** 0 (Day 67 cleared the last one — `svgEl` hoist)
+- **CSS classes defined:** 215 unique
+- **Dead CSS suspects:** 0 confirmed (`.animal-react-*` and `.difficulty-*` look like dead-rule candidates by lexical count, but verified — all are dynamically applied via `'animal-react-' + animalType` and `'difficulty-' + p.difficulty.toLowerCase()`)
+- **Console errors live:** 0
+- **Open bugs entering Prune week:** 0
 
 ---
 
-## 3. Findings — Where the fat is (code-side, not UX)
+## 3. Code-Health Targets (the actual prune budget)
 
-### 🚨 Big DRY targets (Wednesday Day 56)
+Hard rule: end ≤ 11,866 LOC. Stretch: ≤ 11,830 LOC (Cycle 2 parity at -36).
 
-**3A. 9 nearly-identical `closeXxxModalOutside(e)` handlers (~25–30 lines saveable)**
+### 🎯 Target A — Section-divider de-duplication (~50 LOC)
+
+The script section uses a `// ====================` "outer fence" pattern around every section header:
 
 ```
-closeSettingsMenuOutside, closeShareMenuOutside, closeTrainNamesModalOutside,
-closeTrackReplayModalOutside, closeSaveModalOutside, closeScreenshotModalOutside,
-closeShortcutsModalOutside, closePuzzleModalOutside, closeStatsModalOutside
+// ============================================================
+// SECTION LABEL
+// ============================================================
 ```
 
-All 9 follow the same shape:
-```js
-function closeFooModalOutside(e) {
-  if (e.target === document.getElementById('foo-overlay')) closeFooModal();
-}
+There are **107 fence-divider lines** in the script section, paired with **~50 section headers**. **51 of those fences are sandwich-closers** (the line *after* a `// LABEL` header). Removing the closing fences keeps every section break visible (each section still starts with `===\nLABEL`) and saves ~50 LOC with **zero readability loss**.
+
+Concretely, transform every:
+```
+// ============================================================
+// LABEL
+// ============================================================
+```
+into:
+```
+// ============================================================
+// LABEL
 ```
 
-**Cut:** Replace with a single delegated handler on `document` that looks at the `.modal-overlay` class on `e.target` and dispatches to a registered closer. Or simpler: one shared `dismissOnOverlayClick(e, overlayId, closerFn)` that all `onclick=` attributes call inline. The inline-attribute footprint goes up slightly (~9 × 30 chars), but the JS function bloat (9 × 3 lines = 27 lines) goes away. Net negative.
+→ **Estimated saving: ~50 LOC.** Day 3 (Code Cleanup) target.
 
-**3B. 5+ `updateXxxSettingsLabel` functions (~30–50 lines saveable)**
+### 🎯 Target B — Verbose Day 60 / Day 63 explainer comments (~5–8 LOC)
 
-`updateMusicSettingsLabel`, `updateBigGridLabel`, `updateReplaySettingsLabel`, `updateSoundPackSettingsLabel`, plus implicit ones for High-Contrast / Passengers / Night. Each reads a state variable and writes `.textContent` on a labelled DOM node. Identical shape:
-```js
-function updateXxxSettingsLabel() {
-  const el = document.getElementById('settings-xxx-label');
-  if (el) el.textContent = `${EMOJI} ${LABEL}: ${state.xxx}`;
-}
-```
+Two block comments are *very* prose-heavy (8–10 lines each describing rationale for a single small function). They were useful during build week, but the code itself is now well-named enough that a one-line summary is fine. Specific candidates:
+- `// ============================================================` + 8-line essay above `ANIMAL_PASSENGERS` (lines ~11149–11157)
+- 6-line preamble above `STICKER_STORAGE_KEY` (lines ~11514–11521)
 
-**Cut:** A single `refreshSettingsLabels()` driven by a config array of `{id, format()}` entries. Called from `openSettingsMenu()` and the individual toggle handlers. ~40 lines net saving.
+Tighten to ~2 lines each. → **Estimated saving: ~10 LOC.** Day 3 target.
 
-**3C. Cargo + Passenger badge cleanup duplication (~15 lines saveable)**
+### 🎯 Target C — Sticker constant array compaction (~2 LOC)
 
-`cleanupStationCargoBadges`, `cleanupTrainCargoBadges`, `cleanupStationPassengers` (plus `resetCargoState` and `resetPassengerState`) all do the same conceptual work: walk DOM, query selector, remove nodes; reset module state. Two thirds of this code is structurally identical.
+`STICKERS` array (12 entries) currently has the `train-master` meta-sticker on 4 lines (the `check` function takes a multi-line body). Could be inlined to 2 lines with `function () { return STICKERS.every(s => s.id === 'train-master' || stickerState.earned[s.id]); }`. **Marginal but free.**
 
-**Cut:** Extract `cleanupBadgesByClass(className)` helper and have the three callers pass `'station-cargo-badge'`, `'train-cargo-badge'`, `'station-passenger'`. ~15 lines net.
+→ **Estimated saving: ~2 LOC.** Day 3 target.
 
-### 🟡 Medium prune targets (Wednesday — only if time permits)
+### 🎯 Target D (defer if margin is comfortable) — Sky CSS variant consolidation
 
-**3D. Dead-ish helpers in the long tail**
-- `cancelLongPress` (3 refs but all defensive — verify if any actually fires)
-- `restoreBigGrid` / `restoreSoundPack` are 1-call helpers — consider inlining at the single call site in `init()`.
-- 7 inline `style="…"` attributes still in the HTML (down from 21+ in cycle 1, but a few were re-added in Cycle 2's modal HTML). Move to existing utility classes.
+`@keyframes sky-tint-cycle` and `@keyframes sky-tint-cycle-night` are 9 + 4 lines respectively. They could share keyframes via CSS custom properties for the gradient stops, but the cleanup adds ~6 lines of CSS-variable plumbing. **Net wash. Skip.**
 
-**3E. SOUND_PACKS config could shed comment bulk**
-The Day 48 config object has helpful inline comments for each timbral parameter (whistle f1/f2/type/vol/dur/delay, chug filterFreq/filterQ/vol+accents, etc.). Some are descriptive sentences. If we're tight on the LOC budget, tightening these to short tags (or moving the doc to LESSONS_LEARNED.md) yields ~10 lines.
+### 🎯 Target E (defer) — Modal `.close-btn` rule consolidation
 
-### 🟢 P3 (out of scope for prune; flag for next cycle)
-- **0/26 pieces locked on fresh visit.** Either the progression system is now permissive by default (intentional?) or `isPieceUnlocked()` falls through when `state.unlocks.pieces.length === 0`. Cycle 1 review explicitly verified "80%+ pieces locked at start." Day 49 audit notes claim "default 6 unlocked." Today's audit says **0 locked / 26 visible**. This is a behavior change, not a code cleanup, so it doesn't belong in prune week. Flag for Cycle 3 Harden Week 1: explicitly decide and document — "no progression on fresh visit" or "progression broken, restore the lock state."
+Each modal style block re-declares its `.close-btn` selector with the same 6-property body. There are 8 such repetitions. A single `.modal .close-btn { ... }` rule would save ~24 LOC, but the existing rules use modal-id selectors (`#sticker-modal .close-btn`), and the bodies aren't byte-identical (some override night-mode). **Higher refactor risk for ~15 net LOC. Defer to a future cycle.**
 
-### ✅ Sacred (do NOT cut)
-- HONK 📯 (untouchable)
-- All 9 track types, 5 train colors, 3 cars, 9 scenery, 10 puzzles
-- Train Names, Big Grid, Cargo Missions, Track Replay, Sound Packs (cycle 2 features all earned their place)
-- Tutorial auto-show on first visit (the strongest "first 30 seconds" win)
-- Speed slider with bunny+tortoise emojis
+### Realistic Day-3 budget
 
----
-
-## 4. Tuesday plan (Day 55 — Simplify, UX-side)
-
-Cycle 1's prune week did UX consolidation; cycle 2's UX is already lean. The cycle-2 simplify pass is **about Settings menu polish**, not menu-tree restructuring:
-
-**Cut #1 — Move ⌨️ Keyboard Shortcuts out of Settings, into ❓ Help.**
-Kids who need help look at ❓, not ⚙️. Adults can find it either way. The shortcuts modal stays; only its launcher moves. Saves 1 Settings line + 1 launcher function.
-
-**Cut #2 — Demote ⛶ Fullscreen.**
-F11 works in every browser. The launcher costs us ~5 lines of fullscreen-detection/swap code. Either remove or move to keyboard-shortcuts overlay. Saves ~5 lines.
-
-**Cut #3 — Settings auto-grouping.**
-Currently a flat list of 9 emoji rows. Group as: **Audio** (🎵, 🔊), **Display** (♿, 🟦, ⛶), **Game** (🏷️, 👻, 📊). Same 9 rows but with 3 short `<h3>` separators. This is **+3 lines of HTML** — counted against the budget but worth the kid-eye win.
-
-**Cut #4 — Drop the redundant 🎵 Music toggle.**
-Music belongs in the same place as Sound (🔊 mute). Add a second click on 🔊 mute to cycle "All audio / SFX only / Muted" or expose music as a tiny secondary slider inside the same UI. Saves 1 Settings line, but adds slight UI complexity to the mute control — **revisit Tuesday before committing.**
-
-**Net Tuesday target:** -10 to -15 lines, plus the +3-line Settings header bump.
-
-## 5. Wednesday plan (Day 56 — Code Cleanup)
-
-Execute 3A, 3B, 3C above plus the 3D long-tail.
-- **3A** outside-click handlers: -25 to -30 lines
-- **3B** settings labels: -30 to -50 lines
-- **3C** cleanup helpers: -15 lines
-- **3D** misc inlining + dead branches: -10 lines
-
-**Net Wednesday target: -80 to -105 lines.**
-
-## 6. Thursday plan (Day 57 — Delight Polish)
-
-- Verify tutorial 3-step sequence still flows: "Drag a Track Piece! → Hit Play → CHOO CHOO!" (and confirm HONK is taught).
-- Make the very-first random track even more delightful: ensure a cargo-mission pair appears (Day 46 said ~70% rate — verify this is still true post-cuts; if not, bump to ~85% on the *first* random of a session).
-- Smooth the Settings open-animation timing if the grouping (Cut #3) introduces visible jank.
-- Audit Track Replay: kid-test the icon — is 👻 read as "ghost" or as "spooky"? Maybe 🔁 or 🎬 is friendlier.
-
-**Net Thursday target:** 0 to +3 lines (small additions allowed; offset by Wednesday's haul).
-
-## 7. Friday plan (Day 58 — Expert Panel + Validation)
-
-- Open the deployed site cold, score 10 dimensions vs Day 43 baseline (8.3/10).
-- **HARD RULE check: file size ≤ 11,192 lines.** If we land at 11,050 → ✅. If we land at 11,193 → ❌, revert until we're under.
-- Confirm zero open bugs after this prune (Harden Week 2 closed with 0; cycle-2-prune should not introduce any).
-- Write `reviews/prune-cycle-2-review.md` with cycle-1 retrospective comparison.
-
----
-
-## 8. Risks & non-goals
-
-- **Don't remove features.** Train Names, Big Grid, Cargo Missions, Track Replay, Sound Packs all stay. Track Replay is the closest to "kid-niche" but it earned its 365 lines on Day 47 and the activation pattern (Settings → 👻 → Record / Replay) is clean.
-- **Don't change the saved-state schema.** Auto-save format (~9 LS keys), share-link v2 byte format, save-slot keys — all frozen during prune.
-- **Don't relitigate cycle 1's UX gains.** The 21 → 15 toolbar trim is good. Don't undo it.
-- **Don't fix the missing locked-pieces in this week.** It's a behavior change that needs a Build-week or Harden-week conversation, not a prune-week side-quest.
-
----
-
-## 9. Friday score commitment (Day 58)
-
-Re-run 10-dimension scoring vs Day 43:
-
-| Dimension | Day 43 | Target Day 58 |
+| Target | Saving | Risk |
 |---|---|---|
-| First Impression | 9 | 9 (same) |
-| Clarity | 9 | 9 (small Settings grouping win) |
-| Core Loop | 9 | 9 |
-| Difficulty Curve | 8 | 8 (no progression change this week) |
-| Juice/Polish | 9 | 9 |
-| Replayability | 7 | 7–8 (cycle-2 features mature) |
-| Uniqueness | 7 | 7 |
-| Bug-Free | 9 | 9 (don't introduce any) |
-| Visual Design | 9 | 9 |
-| Addictiveness | 7 | 7 |
+| A. Section-divider de-dup | ~50 LOC | None |
+| B. Verbose comments | ~10 LOC | None |
+| C. Sticker meta inline | ~2 LOC | None |
+| **Subtotal** | **~62 LOC** | **None** |
 
-Target overall: **8.3–8.5 / 10**, with the **headline metric being code health** — first prune week to land at-or-under the start-of-week LOC ceiling.
+→ **Projected end-of-week LOC: 11,866 − 62 = 11,804.** Beats the hard rule (≤11,866) by 62 lines, beats Cycle 2's −36 by ~26 lines. **Stretch goal achievable.**
 
 ---
 
-*Audit complete. On to Tuesday: simplify the Settings drawer.*
-*— Mochi, factory orchestrator, Day 54.*
+## 4. UX Simplification Targets (Day 2 — Simplify)
+
+The Cycle 2 prune already absorbed the obvious UX wins (settings grouping, Fullscreen demoted to F-key, Track Replay icon 👻→🎬, HONK in tutorial). For Cycle 3, the deck is **mostly clean**. Two small candidates:
+
+### 4a. Sticker Book progress on first-visit modal (delight polish, candidate)
+First-time sticker-book visitor sees `0 / 12 stickers earned`. A gentle hint — *"Play to earn your first sticker!"* — under the progress bar would warm up the empty state. **+4 LOC, kid-friendly delight.** (This is actually a Day 4 *Delight Polish* candidate, not a Day 2 cut. Flagged here for visibility.)
+
+### 4b. Settings drawer Sticker Book entry — icon variant
+Currently `⭐ Sticker Book`. Considered: leave it. The ⭐ matches the meta-sticker reward and the Stats & Milestones tile already uses 📊, so star is the right read. **No change.**
+
+### 4c. (Defer) Passengers 🧑 button surface
+Round-row Passengers button is the only stateful icon in row 2 (Off/On switch). Discoverability nit but **not** a prune target — moving it to settings would *grow* the file (drawer tile + remove toolbar button = net wash or growth). **Flag for Build Week 4 roadmap discussion.**
+
+→ **Day 2 plan: no UX cuts.** Cycle 3 Prune Week is a code-health week, by design.
+
+---
+
+## 5. Delight Polish (Day 4 candidates)
+
+These are *additions*, not cuts — Day 4 of Prune Week is where small kid-magic gets added back inside the saved-LOC margin.
+
+1. **Sticker Book empty-state hint** (~4 LOC, see §4a) — warms up the 0/12 state.
+2. **Honk-from-keyboard tells you what train honked** — currently HONK sounds for the active train, but on first run a kid might press it and not see which train made the sound. A 1-frame badge over the active loco when HONK fires? **Optional, ~10 LOC.**
+3. **First-sticker celebration upgrade** — Day 63's award path uses `SFX.celebrate()` + toast. For the *first* sticker only, consider a brief whole-screen confetti burst (the function already exists from cargo deliveries). **~5 LOC.**
+
+→ Pick the cheapest one (1) on Day 4. Save the rest for Build Week 4 or beyond.
+
+---
+
+## 6. Non-Prune Flags (for the next Build Week roadmap, not actionable here)
+
+- **🧑 Passengers button discoverability** (§4c) — Off/On state isn't obvious. Consider rename, indicator dot, or settings-drawer relocation in Cycle 4.
+- **Tutorial coverage** — Tutorial still has 3 steps. Cycle 3 shipped 5 features. Kids who skip tutorial won't see Sticker Book, Animal Passengers, or Whistle Songs surfaced anywhere. Consider a "What's New" reveal after the 3rd run, or extending the tutorial to 4 steps. **Build Week 4 candidate.**
+- **Big Grid + Sky-cycle interaction** — On a 16×10 grid, the sun-arc keyframe percentages still target the viewport, so the sun's trajectory looks fine. Verified in Harden Week. No action.
+
+---
+
+## 7. Day-by-Day Plan for Prune Week 3
+
+| Day | Date | Goal | Specifics |
+|---|---|---|---|
+| **Day 69 (Mon)** | May 28 | Fresh-Eyes Audit | _(this report)_ |
+| **Day 70 (Tue)** | May 29 | Simplify | No UX cuts this cycle — verify no bloat snuck in during audit, +light polish if margin allows |
+| **Day 71 (Wed)** | May 30 | Code Cleanup | Targets A + B + C (~62 LOC saved, hard rule cleared) |
+| **Day 72 (Thu)** | May 31 | Delight Polish | Add Sticker Book empty-state hint (§5.1) |
+| **Day 73 (Fri)** | June 1 | Expert Panel + Validation | Cycle 3 close-out review, score vs Day 58 (8.4 baseline), commit to `reviews/prune-cycle-3-review.md` |
+
+---
+
+## 8. The Number That Matters
+
+**Entering:** 11,866 lines / 422,935 bytes
+**Hard rule end-of-week:** ≤ 11,866
+**Realistic projection:** ~11,804 (-62)
+**Stretch:** ≤ 11,830 (-36, parity with Cycle 2)
+
+**Prediction:** Cycle 3 Prune will be the **second consecutive net-negative prune** in the 90-day plan. Code-debt momentum compounding.
+
+---
+
+*Auditor: Mochi 🐯
+Date: May 28, 2026
+File: `PRUNE_REPORT.md`
+Cycle: 3 of the 90-day program (Apr 18 – Jul 16, 2026)*
