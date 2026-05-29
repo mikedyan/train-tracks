@@ -2866,7 +2866,6 @@ body.night-mode #grid-viewport.sky-cycling #sky-sun {
 <script>
 // ============================================================
 // SOUND ENGINE (Web Audio API — no external files)
-// ============================================================
 let audioCtx = null;
 let soundEnabled = true;
 let masterGainNode = null;
@@ -3846,7 +3845,6 @@ function stopChugLoop() {
 
 // ============================================================
 // NIGHT MODE
-// ============================================================
 const NIGHT_MODE_KEY = 'trainTracks_nightMode';
 
 function isNightMode() {
@@ -3915,7 +3913,6 @@ function updateHeadlightVisibility() {
 
 // ============================================================
 // BIOME SYSTEM
-// ============================================================
 function applyBiome(biome) {
   // Remove all biome classes
   BIOMES.forEach(b => document.body.classList.remove('biome-' + b));
@@ -3946,7 +3943,6 @@ function cycleBiome() {
 
 // ============================================================
 // WEATHER SYSTEM — Rain, Snow, Sunny
-// ============================================================
 function cycleWeather() {
   const idx = WEATHER_MODES.indexOf(currentWeather);
   const newWeather = WEATHER_MODES[(idx + 1) % WEATHER_MODES.length];
@@ -4150,7 +4146,6 @@ function restoreBiome() {
 
 // ============================================================
 // HIGH-CONTRAST MODE
-// ============================================================
 const HIGH_CONTRAST_KEY = 'trainTracks_highContrast';
 
 function isHighContrast() {
@@ -4173,7 +4168,6 @@ function restoreHighContrast() {
 
 // ============================================================
 // BIG GRID MODE (Day 45: 12x8 <-> 16x10)
-// ============================================================
 function applyGridSize(big) {
   const dims = big ? BIG_GRID : SMALL_GRID;
   ROWS = dims.rows;
@@ -4245,7 +4239,6 @@ function toggleBigGrid() {
 
 // ============================================================
 // FULLSCREEN MODE
-// ============================================================
 function toggleFullscreen() {
   if (document.fullscreenElement) {
     document.exitFullscreen().catch(() => {});
@@ -4282,7 +4275,6 @@ function rerenderPalette() {
 
 // ============================================================
 // CONSTANTS
-// ============================================================
 // Reactive: switch between 12x8 (default) and 16x10 (big grid mode).
 // Day 45 (Cycle 2 Build Day 2): converted from const so applyGridSize() can swap them.
 let COLS = 12;
@@ -4361,7 +4353,6 @@ const THROUGH_ROUTES = {
 
 // ============================================================
 // STATE
-// ============================================================
 const state = {
   grid: Array.from({ length: ROWS }, () => Array(COLS).fill(null)),
   // Each cell: { type, rotation } or null
@@ -4383,7 +4374,6 @@ let animStates = []; // array of per-train animation states
 
 // ============================================================
 // ZOOM / PAN STATE
-// ============================================================
 const ZOOM_MIN = 0.5;
 const ZOOM_MAX = 2.0;
 const ZOOM_KEY = 'trainTracks_zoom';
@@ -4480,7 +4470,6 @@ function getTrainColor(type) { return type && type.startsWith('train-') ? type.r
 
 // ============================================================
 // UTILITY
-// ============================================================
 function rotateDir(dir, times) {
   let d = dir;
   for (let i = 0; i < times; i++) d = ROTATE_MAP[d];
@@ -4575,7 +4564,6 @@ function findBestRotation(row, col, type) {
 
 // ============================================================
 // TRACK SVG RENDERING
-// ============================================================
 function createTrackSVG(type) {
   const ns = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(ns, 'svg');
@@ -4988,7 +4976,6 @@ function createPaletteSVG(type) {
 
 // ============================================================
 // GRID RENDERING
-// ============================================================
 function initGrid() {
   const grid = document.getElementById('grid');
   grid.innerHTML = '';
@@ -5271,7 +5258,6 @@ function updateConnectionDots(row, col) {
 
 // ============================================================
 // CAR POSITIONING (Static display)
-// ============================================================
 function getCarCellPositions(train) {
   if (!train || !train.cars || train.cars.length === 0) return [];
 
@@ -5367,7 +5353,6 @@ function renderStaticCars() {
 
 // ============================================================
 // UNDO
-// ============================================================
 function saveUndo() {
   state.undoStack.push({
     grid: state.grid.map(row => row.map(cell => cell ? { ...cell } : null)),
@@ -5423,7 +5408,6 @@ function updateUndoRedoButtons() {
 
 // ============================================================
 // T-JUNCTION SWITCHES
-// ============================================================
 function toggleSwitch(row, col) {
   const key = row + ',' + col;
   const piece = state.grid[row][col];
@@ -5462,7 +5446,6 @@ function updateSwitchLever(row, col) {
 
 // ============================================================
 // PIECE PLACEMENT
-// ============================================================
 // Visual pulse on auto-connected edges
 function showAutoConnectPulse(row, col) {
   const cell = getCellEl(row, col);
@@ -5613,7 +5596,6 @@ function clearAll() {
 
 // ============================================================
 // RIGHT-CLICK TO REMOVE (Feature #2)
-// ============================================================
 let longPressTimer = null;
 let longPressTarget = null;
 
@@ -5689,7 +5671,6 @@ function cancelLongPress() {
 
 // ============================================================
 // DRAG & DROP (Pointer Events)
-// ============================================================
 let dragInfo = null;
 const ghost = document.getElementById('ghost');
 const trashZone = document.getElementById('trash-zone');
@@ -6345,7 +6326,6 @@ function clearHighlight() {
 
 // ============================================================
 // TOAST
-// ============================================================
 let toastTimeout = null;
 function showToast(msg) {
   const el = document.getElementById('toast');
@@ -6357,7 +6337,6 @@ function showToast(msg) {
 
 // ============================================================
 // TRAIN ANIMATION
-// ============================================================
 // Edge midpoints in cell-local coordinates (0-1 range)
 const EDGE_POS = {
   N: { x: 0.5, y: 0 },
@@ -6450,12 +6429,10 @@ function interpolatePath(points, t) {
 
 // ============================================================
 // SMOKE PARTICLE SYSTEM
-// ============================================================
 let smokeInterval = null;
 let smokeParticles = [];
 // ============================================================
 // TRAIN HORN SYSTEM (Feature: Cycle 1, Day 1)
-// ============================================================
 let hornCooldown = false;
 
 const HORN_PITCHES = {
@@ -6565,7 +6542,6 @@ function spawnSteamPuffs(anim) {
 
 // ============================================================
 // RAILROAD CROSSING GATE PROXIMITY DETECTION
-// ============================================================
 let crossingActiveTimers = {}; // "row,col" -> timer ID
 
 function updateCrossingGates() {
@@ -6763,7 +6739,6 @@ function cleanupSmokeParticles() {
 
 // ============================================================
 // CHIMNEY SMOKE SYSTEM (Ambient — always active)
-// ============================================================
 let chimneyInterval = null;
 const MAX_CHIMNEY_PARTICLES_PER_HOUSE = 2;
 
@@ -6838,7 +6813,6 @@ function cleanupChimneySmoke() {
 
 // ============================================================
 // LOOP CELEBRATION (Confetti)
-// ============================================================
 function triggerLoopCelebration(anim) {
   if (!anim || !anim.trainEl) return;
   const reduceMotion = prefersReducedMotion();
@@ -6889,7 +6863,6 @@ function triggerLoopCelebration(anim) {
 
 // ============================================================
 // CRASH/DERAIL SEQUENCE
-// ============================================================
 const CRASH_MESSAGES = [
   '💥 Oops! Connect more tracks!',
   '💥 Almost! Try adding a curve!',
@@ -7034,7 +7007,6 @@ function triggerCollision(anim1, anim2) {
 
 // ============================================================
 // CAR ANIMATION HELPERS
-// ============================================================
 function findHistoryEntry(history, targetDist) {
   if (history.length === 0) return null;
   let lo = 0, hi = history.length - 1;
@@ -7681,7 +7653,6 @@ function toggleMute() {
 
 // ============================================================
 // SETTINGS MENU + SHARE MENU (Day 40 prune-week consolidation)
-// ============================================================
 function openSettingsMenu() {
   updateMusicSettingsLabel();
   updateBigGridLabel();
@@ -7708,7 +7679,6 @@ function closeShareMenu() {
 }
 // ============================================================
 // TRAIN NAME LABELS (Day 44 — Cycle 2 Build Day 1)
-// ============================================================
 // Lets kids type a name per placed train ("MARK'S TRAIN", "RAINBOW EXPRESS")
 // which floats above the loco during play. Names persist via the existing
 // state.trains JSON serialization (auto-save, save slots) for free — they
@@ -7832,7 +7802,6 @@ function normalizeTrainsName() {
 
 // ============================================================
 // TRACK REPLAY / GHOST TRAIN (Day 47 — Cycle 2 Build Day 4)
-// ============================================================
 // Kid pitch: Press 🔴 Record, build your track. Press ▶️ Replay,
 // a ghost rebuilds it for you piece-by-piece, then the train auto-runs.
 // Coding-lite. Mark replays his masterpiece for dad.
@@ -8145,7 +8114,6 @@ function stopPlay() {
 
 // ============================================================
 // RANDOM TRACK GENERATOR (Feature #4)
-// ============================================================
 let randomTrackCount = 0;
 function generateRandomTrack() {
   if (puzzleState.active) { showToast('🧩 Exit puzzle first!'); return; }
@@ -8602,7 +8570,6 @@ function placeTrainOnLoop(path) {
 
 // ============================================================
 // PERSISTENCE (Auto-save, Save Slots, Thumbnails)
-// ============================================================
 const AUTOSAVE_KEY = 'trainTracks_autosave';
 const SLOT_KEY_PREFIX = 'trainTracks_slot_';
 
@@ -8847,7 +8814,6 @@ function closeSaveModal() {
 
 // ============================================================
 // SCREENSHOT SYSTEM
-// ============================================================
 let screenshotCanvas = null;
 
 function renderScreenshotCanvas() {
@@ -9194,7 +9160,6 @@ function copyScreenshot() {
 
 // ============================================================
 // SHARE LINK — Compact URL encoding of grid state
-// ============================================================
 
 // Type mapping: 0=empty, 1-7=track types, 8-16=scenery types
 const SHARE_TYPE_MAP = {
@@ -9576,7 +9541,6 @@ function loadFromShareHash() {
 
 // ============================================================
 // SIZING
-// ============================================================
 function isMobileLayout() {
   return window.innerWidth <= 768;
 }
@@ -9605,7 +9569,6 @@ function calculateSize() {
 
 // ============================================================
 // MOBILE DRAWER
-// ============================================================
 function toggleMobileDrawer() {
   const drawer = document.getElementById('mobile-drawer');
   if (!drawer) return;
@@ -9637,7 +9600,6 @@ function buildMobileDrawer() {
 
 // ============================================================
 // HAPTIC FEEDBACK
-// ============================================================
 function hapticPlace() {
   if (navigator.vibrate) {
     try { navigator.vibrate(10); } catch(e) {}
@@ -9653,7 +9615,6 @@ function hapticRemove() {
 
 // ============================================================
 // KEYBOARD SHORTCUTS + QUICK SELECT
-// ============================================================
 let selectedTool = null;
 let hoveredCell = null;
 let gridFocusRow = -1;
@@ -10015,7 +9976,6 @@ function handleKeyDown(e) {
 
 // ============================================================
 // SHORTCUTS MODAL
-// ============================================================
 function openShortcutsModal() {
   document.getElementById('shortcuts-overlay').classList.add('open');
 }
@@ -10028,7 +9988,6 @@ function closeShortcutsModal() {
 
 // ============================================================
 // PUZZLE SYSTEM
-// ============================================================
 
 const PUZZLES = [
   {
@@ -10495,9 +10454,7 @@ function exitPuzzle() {
 // ============================================================
 // INIT
 // ============================================================
-// ============================================================
 // ZOOM / PAN EVENT HANDLERS
-// ============================================================
 
 // Mouse wheel zoom (desktop)
 function onViewportWheel(e) {
@@ -10619,7 +10576,6 @@ function initZoomPan() {
 
 // ============================================================
 // TUTORIAL SYSTEM
-// ============================================================
 const TUTORIAL_KEY = 'trainTracks_tutorialDone';
 
 const TUTORIAL_STEPS = [
@@ -10794,7 +10750,6 @@ function onTutorialOverlayClick(e) {
 
 // ============================================================
 // PASSENGER DELIVERY SYSTEM
-// ============================================================
 const PASSENGER_KEY = 'trainTracks_passengers';
 const PASSENGER_ENABLED_KEY = 'trainTracks_passengersEnabled';
 const MAX_PASSENGERS_PER_STATION = 3;
@@ -11018,7 +10973,6 @@ function updatePassengerHUD() {
 
 // ============================================================
 // CARGO DELIVERY SYSTEM (Day 46)
-// ============================================================
 const CARGO_TYPES = {
   logs: { emoji: '🪵', label: 'Logs' },
   milk: { emoji: '🥛', label: 'Milk' },
@@ -11147,7 +11101,6 @@ function refreshTrainCargoBadge(anim) {
 
 // ============================================================
 // ANIMAL PASSENGERS SYSTEM (Day 60)
-// ============================================================
 // Cows, sheep, ducks (and horses!) adjacent to stations can hop aboard a
 // passing train. They moo/baa/quack when they board, ride in a little badge
 // next to the locomotive, and hop off at the next station the train reaches.
@@ -11291,7 +11244,6 @@ function refreshTrainAnimalBadge(anim) {
 // ============================================================
 // ============================================================
 // PROGRESSION & UNLOCKS SYSTEM
-// ============================================================
 const STATS_KEY = 'trainTracks_stats';
 const UNLOCKS_KEY = 'trainTracks_unlocks';
 
@@ -11449,7 +11401,6 @@ function checkReturningPlayer() {
 
 // ============================================================
 // STATS MODAL
-// ============================================================
 function openStatsModal() {
   renderStatsContent();
   document.getElementById('stats-overlay').classList.add('open');
