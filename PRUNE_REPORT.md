@@ -207,10 +207,20 @@ These are *additions*, not cuts — Day 4 of Prune Week is where small kid-magic
 | Day | Date | Goal | Specifics |
 |---|---|---|---|
 | **Day 69 (Mon)** | May 28 | Fresh-Eyes Audit | _(this report)_ |
-| **Day 70 (Tue)** | May 29 | Simplify | No UX cuts this cycle — verify no bloat snuck in during audit, +light polish if margin allows |
-| **Day 71 (Wed)** | May 30 | Code Cleanup | Targets A + B + C (~62 LOC saved, hard rule cleared) |
+| **Day 70 (Tue)** | May 29 | Simplify | **Target A executed (closing-fence dedup, −49 LOC).** Hard rule cleared, stretch goal beaten by 13 lines. Game verified live on deploy: 0 console errors, random-track generates 40 cells + train clean. |
+| **Day 71 (Wed)** | May 30 | Code Cleanup | Remaining Targets B + C (~12 LOC). Optional: look for further safe dead-code or duplicate-CSS to push deeper below stretch. |
 | **Day 72 (Thu)** | May 31 | Delight Polish | Add Sticker Book empty-state hint (§5.1) |
 | **Day 73 (Fri)** | June 1 | Expert Panel + Validation | Cycle 3 close-out review, score vs Day 58 (8.4 baseline), commit to `reviews/prune-cycle-3-review.md` |
+
+### Day 70 Result (May 29)
+
+- **LOC:** 11,866 → **11,817** (−49)
+- **Bytes:** 422,935 → **419,799** (−3,136)
+- **Hard rule** (≤11,866): ✅ cleared by 49 lines
+- **Stretch goal** (≤11,830): ✅ beaten by 13 lines
+- **What changed:** 49 redundant closing `// =====` fences removed from 3-line sandwich section headers. 58 fences remain — all legitimate multi-line block comment delimiters (correctly preserved).
+- **Verification:** `node --check` on extracted script clean. Live deploy at v=70 renders grid, palette (52 pieces), 50 buttons. `generateRandomTrack()` produces 40 occupied cells + train with 0 console errors.
+- **Schedule impact:** Targets B + C deferred to Day 3 (Code Cleanup). Margin is generous — Day 3 can pursue further code-health wins beyond the original budget.
 
 ---
 
