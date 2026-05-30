@@ -1633,7 +1633,6 @@ body.night-mode .shortcut-desc {
 }
 .shortcut-section:first-child { margin-top: 0; }
 
-
 /* PUZZLE MODE */
 #puzzle-overlay {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -2480,7 +2479,6 @@ body.night-mode #grid-viewport.sky-cycling #sky-sun {
     animation-duration: 180s;
   }
 }
-
 
 /* RAINBOW TRACK */
 @keyframes rainbow-shimmer {
@@ -3940,7 +3938,6 @@ function cycleBiome() {
   showToast(BIOME_ICONS[newBiome] + ' ' + BIOME_NAMES[newBiome] + ' biome!');
 }
 
-
 // ============================================================
 // WEATHER SYSTEM — Rain, Snow, Sunny
 function cycleWeather() {
@@ -4312,8 +4309,6 @@ let weatherParticles = [];
 const MAX_WEATHER_PARTICLES = 60;
 let weatherAmbientNodes = []; // active ambient sound oscillators/nodes
 let weatherAmbientGain = null;
-
-
 
 function getSceneryEmoji(type) {
   const overrides = BIOME_EMOJI_OVERRIDES[currentBiome];
@@ -5811,9 +5806,6 @@ function onGridDown(e) {
       return;
     }
   }
-
-
-
 
   if (piece && SCENERY_TYPES.includes(piece.type)) {
     dragInfo = {
@@ -8810,8 +8802,6 @@ function closeSaveModal() {
   document.getElementById('save-overlay').classList.remove('open');
 }
 
-
-
 // ============================================================
 // SCREENSHOT SYSTEM
 let screenshotCanvas = null;
@@ -9118,7 +9108,6 @@ function closeScreenshotModal() {
   document.getElementById('screenshot-overlay').classList.remove('open');
   screenshotCanvas = null;
 }
-
 
 function downloadScreenshot() {
   if (!screenshotCanvas) return;
@@ -9612,7 +9601,6 @@ function hapticRemove() {
   }
 }
 
-
 // ============================================================
 // KEYBOARD SHORTCUTS + QUICK SELECT
 let selectedTool = null;
@@ -9908,8 +9896,6 @@ function handleKeyDown(e) {
     return;
   }
 
-
-
   // M: toggle music
   if ((key === 'm' || key === 'M') && !e.ctrlKey && !e.metaKey) {
     toggleMusic();
@@ -9922,7 +9908,6 @@ function handleKeyDown(e) {
     else { showTutorial(); }
     return;
   }
-
 
   // P: screenshot
   if ((key === 'p' || key === 'P') && !e.ctrlKey && !e.metaKey) {
@@ -9983,8 +9968,6 @@ function openShortcutsModal() {
 function closeShortcutsModal() {
   document.getElementById('shortcuts-overlay').classList.remove('open');
 }
-
-
 
 // ============================================================
 // PUZZLE SYSTEM
@@ -10747,7 +10730,6 @@ function onTutorialOverlayClick(e) {
   }
 }
 
-
 // ============================================================
 // PASSENGER DELIVERY SYSTEM
 const PASSENGER_KEY = 'trainTracks_passengers';
@@ -11100,15 +11082,8 @@ function refreshTrainCargoBadge(anim) {
 }
 
 // ============================================================
-// ANIMAL PASSENGERS SYSTEM (Day 60)
-// Cows, sheep, ducks (and horses!) adjacent to stations can hop aboard a
-// passing train. They moo/baa/quack when they board, ride in a little badge
-// next to the locomotive, and hop off at the next station the train reaches.
-//
-// Reuses Day 25's station-pickup model and Day 30's animal SFX. Unlike
-// cargo, animal-passengers need ZERO setup — any animal scenery next to any
-// station is automatically boardable while a train is running. The whole
-// system is auto-on; nothing to enable, nothing to configure.
+// ANIMAL PASSENGERS SYSTEM (Day 60) — animals next to stations
+// auto-board passing trains and hop off at the next station.
 const ANIMAL_PASSENGERS = {
   'cow':       { emoji: '🐄', sfx: () => SFX.moo(),       label: 'Cow'   },
   'sheep':     { emoji: '🐑', sfx: () => SFX.sheep(),     label: 'Sheep' },
@@ -11462,13 +11437,8 @@ function renderStatsContent() {
 }
 
 // ============================================================
-// STICKER BOOK (Day 63 — Cycle 3 Build Day 5)
-// ~12 collectible stickers in a 4×3 grid. Earned ones light up
-// in full color; unearned are grayed silhouettes with a `?`.
-// Auto-checks after every stat increment + sound pack switch +
-// night-mode toggle. Persists in localStorage. No new mechanics
-// — reuses existing gameStats counters plus two tiny flags.
-// ============================================================
+// STICKER BOOK (Day 63) — 12 collectible milestone stickers,
+// auto-checked after stat increments / sound-pack / night toggle.
 const STICKER_STORAGE_KEY = 'trainTracks_stickers';
 
 let stickerState = {
@@ -11489,10 +11459,7 @@ const STICKERS = [
   { id: 'decorator',      emoji: '🎨', name: 'Decorator',      desc: 'Place 25 scenery items',   check: function () { return gameStats.sceneryPlaced >= 25; } },
   { id: 'night-owl',      emoji: '🌙', name: 'Night Owl',      desc: 'Drive at night',           check: function () { return stickerState.nightToggled; } },
   { id: 'dj',             emoji: '🎵', name: 'DJ',             desc: 'Try every sound pack',     check: function () { return stickerState.soundPacksTried.length >= 3; } },
-  { id: 'train-master',   emoji: '⭐', name: 'Train Master',   desc: 'Earn every other sticker', check: function () {
-      // Special: earned only after every other sticker is in the book
-      return STICKERS.every(function (s) { return s.id === 'train-master' || stickerState.earned[s.id]; });
-    } },
+  { id: 'train-master',   emoji: '⭐', name: 'Train Master',   desc: 'Earn every other sticker', check: function () { return STICKERS.every(function (s) { return s.id === 'train-master' || stickerState.earned[s.id]; }); } },
 ];
 
 function loadStickerState() {
