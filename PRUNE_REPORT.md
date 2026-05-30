@@ -208,9 +208,21 @@ These are *additions*, not cuts — Day 4 of Prune Week is where small kid-magic
 |---|---|---|---|
 | **Day 69 (Mon)** | May 28 | Fresh-Eyes Audit | _(this report)_ |
 | **Day 70 (Tue)** | May 29 | Simplify | **Target A executed (closing-fence dedup, −49 LOC).** Hard rule cleared, stretch goal beaten by 13 lines. Game verified live on deploy: 0 console errors, random-track generates 40 cells + train clean. |
-| **Day 71 (Wed)** | May 30 | Code Cleanup | Remaining Targets B + C (~12 LOC). Optional: look for further safe dead-code or duplicate-CSS to push deeper below stretch. |
+| **Day 71 (Wed)** | May 30 | Code Cleanup | **Targets B + C executed + bonus blank-run dedup, −33 LOC.** See Day 71 Result below. |
 | **Day 72 (Thu)** | May 31 | Delight Polish | Add Sticker Book empty-state hint (§5.1) |
 | **Day 73 (Fri)** | June 1 | Expert Panel + Validation | Cycle 3 close-out review, score vs Day 58 (8.4 baseline), commit to `reviews/prune-cycle-3-review.md` |
+
+### Day 71 Result (May 30)
+
+- **LOC:** 11,817 → **11,784** (−33)
+- **Bytes:** 419,799 → **418,970** (−829)
+- **Cycle 3 Prune cumulative:** −82 LOC (hard rule ≤11,866 cleared by 82, stretch ≤11,830 beaten by 46 — already past Cycle 2's −36 with 2 days to spare)
+- **What changed:**
+  - Target B: Day 60 `ANIMAL_PASSENGERS` 10-line preamble → 3-line summary; Day 63 `STICKER_STORAGE_KEY` 8-line preamble → 3-line summary (−15 LOC)
+  - Target C: `train-master` meta-check inlined (4 → 1 line, −3 LOC)
+  - Bonus: 18 redundant blank lines removed (5 known 3+-run locations plus all 2-blank runs across the file collapsed to a single blank — readability unchanged)
+- **Verification:** `node --check` on extracted script: clean. Live deploy at `?v=71`: 0 console errors, 52 palette pieces, 50 buttons, 12 stickers, 4 animal types (cow/sheep/duck-land/horse), `generateRandomTrack()` succeeds.
+- **Day 4 / Day 5 plan unchanged:** Delight polish (Sticker Book empty-state hint, §5.1) Thursday; Cycle 3 close-out review Friday. Margin is so generous Day 4 could absorb an extra small polish if one surfaces.
 
 ### Day 70 Result (May 29)
 
