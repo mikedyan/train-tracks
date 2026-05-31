@@ -209,8 +209,22 @@ These are *additions*, not cuts — Day 4 of Prune Week is where small kid-magic
 | **Day 69 (Mon)** | May 28 | Fresh-Eyes Audit | _(this report)_ |
 | **Day 70 (Tue)** | May 29 | Simplify | **Target A executed (closing-fence dedup, −49 LOC).** Hard rule cleared, stretch goal beaten by 13 lines. Game verified live on deploy: 0 console errors, random-track generates 40 cells + train clean. |
 | **Day 71 (Wed)** | May 30 | Code Cleanup | **Targets B + C executed + bonus blank-run dedup, −33 LOC.** See Day 71 Result below. |
-| **Day 72 (Thu)** | May 31 | Delight Polish | Add Sticker Book empty-state hint (§5.1) |
+| **Day 72 (Thu)** | May 31 | Delight Polish | **Sticker Book empty + complete hints shipped (+6 LOC).** See Day 72 Result below. |
 | **Day 73 (Fri)** | June 1 | Expert Panel + Validation | Cycle 3 close-out review, score vs Day 58 (8.4 baseline), commit to `reviews/prune-cycle-3-review.md` |
+
+### Day 72 Result (May 31)
+
+- **LOC:** 11,784 → **11,790** (+6)
+- **Bytes:** 418,970 → **419,335** (+365)
+- **Cycle 3 Prune cumulative:** **−76 LOC** (entry 11,866 → 11,790; hard rule cleared by 76, stretch ≤11,830 beaten by 40, Cycle 2's −36 beaten by 40)
+- **What changed:** Inside `renderStickerContent()`, two single-line conditionals append a hint after the progress bar: `earnedCount === 0` shows *“Play to earn your first sticker! 🚂”* in italic warm-brown; `earnedCount === total` shows *“🌟 Collection complete! 🌟”* in bold celebration orange. Mid-state (1–11 stickers) shows nothing, keeping the modal clean. 4 CSS rules (`.sticker-empty-hint`, night-mode variant, `.sticker-complete` variant, night-mode complete) total ~4 LOC.
+- **Verification (live `?v=72&fresh=1`):**
+  - 0/12 state: hint text `Play to earn your first sticker! 🚂`, class `sticker-empty-hint` ✅
+  - 1/12 state: no hint element rendered ✅
+  - 12/12 state: hint text `🌟 Collection complete! 🌟`, class `sticker-empty-hint sticker-complete` ✅
+  - 0 console errors, JS parse clean (`node --check` on extracted script)
+  - Screenshot evidence saved in build-reports
+- **Mandate respected:** No new UX surface (toolbar / settings drawer untouched); the hint lives inside the existing Sticker Book modal that was already on the chrome since Day 63. Net +6 LOC inside the comfortable Day-2/Day-3 saved-LOC margin (−82 LOC saved → −76 LOC after polish).
 
 ### Day 71 Result (May 30)
 
