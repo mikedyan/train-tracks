@@ -2054,6 +2054,10 @@ body.night-mode .sticker-progress-text { color: #B0BEC5; }
 .sticker-progress-bar { height: 8px; background: #E0E0E0; border-radius: 4px; overflow: hidden; margin-top: 6px; }
 body.night-mode .sticker-progress-bar { background: #455A64; }
 .sticker-progress-fill { height: 100%; background: linear-gradient(90deg, #FFB300, #FF6F00); border-radius: 4px; transition: width 0.4s ease; }
+.sticker-empty-hint { font-size: 12px; color: #8D6E63; margin-top: 8px; font-style: italic; }
+body.night-mode .sticker-empty-hint { color: #B0BEC5; }
+.sticker-empty-hint.sticker-complete { color: #FF6F00; font-style: normal; font-weight: 700; }
+body.night-mode .sticker-empty-hint.sticker-complete { color: #FFB300; }
 .sticker-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 @media (max-width: 480px) { .sticker-grid { grid-template-columns: repeat(3, 1fr); } }
 .sticker-cell {
@@ -11551,6 +11555,8 @@ function renderStickerContent() {
   let html = '<div class="sticker-progress">';
   html += '<span class="sticker-progress-text">' + earnedCount + ' / ' + total + ' stickers earned</span>';
   html += '<div class="sticker-progress-bar"><div class="sticker-progress-fill" style="width:' + pct + '%"></div></div>';
+  if (earnedCount === 0) html += '<div class="sticker-empty-hint">Play to earn your first sticker! 🚂</div>';
+  else if (earnedCount === total) html += '<div class="sticker-empty-hint sticker-complete">🌟 Collection complete! 🌟</div>';
   html += '</div>';
   html += '<div class="sticker-grid">';
   for (const s of STICKERS) {
