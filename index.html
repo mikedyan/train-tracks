@@ -2577,6 +2577,47 @@ body.night-mode #grid-viewport.sky-cycling #sky-sun {
   }
   /* Keep functional transitions for modals/UI */
 }
+
+/* Day 74 (Cycle 4 Build Day 1) — Ambient Critters. Butterflies + bees flit
+   above scenery cells while a train is playing. Pure CSS wander animation;
+   JS only picks anchors + applies a class. Auto-cleans on stopPlay(). */
+.ambient-critter {
+  position: absolute;
+  font-size: 16px;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+  z-index: 42;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
+  will-change: transform;
+}
+.ambient-critter.crit-a { animation: crit-wander-a var(--crit-dur, 5s) ease-in-out infinite; animation-delay: var(--crit-delay, 0s); }
+.ambient-critter.crit-b { animation: crit-wander-b var(--crit-dur, 6s) ease-in-out infinite; animation-delay: var(--crit-delay, 0s); }
+.ambient-critter.crit-c { animation: crit-wander-c var(--crit-dur, 7s) ease-in-out infinite; animation-delay: var(--crit-delay, 0s); }
+@keyframes crit-wander-a {
+  0%   { transform: translate(0, 0) rotate(-4deg); }
+  25%  { transform: translate(18px, -10px) rotate(6deg); }
+  50%  { transform: translate(2px, -22px) rotate(-2deg); }
+  75%  { transform: translate(-20px, -8px) rotate(5deg); }
+  100% { transform: translate(0, 0) rotate(-4deg); }
+}
+@keyframes crit-wander-b {
+  0%   { transform: translate(0, 0); }
+  20%  { transform: translate(14px, 6px); }
+  40%  { transform: translate(10px, -8px); }
+  60%  { transform: translate(-10px, -4px); }
+  80%  { transform: translate(-6px, 7px); }
+  100% { transform: translate(0, 0); }
+}
+@keyframes crit-wander-c {
+  0%   { transform: translate(0, 0) rotate(0deg); }
+  50%  { transform: translate(24px, -14px) rotate(10deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+.animations-paused .ambient-critter { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .ambient-critter { animation: none; }
+}
 </style>
 </head>
 <body>
@@ -3886,6 +3927,51 @@ function stopSkyCycle() {
 function updateSkySunEmoji() {
   const sun = document.getElementById('sky-sun');
   if (sun) sun.textContent = isNightMode() ? '🌙' : '☀️';
+}
+
+// Day 74 (Cycle 4 Build Day 1) — Ambient Critters. Spawn small butterflies/bees
+// above nature scenery (flower/tree/sheep/cow/horse/people/house) while playing.
+// Pure visual; auto-cleans on stopPlay. Respects prefers-reduced-motion.
+const CRITTER_ANCHOR_TYPES = ['flower', 'tree', 'sheep', 'cow', 'horse', 'people', 'house', 'duck-land'];
+function spawnAmbientCritters() {
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const container = document.getElementById('grid-container');
+  if (!container) return;
+  const anchors = [];
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const p = state.grid[r] && state.grid[r][c];
+      if (p && CRITTER_ANCHOR_TYPES.includes(p.type)) anchors.push({ row: r, col: c, type: p.type });
+    }
+  }
+  if (anchors.length === 0) return;
+  for (let i = anchors.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = anchors[i]; anchors[i] = anchors[j]; anchors[j] = tmp;
+  }
+  const max = Math.min(6, anchors.length);
+  const variants = ['a', 'b', 'c'];
+  for (let i = 0; i < max; i++) {
+    const a = anchors[i];
+    // Bee for tree/house (hive vibes); butterfly for everything else.
+    const emoji = (a.type === 'tree' || a.type === 'house') ? '🐝' : '🦋';
+    const variant = variants[i % variants.length];
+    const cx = a.col * (cellSize + 1) + cellSize * 0.5;
+    const cy = a.row * (cellSize + 1) + cellSize * 0.3;
+    const jitterX = (Math.random() - 0.5) * cellSize * 0.4;
+    const jitterY = (Math.random() - 0.5) * cellSize * 0.2;
+    const el = document.createElement('div');
+    el.className = 'ambient-critter crit-' + variant;
+    el.textContent = emoji;
+    el.style.left = (cx + jitterX - 8) + 'px';
+    el.style.top = (cy + jitterY - 8) + 'px';
+    el.style.setProperty('--crit-dur', (4 + Math.random() * 3).toFixed(2) + 's');
+    el.style.setProperty('--crit-delay', (-Math.random() * 4).toFixed(2) + 's');
+    container.appendChild(el);
+  }
+}
+function cleanupAmbientCritters() {
+  document.querySelectorAll('.ambient-critter').forEach(el => el.remove());
 }
 
 function restoreNightMode() {
@@ -7065,6 +7151,9 @@ function startPlay() {
   // Day 59: kick off Time-of-Day sky cycle (sun/moon arc + tint).
   startSkyCycle();
 
+  // Day 74: spawn ambient butterflies/bees above scenery (auto-on).
+  spawnAmbientCritters();
+
   // Update music tempo for play state
   updateMusicTempo();
 
@@ -8083,6 +8172,9 @@ function stopPlay() {
 
   // Day 59: stop the Time-of-Day sky cycle.
   stopSkyCycle();
+
+  // Day 74: remove ambient critters.
+  cleanupAmbientCritters();
 
   // Update music tempo for idle state
   updateMusicTempo();
