@@ -1,14 +1,14 @@
 {
   "project": "Train Tracks",
-  "currentDay": 73,
+  "currentDay": 74,
   "status": "active",
-  "weekType": "prune",
-  "weekDay": 5,
-  "cycleNumber": 3,
-  "cycleDay": 15,
-  "lastRun": "2026-06-01T09:30:00-07:00",
-  "lastRunDate": "2026-06-01",
-  "cycleClosed": true,
+  "weekType": "build",
+  "weekDay": 1,
+  "cycleNumber": 4,
+  "cycleDay": 1,
+  "lastRun": "2026-06-02T09:30:00-07:00",
+  "lastRunDate": "2026-06-02",
+  "cycleClosed": false,
   "cycle3Review": "reviews/prune-cycle-3-review.md",
   "completedDays": [
     1,
@@ -83,12 +83,20 @@
     70,
     71,
     72,
-    73
+    73,
+    74
   ],
-  "nextDay": 74,
-  "phase": "90-Day Cycle (Apr 18 - Jul 16, 2026)",
-  "roadmap": "roadmaps/cycle-3-build.md",
-  "review": "reviews/prune-cycle-2-review.md",
+  "nextDay": 75,
+  "phase": "Cycle 4 (Build Week, Days 74-78)",
+  "roadmap": "roadmaps/cycle-4-build.md",
+  "review": "reviews/prune-cycle-3-review.md",
+  "cycle4BuildPlan": [
+    "Day 74 Mon: 🦋 Ambient Critters (butterflies + bees over scenery) — shipped",
+    "Day 75 Tue: 🚦 Station Arrival Signal (green/yellow/red countdown light)",
+    "Day 76 Wed: 🎉 Confetti Cannon (every 5th delivery = party)",
+    "Day 77 Thu: 🌧️ Puddle Splashes (rain creates puddles, trains splash)",
+    "Day 78 Fri: 🛤️ Train Trail (color-matched fading trail behind each train)"
+  ],
   "cycle3BuildPlan": [
     "Day 59 Mon: 🌅 Time-of-Day Sky during play (shipped)",
     "Day 60 Tue: 🐮🐑 Animal Passengers (cows/sheep board trains)",
@@ -533,6 +541,12 @@
       "day": 73,
       "date": "2026-06-01",
       "feature": "Prune Week 3 Day 5: Expert Panel + Validation — Cycle 3 close-out and 90-day-plan close-out. Live-tested ?v=73&fresh=1 after localStorage.clear(): tutorial auto-opens, 40 locked palette items (progression regression from Cycle 2 fixed), generateRandomTrack produces 37-cell track + 1 train, Play→HONK→Stop clean, Puzzles modal shows 10 cards, Share modal shows Copy Link + Replay Link + Save Image, Settings shows 8 tiles incl. Sticker Book, 0 console errors across the 9-action sequence. Cycle 3 Prune final tally: 11,866→11,790 LOC (-76), 422,935→419,531 bytes (-3,404 — first net-negative bytes in any cycle), 325 functions flat, 0 open bugs. Score: 8.6/10 (vs Cycle 2: 8.4, Cycle 1: 8.3 — largest single-cycle gain). Cycles compared: Build features 15 shipped, Harden bugs found 14→4→0 (factory got better at not making them), Prune LOC Δ +55→-36→-76 (factory got better at cutting them). 90-day plan complete. reviews/prune-cycle-3-review.md written.",
+      "status": "complete"
+    },
+    {
+      "day": 74,
+      "date": "2026-06-02",
+      "feature": "Cycle 4 Build Day 1: 🦋 Ambient Critters — small butterflies + bees flit above nature scenery (flower/tree/sheep/cow/horse/people/house/duck-land) while a train is playing. Pure CSS wander animation with 3 variant keyframes (crit-wander-a/b/c) and randomized duration (4-7s) + negative delay so each critter has its own phase. JS picks up to 6 random scenery anchors via Fisher-Yates shuffle, positions critters above each anchor with small jitter (0.4*cell horizontally, 0.2*cell vertically), spawns them in startPlay() right after the sky cycle, and tears them down via cleanupAmbientCritters() in stopPlay(). Bee 🐝 over tree/house anchors (hive vibes); butterfly 🦋 over everything else. Auto-on (zero new toolbar surface). Respects prefers-reduced-motion (animation: none). animations-paused class also pauses critters for consistency. Verified live on ?v=74&fresh=1: 35 scenery anchors on first random track, 0 critters before play, 6 critters during play (5🦋 + 1🐝), all with computed animationName matching crit-wander-{a,b,c} and unique durations, 0 critters after stopPlay. Screenshot confirms blue butterflies on cow + sunflowers + horse, bee on house. 11,790 → 11,882 LOC (+92), 419,531 → 423,635 bytes (+4,104). 0 bugs, 0 console errors, JS parse clean.",
       "status": "complete"
     }
   ],
