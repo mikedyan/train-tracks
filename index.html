@@ -2618,6 +2618,48 @@ body.night-mode #grid-viewport.sky-cycling #sky-sun {
 @media (prefers-reduced-motion: reduce) {
   .ambient-critter { animation: none; }
 }
+
+/* Day 75 (Cycle 4 Build Day 2) — Station Arrival Signal. Tiny 3-dot
+   stoplight in the upper-right corner of every station during play. Green
+   when no train is incoming, yellow when one is ~2 cells out along the
+   connected rail, red when one is at or 1 cell from arrival. Auto-on,
+   no toolbar surface. JS only flips data-state; the dots are pure CSS. */
+.station-signal {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 2px 1.5px;
+  border-radius: 3px;
+  background: rgba(40, 30, 20, 0.78);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), inset 0 0 0 0.5px rgba(255, 255, 255, 0.15);
+  z-index: 30;
+  pointer-events: none;
+}
+.station-signal .signal-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #2a2a2a;
+  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.08);
+  transition: background 0.18s ease, box-shadow 0.18s ease;
+}
+.station-signal[data-state="red"]    .signal-dot.signal-red    { background: #ff4136; box-shadow: 0 0 4px #ff4136, inset 0 0 0 0.5px rgba(255, 255, 255, 0.4); }
+.station-signal[data-state="yellow"] .signal-dot.signal-yellow { background: #ffd31a; box-shadow: 0 0 4px #ffd31a, inset 0 0 0 0.5px rgba(255, 255, 255, 0.4); }
+.station-signal[data-state="green"]  .signal-dot.signal-green  { background: #3ec850; box-shadow: 0 0 4px #3ec850, inset 0 0 0 0.5px rgba(255, 255, 255, 0.4); }
+.station-signal[data-state="red"]    .signal-dot.signal-red    { animation: signal-pulse 0.6s ease-in-out infinite; }
+.station-signal[data-state="yellow"] .signal-dot.signal-yellow { animation: signal-pulse 1.2s ease-in-out infinite; }
+@keyframes signal-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+body.high-contrast .station-signal { background: #000; box-shadow: 0 0 0 1px #fff; }
+body.high-contrast .station-signal .signal-dot { width: 5px; height: 5px; }
+@media (prefers-reduced-motion: reduce) {
+  .station-signal .signal-dot { animation: none !important; transition: none; }
+}
 </style>
 </head>
 <body>
@@ -3972,6 +4014,80 @@ function spawnAmbientCritters() {
 }
 function cleanupAmbientCritters() {
   document.querySelectorAll('.ambient-critter').forEach(el => el.remove());
+}
+
+// Day 75 (Cycle 4 Build Day 2) — Station Arrival Signal.
+// Each station gets a tiny 3-dot stoplight that flips green → yellow → red
+// as a train approaches along the connected rail. Pure visual; auto-cleans
+// on stopPlay(). Throttled to ~8 Hz so BFS cost stays trivial even at 60 fps.
+const stationSignalState = { els: [], lastUpdate: 0 };
+function setupStationSignals() {
+  cleanupStationSignals();
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const p = state.grid[r] && state.grid[r][c];
+      if (!p || p.type !== 'station') continue;
+      const cell = getCellEl(r, c);
+      if (!cell) continue;
+      const el = document.createElement('div');
+      el.className = 'station-signal';
+      el.dataset.state = 'green';
+      el.innerHTML = '<span class="signal-dot signal-red"></span>' +
+                     '<span class="signal-dot signal-yellow"></span>' +
+                     '<span class="signal-dot signal-green"></span>';
+      cell.appendChild(el);
+      stationSignalState.els.push({ row: r, col: c, el: el });
+    }
+  }
+}
+function cleanupStationSignals() {
+  document.querySelectorAll('.station-signal').forEach(el => el.remove());
+  stationSignalState.els = [];
+  stationSignalState.lastUpdate = 0;
+}
+// BFS from a station along connected rail. Returns the shortest rail distance
+// to any active train, or Infinity if none within maxDepth. A train sitting
+// ON the station returns 0 (→ red).
+function distFromStationToNearestTrain(stationRow, stationCol, maxDepth) {
+  if (!animStates || animStates.length === 0) return Infinity;
+  const trainCells = new Set();
+  for (const a of animStates) {
+    if (a.crashing || a.finished) continue;
+    trainCells.add(a.row + ',' + a.col);
+  }
+  if (trainCells.size === 0) return Infinity;
+  const visited = new Set();
+  const queue = [{ row: stationRow, col: stationCol, dist: 0 }];
+  visited.add(stationRow + ',' + stationCol);
+  let head = 0;
+  while (head < queue.length) {
+    const cur = queue[head++];
+    if (trainCells.has(cur.row + ',' + cur.col)) return cur.dist;
+    if (cur.dist >= maxDepth) continue;
+    const piece = state.grid[cur.row] && state.grid[cur.row][cur.col];
+    if (!piece || SCENERY_TYPES.includes(piece.type)) continue;
+    const conns = getConnections(piece.type, piece.rotation);
+    for (const dir of conns) {
+      if (!neighborConnected(cur.row, cur.col, dir)) continue;
+      const nb = getNeighbor(cur.row, cur.col, dir);
+      if (!nb) continue;
+      const key = nb.row + ',' + nb.col;
+      if (visited.has(key)) continue;
+      visited.add(key);
+      queue.push({ row: nb.row, col: nb.col, dist: cur.dist + 1 });
+    }
+  }
+  return Infinity;
+}
+function updateStationSignals(now) {
+  if (!stationSignalState.els.length) return;
+  if (now - stationSignalState.lastUpdate < 120) return;
+  stationSignalState.lastUpdate = now;
+  for (const s of stationSignalState.els) {
+    const d = distFromStationToNearestTrain(s.row, s.col, 3);
+    const newState = d <= 1 ? 'red' : (d <= 2 ? 'yellow' : 'green');
+    if (s.el.dataset.state !== newState) s.el.dataset.state = newState;
+  }
 }
 
 function restoreNightMode() {
@@ -7154,6 +7270,9 @@ function startPlay() {
   // Day 74: spawn ambient butterflies/bees above scenery (auto-on).
   spawnAmbientCritters();
 
+  // Day 75: stoplight signal on every station (green/yellow/red). Auto-on.
+  setupStationSignals();
+
   // Update music tempo for play state
   updateMusicTempo();
 
@@ -7337,6 +7456,9 @@ function animateFrame(timestamp) {
 
   // Update railroad crossing gates
   updateCrossingGates();
+
+  // Day 75: update station arrival signal lights (throttled internally).
+  updateStationSignals(timestamp);
 
   // Collision detection: check if any two active trains share the same cell
   for (let i = 0; i < animStates.length; i++) {
@@ -8175,6 +8297,9 @@ function stopPlay() {
 
   // Day 74: remove ambient critters.
   cleanupAmbientCritters();
+
+  // Day 75: remove station arrival signals.
+  cleanupStationSignals();
 
   // Update music tempo for idle state
   updateMusicTempo();
