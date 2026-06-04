@@ -836,6 +836,43 @@ body.high-contrast .cell.grid-focus { outline: 4px solid #FFFF00; outline-offset
   animation: confetti-burst 1.2s ease-out forwards;
 }
 
+/* Day 76: Confetti Cannon — streamers + party banner */
+@keyframes confetti-streamer {
+  0%   { opacity: 1; transform: translate(0, 0) rotate(0deg); }
+  100% { opacity: 0; transform: translate(var(--streamer-dx, 0px), var(--streamer-dy, 120px)) rotate(var(--streamer-rot, 720deg)); }
+}
+.confetti-streamer {
+  position: absolute;
+  width: 7px;
+  height: 13px;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 61;
+  animation: confetti-streamer 1.6s ease-out forwards;
+}
+@keyframes party-banner {
+  0%   { opacity: 0; transform: translate(-50%, 28px) scale(0.6); }
+  18%  { opacity: 1; transform: translate(-50%, 0)   scale(1.18); }
+  35%  { transform: translate(-50%, 0) scale(1); }
+  80%  { opacity: 1; transform: translate(-50%, -4px) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -32px) scale(0.92); }
+}
+.party-banner {
+  position: absolute;
+  left: 50%;
+  top: 14%;
+  font-size: 40px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #fff;
+  text-shadow: 0 4px 0 #ff5252, 0 6px 18px rgba(0,0,0,0.35);
+  pointer-events: none;
+  z-index: 65;
+  animation: party-banner 1.6s ease-out forwards;
+  white-space: nowrap;
+}
+body.high-contrast .party-banner { color: #fff; text-shadow: 0 4px 0 #000, 0 0 12px #000; }
+
 /* CRASH ANIMATIONS */
 @keyframes crash-star-burst {
   0% { opacity: 1; transform: translate(0, 0) scale(1) rotate(0deg); }
@@ -2531,7 +2568,7 @@ body.night-mode #grid-viewport.sky-cycling #sky-sun {
 
 /* Reduced Motion Preference */
 @media (prefers-reduced-motion: reduce) {
-  .smoke-particle, .chimney-smoke, .confetti-particle {
+  .smoke-particle, .chimney-smoke, .confetti-particle, .confetti-streamer, .party-banner {
     animation: none !important;
     display: none !important;
   }
@@ -11108,6 +11145,7 @@ function handleTrainAtStation(anim, row, col) {
 
     // Mini confetti at station
     triggerMiniConfetti(row, col);
+    recordDelivery(row, col);
     return; // Don't board and deliver in same visit
   }
 
@@ -11158,6 +11196,81 @@ function triggerMiniConfetti(row, col) {
     p.style.top = cy + 'px';
     container.appendChild(p);
     setTimeout(() => { if (p.parentNode) p.remove(); }, 1300);
+  }
+}
+
+// ============================================================
+// Day 76: CONFETTI CANNON — every 5th delivery throws a party
+let deliveryStreak = 0;
+const CONFETTI_CANNON_EVERY = 5;
+function recordDelivery(row, col) {
+  deliveryStreak++;
+  if (deliveryStreak % CONFETTI_CANNON_EVERY === 0) {
+    triggerConfettiCannon(row, col);
+  }
+}
+function resetDeliveryStreak() { deliveryStreak = 0; }
+function triggerConfettiCannon(row, col) {
+  // Sound + toast fire even with reduced motion so kids still feel the reward
+  SFX.celebrate();
+  showToast('🎉 PARTY! ' + deliveryStreak + ' deliveries!');
+  if (prefersReducedMotion()) return;
+
+  const grid = document.getElementById('grid');
+  const container = document.getElementById('grid-container');
+  if (!grid || !container) return;
+  const offX = grid.offsetLeft;
+  const offY = grid.offsetTop;
+  const cx = col * (cellSize + 1) + cellSize / 2 + offX;
+  const cy = row * (cellSize + 1) + cellSize / 2 + offY;
+
+  // Big party banner near the top of the play area
+  const banner = document.createElement('div');
+  banner.className = 'party-banner';
+  banner.textContent = '🎉 PARTY! 🎉';
+  container.appendChild(banner);
+  setTimeout(() => { if (banner.parentNode) banner.remove(); }, 1700);
+
+  const colors = ['#FF5252', '#FFAB40', '#FFEB3B', '#69F0AE', '#40C4FF', '#E040FB', '#FF4081', '#7C4DFF', '#00E5FF'];
+
+  // Three sequential bursts of confetti + streamers for a fuller cannon feel
+  for (let b = 0; b < 3; b++) {
+    setTimeout(() => {
+      // Round confetti (bigger + more than mini)
+      const numP = 18;
+      for (let i = 0; i < numP; i++) {
+        const p = document.createElement('div');
+        p.className = 'confetti-particle';
+        const size = 6 + Math.random() * 5;
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
+        p.style.background = colors[Math.floor(Math.random() * colors.length)];
+        const angle = (Math.PI * 2 * i) / numP + (Math.random() - 0.5) * 0.6;
+        const dist = 70 + Math.random() * 90;
+        p.style.setProperty('--confetti-dx', (Math.cos(angle) * dist) + 'px');
+        p.style.setProperty('--confetti-dy', (Math.sin(angle) * dist - 24) + 'px');
+        p.style.left = cx + 'px';
+        p.style.top = cy + 'px';
+        container.appendChild(p);
+        setTimeout(() => { if (p.parentNode) p.remove(); }, 1300);
+      }
+      // Streamers spin outward and downward (gravity bias)
+      const numS = 8;
+      for (let i = 0; i < numS; i++) {
+        const s = document.createElement('div');
+        s.className = 'confetti-streamer';
+        s.style.background = colors[Math.floor(Math.random() * colors.length)];
+        const angle = (Math.PI * 2 * i) / numS + (Math.random() - 0.5) * 0.5;
+        const dist = 90 + Math.random() * 110;
+        s.style.setProperty('--streamer-dx', (Math.cos(angle) * dist) + 'px');
+        s.style.setProperty('--streamer-dy', (Math.sin(angle) * dist + 70) + 'px');
+        s.style.setProperty('--streamer-rot', (480 + Math.random() * 540) + 'deg');
+        s.style.left = cx + 'px';
+        s.style.top = cy + 'px';
+        container.appendChild(s);
+        setTimeout(() => { if (s.parentNode) s.remove(); }, 1700);
+      }
+    }, b * 120);
   }
 }
 
@@ -11267,6 +11380,7 @@ function handleTrainAtCargoStation(anim, row, col) {
     SFX.passengerDeliver();
     showToast(cfg.emoji + ' ' + cfg.label + ' delivered!');
     triggerMiniConfetti(row, col);
+    recordDelivery(row, col);
     refreshTrainCargoBadge(anim);
     updateCargoHUD();
     return true;
@@ -11394,6 +11508,7 @@ function handleTrainAtAnimalStation(anim, row, col) {
     if (cfg) cfg.sfx();
     triggerAnimalReaction(row, col, onboard.type);
     triggerMiniConfetti(row, col);
+    recordDelivery(row, col);
     showToast(cfg.emoji + ' ' + cfg.label + ' hopped off!');
     refreshTrainAnimalBadge(anim);
     return true;
