@@ -2697,6 +2697,92 @@ body.high-contrast .station-signal .signal-dot { width: 5px; height: 5px; }
 @media (prefers-reduced-motion: reduce) {
   .station-signal .signal-dot { animation: none !important; transition: none; }
 }
+
+/* Day 77: Puddle Splashes — small rainwater puddles on horizontal track
+   (E↔W passable pieces) during rain. Trains crossing them kick up a
+   four-droplet splash. Auto-on while playing in rain, vanishes ~5s after
+   the rain stops. Anchored bottom-center of the cell, between the track
+   bed and the locomotive z-layer. */
+.cell .puddle {
+  position: absolute;
+  left: 50%;
+  bottom: 18%;
+  width: 56%;
+  height: 14%;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at 35% 30%,
+    rgba(180, 220, 255, 0.85) 0%,
+    rgba(80, 140, 200, 0.7) 45%,
+    rgba(40, 90, 160, 0.55) 100%);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25), inset 0 0 6px rgba(255, 255, 255, 0.18);
+  pointer-events: none;
+  z-index: 4;
+  opacity: 0;
+  animation: puddle-form 0.45s ease-out forwards, puddle-shimmer 2.4s ease-in-out 0.45s infinite;
+}
+.cell .puddle.fading { animation: puddle-fade 0.6s ease-in forwards; }
+@keyframes puddle-form {
+  0%   { opacity: 0; transform: translateX(-50%) scaleY(0.2) scaleX(0.4); }
+  100% { opacity: 0.85; transform: translateX(-50%) scaleY(1) scaleX(1); }
+}
+@keyframes puddle-shimmer {
+  0%, 100% { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25), inset 0 0 6px rgba(255, 255, 255, 0.18); }
+  50%      { box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28), inset 0 0 9px rgba(255, 255, 255, 0.3); }
+}
+@keyframes puddle-fade {
+  0%   { opacity: 0.85; }
+  100% { opacity: 0; transform: translateX(-50%) scaleY(0.4); }
+}
+.puddle-droplet {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%,
+    rgba(220, 240, 255, 0.95),
+    rgba(110, 170, 230, 0.7) 70%,
+    rgba(60, 110, 180, 0.4));
+  box-shadow: 0 0 3px rgba(120, 180, 240, 0.6);
+  pointer-events: none;
+  z-index: 25;
+  --drop-dx: 0px;
+  --drop-dy: -22px;
+  animation: puddle-droplet-fly var(--drop-dur, 0.55s) ease-out forwards;
+}
+@keyframes puddle-droplet-fly {
+  0%   { transform: translate(-50%, -50%) scale(0.6); opacity: 0; }
+  20%  { opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--drop-dx)), calc(-50% + var(--drop-dy))) scale(1); opacity: 0; }
+}
+body.night-mode .cell .puddle {
+  background: radial-gradient(ellipse at 35% 30%,
+    rgba(150, 190, 230, 0.75) 0%,
+    rgba(60, 110, 170, 0.65) 45%,
+    rgba(25, 60, 120, 0.55) 100%);
+}
+body.night-mode .puddle-droplet {
+  background: radial-gradient(circle at 35% 30%,
+    rgba(200, 230, 255, 0.9),
+    rgba(90, 150, 220, 0.7) 70%,
+    rgba(40, 90, 160, 0.4));
+}
+body.high-contrast .cell .puddle {
+  background: #08f;
+  box-shadow: 0 0 0 1px #fff;
+}
+body.high-contrast .puddle-droplet {
+  background: #08f;
+  box-shadow: 0 0 0 1px #fff;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cell .puddle,
+  .cell .puddle.fading,
+  .puddle-droplet {
+    animation: none !important;
+  }
+  .cell .puddle { opacity: 0.7; }
+}
 </style>
 </head>
 <body>
@@ -3701,6 +3787,50 @@ const SFX = {
       osc2.stop(startT + 0.35);
     });
   },
+  splash() {
+    // Day 77: "kssh" splash — short high-passed noise burst with a quick
+    // descending whistle so it reads as water-y, not just static. Layered
+    // softly so kids hear it even with the rain ambient bed underneath.
+    if (!soundEnabled) return;
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    const mg = getMasterGain();
+    // Noise burst (the "kssh")
+    const bufDur = 0.18;
+    const bufSize = Math.floor(ctx.sampleRate * bufDur);
+    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const hpf = ctx.createBiquadFilter();
+    hpf.type = 'highpass';
+    hpf.frequency.value = 1800;
+    const lpf = ctx.createBiquadFilter();
+    lpf.type = 'lowpass';
+    lpf.frequency.value = 6200;
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.085, ctx.currentTime);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + bufDur);
+    src.connect(hpf);
+    hpf.connect(lpf);
+    lpf.connect(noiseGain);
+    noiseGain.connect(mg);
+    src.start(ctx.currentTime);
+    src.stop(ctx.currentTime + bufDur);
+    // Wet drop pitch sweep — a tiny downward chirp for water character
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1400, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(420, ctx.currentTime + 0.12);
+    gain.gain.setValueAtTime(0.05, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.14);
+    osc.connect(gain);
+    gain.connect(mg);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.15);
+  },
   sheep() {
     // Sheep baa — nasal bleat with pitch wobble
     if (!soundEnabled) return;
@@ -4127,6 +4257,108 @@ function updateStationSignals(now) {
   }
 }
 
+// =============================================================
+// Day 77: 🌧️ PUDDLE SPLASHES
+// Small rainwater puddles randomly form on horizontal track tiles during
+// rain. When a train rolls into a puddled cell, a 4-droplet splash and a
+// "kssh" SFX fire. Cleans up 5s after rain stops (or immediately on Stop).
+// Auto-on — no new toolbar surface (LESSON-DAY46-F, LESSON-DAY59-A).
+// =============================================================
+function isHorizontalTrackCell(row, col) {
+  const piece = state.grid[row] && state.grid[row][col];
+  if (!piece || SCENERY_TYPES.includes(piece.type)) return false;
+  const conns = getConnections(piece.type, piece.rotation);
+  // E↔W passable pieces: straight rotated 90/270, crossover, bridge,
+  // tjunction rotated to expose both E and W, station rotated horizontal.
+  return conns.includes('E') && conns.includes('W');
+}
+function getHorizontalTrackCells() {
+  const out = [];
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if (isHorizontalTrackCell(r, c)) out.push({ row: r, col: c });
+    }
+  }
+  return out;
+}
+function spawnPuddle(row, col) {
+  const key = row + ',' + col;
+  if (puddleEls.has(key)) return;
+  const cell = getCellEl(row, col);
+  if (!cell) return;
+  const el = document.createElement('div');
+  el.className = 'puddle';
+  cell.appendChild(el);
+  puddleEls.set(key, el);
+}
+function maybeSpawnPuddle() {
+  if (currentWeather !== 'rain' || !state.playing) return;
+  if (puddleEls.size >= MAX_PUDDLES) return;
+  if (Math.random() > PUDDLE_SPAWN_CHANCE) return;
+  const candidates = getHorizontalTrackCells().filter(
+    c => !puddleEls.has(c.row + ',' + c.col)
+  );
+  if (candidates.length === 0) return;
+  const pick = candidates[Math.floor(Math.random() * candidates.length)];
+  spawnPuddle(pick.row, pick.col);
+}
+function startPuddleSystem() {
+  // Cancel any pending fadeout — rain is back on (or first start).
+  if (puddleFadeoutTimeout) { clearTimeout(puddleFadeoutTimeout); puddleFadeoutTimeout = null; }
+  if (puddleSpawnInterval) return;
+  // Eager first puddle so kids see one quickly when starting a rainy play.
+  setTimeout(maybeSpawnPuddle, 600);
+  puddleSpawnInterval = setInterval(maybeSpawnPuddle, PUDDLE_SPAWN_RATE_MS);
+}
+function stopPuddleSystem(delayMs) {
+  if (puddleSpawnInterval) { clearInterval(puddleSpawnInterval); puddleSpawnInterval = null; }
+  if (puddleFadeoutTimeout) { clearTimeout(puddleFadeoutTimeout); puddleFadeoutTimeout = null; }
+  const wait = (typeof delayMs === 'number') ? delayMs : 0;
+  if (wait <= 0) {
+    clearAllPuddles();
+    return;
+  }
+  // Mark existing puddles as fading so the CSS handles the visual drain,
+  // then hard-remove after the fade window so we don't leak DOM nodes if
+  // the user re-enables rain before this resolves.
+  puddleEls.forEach(el => el.classList.add('fading'));
+  puddleFadeoutTimeout = setTimeout(() => {
+    clearAllPuddles();
+    puddleFadeoutTimeout = null;
+  }, wait);
+}
+function clearAllPuddles() {
+  puddleEls.forEach(el => { if (el.parentNode) el.remove(); });
+  puddleEls.clear();
+}
+function triggerPuddleSplash(row, col) {
+  const key = row + ',' + col;
+  if (!puddleEls.has(key)) return;
+  SFX.splash();
+  if (prefersReducedMotion()) return;
+  const cell = getCellEl(row, col);
+  if (!cell) return;
+  // Splash droplets fly from the puddle center upward/outward.
+  // The cell's coordinate system: puddle sits at left:50%, bottom:18% —
+  // we anchor each droplet at the same spot with a starting transform.
+  const dropCount = 4;
+  for (let i = 0; i < dropCount; i++) {
+    const drop = document.createElement('div');
+    drop.className = 'puddle-droplet';
+    // Spread droplets across an upward fan: dx -18→+18, dy -16→-26.
+    const dx = -18 + (i / (dropCount - 1)) * 36 + (Math.random() * 6 - 3);
+    const dy = -16 - Math.random() * 14;
+    const dur = 0.45 + Math.random() * 0.25;
+    drop.style.setProperty('--drop-dx', dx + 'px');
+    drop.style.setProperty('--drop-dy', dy + 'px');
+    drop.style.setProperty('--drop-dur', dur + 's');
+    drop.style.left = '50%';
+    drop.style.bottom = '22%';
+    cell.appendChild(drop);
+    setTimeout(() => { if (drop.parentNode) drop.remove(); }, dur * 1000 + 50);
+  }
+}
+
 function restoreNightMode() {
   try {
     const val = localStorage.getItem(NIGHT_MODE_KEY);
@@ -4203,6 +4435,7 @@ function applyWeather(weather) {
   // Stop old weather systems
   stopWeatherParticles();
   stopWeatherAmbient();
+  const prevWeather = currentWeather;
   currentWeather = weather;
   // Update button
   const btn = document.getElementById('btn-weather');
@@ -4211,6 +4444,15 @@ function applyWeather(weather) {
   if (weather !== 'sunny') {
     startWeatherParticles();
     startWeatherAmbient();
+  }
+  // Day 77: Puddle Splashes follow the rain. Mid-play rain-on starts the
+  // system; rain-off drains existing puddles after PUDDLE_FADEOUT_DELAY_MS.
+  if (state.playing) {
+    if (weather === 'rain' && prevWeather !== 'rain') {
+      startPuddleSystem();
+    } else if (weather !== 'rain' && prevWeather === 'rain') {
+      stopPuddleSystem(PUDDLE_FADEOUT_DELAY_MS);
+    }
   }
 }
 
@@ -4552,6 +4794,19 @@ let weatherParticles = [];
 const MAX_WEATHER_PARTICLES = 60;
 let weatherAmbientNodes = []; // active ambient sound oscillators/nodes
 let weatherAmbientGain = null;
+// Day 77: Puddle Splashes — module state for the rain-only puddle pool.
+// `puddleEls` is keyed by 'row,col'; values are the .puddle DOM elements
+// currently anchored to that cell. `puddleSpawnInterval` ticks every
+// PUDDLE_SPAWN_RATE_MS to maybe add one new puddle (capped at MAX_PUDDLES).
+// `puddleFadeoutTimeout` schedules a 5s delayed cleanup when rain stops
+// mid-play so the puddles drain naturally instead of vanishing instantly.
+const MAX_PUDDLES = 6;
+const PUDDLE_SPAWN_RATE_MS = 2200;
+const PUDDLE_SPAWN_CHANCE = 0.55; // each tick: only 55% chance to actually add
+const PUDDLE_FADEOUT_DELAY_MS = 5000;
+let puddleEls = new Map();
+let puddleSpawnInterval = null;
+let puddleFadeoutTimeout = null;
 
 function getSceneryEmoji(type) {
   const overrides = BIOME_EMOJI_OVERRIDES[currentBiome];
@@ -7310,6 +7565,10 @@ function startPlay() {
   // Day 75: stoplight signal on every station (green/yellow/red). Auto-on.
   setupStationSignals();
 
+  // Day 77: Puddle Splashes — only meaningful if it's raining when we start.
+  // applyWeather() also wakes the system if rain is toggled mid-play.
+  if (currentWeather === 'rain') startPuddleSystem();
+
   // Update music tempo for play state
   updateMusicTempo();
 
@@ -7595,6 +7854,10 @@ function advanceTrainAnim(anim, timestamp) {
     anim.row = nextPos.row;
     anim.col = nextPos.col;
     anim.cellsVisited++;
+
+    // Day 77: if the cell we just entered has a puddle, kick up a splash.
+    // Cheap no-op when no puddle (Map.has) so safe to call every move.
+    triggerPuddleSplash(nextPos.row, nextPos.col);
 
     // Check for cows within 1 cell and moo
     checkAnimalProximity(anim, nextPos.row, nextPos.col);
@@ -8337,6 +8600,9 @@ function stopPlay() {
 
   // Day 75: remove station arrival signals.
   cleanupStationSignals();
+
+  // Day 77: tear down any rainy-day puddles immediately on stop.
+  stopPuddleSystem(0);
 
   // Update music tempo for idle state
   updateMusicTempo();
