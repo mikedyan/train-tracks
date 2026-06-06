@@ -2783,6 +2783,47 @@ body.high-contrast .puddle-droplet {
   }
   .cell .puddle { opacity: 0.7; }
 }
+
+/* Day 78: 🛤️ Train Trail — small color-matched dots fall behind each train
+   as it rolls, fading from a soft glow to nothing over ~1.5s. JS spawns one
+   dot at the train's visual center whenever the train has moved
+   TRAIN_TRAIL_SPAWN_DIST px since the last dot; pure CSS handles fade-out
+   and the dot self-removes via a setTimeout matching the animation length.
+   z-index 44 sits below the train (z=50) so the loco rolls cleanly *over*
+   its own trail. Auto-on; no toolbar surface. */
+.train-trail-dot {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 44;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  animation: train-trail-fade 1.5s ease-out forwards;
+}
+@keyframes train-trail-fade {
+  0%   { opacity: 0.55; transform: translate(-50%, -50%) scale(1); }
+  60%  { opacity: 0.30; transform: translate(-50%, -50%) scale(0.75); }
+  100% { opacity: 0;    transform: translate(-50%, -50%) scale(0.4); }
+}
+/* Night mode: trail dots pop a little brighter against the dark sky. */
+body.night-mode .train-trail-dot {
+  animation: train-trail-fade-night 1.5s ease-out forwards;
+}
+@keyframes train-trail-fade-night {
+  0%   { opacity: 0.75; transform: translate(-50%, -50%) scale(1); }
+  60%  { opacity: 0.40; transform: translate(-50%, -50%) scale(0.75); }
+  100% { opacity: 0;    transform: translate(-50%, -50%) scale(0.4); }
+}
+/* High-contrast: ring the dot so it reads against any background. */
+body.high-contrast .train-trail-dot {
+  box-shadow: 0 0 0 1px #fff !important;
+}
+/* Reduced motion: skip the trail entirely (avoids motion across viewport). */
+@media (prefers-reduced-motion: reduce) {
+  .train-trail-dot { display: none !important; }
+}
 </style>
 </head>
 <body>
@@ -4357,6 +4398,54 @@ function triggerPuddleSplash(row, col) {
     cell.appendChild(drop);
     setTimeout(() => { if (drop.parentNode) drop.remove(); }, dur * 1000 + 50);
   }
+}
+
+// =============================================================
+// Day 78: 🛤️ TRAIN TRAIL
+// Each train drops a small color-matched dot at its visual center every
+// TRAIN_TRAIL_SPAWN_DIST pixels of travel. CSS animates the dot from a
+// soft glow to transparent over 1.5s; JS schedules removal at +100ms past
+// the animation end so finished dots don't accumulate in the DOM.
+// Auto-on. Skipped while a train is inside a tunnel (the loco itself is
+// fading/invisible there) and entirely off under prefers-reduced-motion.
+// Cleanup hooks into stopPlay()'s existing querySelectorAll sweep.
+// =============================================================
+const TRAIN_TRAIL_SPAWN_DIST = 14;     // px between successive dots
+const TRAIN_TRAIL_SPAWN_DIST_SQ = TRAIN_TRAIL_SPAWN_DIST * TRAIN_TRAIL_SPAWN_DIST;
+const TRAIN_TRAIL_DURATION_MS = 1500;  // matches CSS keyframe length
+
+function spawnTrainTrailDot(anim, x, y) {
+  const container = document.getElementById('grid-container');
+  if (!container) return;
+  const tc = (typeof TRAIN_COLORS !== 'undefined' && TRAIN_COLORS[anim.color])
+    ? TRAIN_COLORS[anim.color] : { body: '#D32F2F' };
+  const dot = document.createElement('div');
+  dot.className = 'train-trail-dot';
+  dot.style.background = tc.body;
+  // Soft halo in the same hue so the trail reads as a glow, not a sticker.
+  dot.style.boxShadow = '0 0 6px ' + tc.body + ', 0 0 2px ' + tc.body;
+  dot.style.left = x + 'px';
+  dot.style.top = y + 'px';
+  container.appendChild(dot);
+  setTimeout(() => { if (dot.parentNode) dot.remove(); }, TRAIN_TRAIL_DURATION_MS + 100);
+}
+
+function maybeSpawnTrainTrail(anim, x, y) {
+  if (!anim || anim.crashing || anim.finished) return;
+  if (anim.inTunnel) return;            // loco is hidden — no trail in the dark
+  if (prefersReducedMotion()) return;   // motion-sensitive users opt out
+  if (anim.lastTrailX === undefined) {
+    anim.lastTrailX = x;
+    anim.lastTrailY = y;
+    spawnTrainTrailDot(anim, x, y);
+    return;
+  }
+  const dx = x - anim.lastTrailX;
+  const dy = y - anim.lastTrailY;
+  if (dx * dx + dy * dy < TRAIN_TRAIL_SPAWN_DIST_SQ) return;
+  anim.lastTrailX = x;
+  anim.lastTrailY = y;
+  spawnTrainTrailDot(anim, x, y);
 }
 
 function restoreNightMode() {
@@ -7944,6 +8033,10 @@ function renderTrainAtProgress(anim) {
   anim.trainEl.style.left = locoX + 'px';
   anim.trainEl.style.top = (locoY + bob) + 'px';
 
+  // Day 78: drop a color-matched trail dot at the train's visual center.
+  // Guarded internally on reduced-motion, tunnel, crash/finished states.
+  maybeSpawnTrainTrail(anim, locoX, locoY + bob);
+
   const angleDeg = (pos.angle || 0) * (180 / Math.PI);
 
   // Tunnel fade/shrink for locomotive
@@ -8580,7 +8673,7 @@ function stopPlay() {
   // Clear crossing gate states
   clearCrossingGates();
   // Clean up crash particles, animal reaction classes, and rainbow sparkles
-  document.querySelectorAll('.crash-star, .crash-dust, .rainbow-sparkle').forEach(el => el.remove());
+  document.querySelectorAll('.crash-star, .crash-dust, .rainbow-sparkle, .train-trail-dot').forEach(el => el.remove());
   document.querySelectorAll('[class*="animal-react-"]').forEach(function(el) {
     el.className = el.className.replace(/animal-react-\S+/g, '').trim();
   });
