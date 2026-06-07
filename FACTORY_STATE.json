@@ -1,13 +1,13 @@
 {
   "project": "Train Tracks",
-  "currentDay": 78,
+  "currentDay": 79,
   "status": "active",
-  "weekType": "build",
-  "weekDay": 5,
+  "weekType": "harden",
+  "weekDay": 1,
   "cycleNumber": 4,
-  "cycleDay": 5,
-  "lastRun": "2026-06-06T09:30:00-07:00",
-  "lastRunDate": "2026-06-06",
+  "cycleDay": 6,
+  "lastRun": "2026-06-07T09:30:00-07:00",
+  "lastRunDate": "2026-06-07",
   "cycleClosed": false,
   "cycle3Review": "reviews/prune-cycle-3-review.md",
   "completedDays": [
@@ -88,10 +88,13 @@
     75,
     76,
     77,
-    78
+    78,
+    79
   ],
-  "nextDay": 79,
-  "phase": "Cycle 4 (Build Week, Days 74-78)",
+  "nextDay": 80,
+  "phase": "Cycle 4 (Harden Week, Days 79-83)",
+  "hardenAnchorLOC": 12481,
+  "hardenAnchorBytes": 448310,
   "roadmap": "roadmaps/cycle-4-build.md",
   "review": "reviews/prune-cycle-3-review.md",
   "cycle4BuildPlan": [
@@ -569,6 +572,12 @@
       "day": 77,
       "date": "2026-06-05",
       "feature": "Cycle 4 Build Day 4: 🌧️ Puddle Splashes — small blue puddles randomly form on horizontal track tiles (E↔W passable: straight @ 90/270, crossover, bridge, horizontal tunnel/station) when weather is rain AND state.playing. When a train rolls into a puddled cell, 4 droplets fan upward (dx -18→+18, dy -16→-30, dur 0.45–0.7s) with a “kssh” SFX (180ms highpass-noise burst + 1400→420Hz sine sweep). MAX_PUDDLES=6, spawn interval 2.2s @ 55% chance, capped via puddleEls Map keyed by ‘r,c’. Activation: startPlay() fires startPuddleSystem() if currentWeather===‘rain’; mid-play applyWeather() rain→non-rain calls stopPuddleSystem(5000) so puddles fade gracefully (CSS .puddle.fading class), non-rain→rain re-activates; stopPlay() always tears down immediately. Splash trigger is a one-liner in advanceTrainAnim right after anim.row/col update (cheap Map.has guard makes it safe on every move). Pure CSS animations for form/shimmer/fade/droplet-fly with prefers-reduced-motion + night-mode + high-contrast variants. Eager first spawn at 600ms inside startPuddleSystem() so kids see a puddle without waiting for the full interval. Verified live on ?v=77&fresh=1: 8 horizontal cells detected on first random track, puddle spawn cadence 0→1→2 over 4.5s of play, manual triggerPuddleSplash spawned 4 droplets w/ correct anchored CSS vars, rain→sunny faded 6→6 (with .fading class)→0 across the 5s window, rain→sunny→rain re-spawned cleanly, stopPlay zeroed interval+timeout+DOM. 12,122 → 12,388 LOC (+266), ~428,940 → 444,163 bytes. 0 bugs, 0 console errors, JS parse clean.",
+      "status": "complete"
+    },
+    {
+      "day": 79,
+      "date": "2026-06-07",
+      "feature": "Cycle 4 Harden Week Day 1: Full Feature Audit — 8/8 piece types place clean, 9/9 core features verified (random gen, undo/redo, save/load, share encode/decode 140 chars, puzzle load 10/10, biome cycle 4/4, night mode, sound packs 3/3, sticker book stat-trigger), 5/5 Cycle-4 build features verified live on ?v=79&fresh=1: Ambient Critters (6 spawn over scenery), Station Signal (2 stations → 2 signals all green when no train near), Confetti Cannon (78 confetti + 24 streamers + 1 banner at delivery #5), Puddle Splashes (2 puddles in ~4s during rain), Train Trail (5 red dots, all color-matched to red train). 0 bugs found, 0 console errors. Anchor file size for Harden Week 4 zero-growth: 12,481 LOC / 448,310 bytes.",
       "status": "complete"
     },
     {
