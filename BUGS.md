@@ -1202,3 +1202,120 @@ The deployed game is rock-solid heading into Prune Week 3:
 - File size **11,866 lines** sets the **Prune Week 3 hard ceiling** — anything ≥ 11,866 at end-of-prune means the week didn't earn its name.
 
 Tomorrow (Day 69) = **Prune Week 3 Day 1: Fresh Eyes Audit** — open the game as a 5-year-old, count buttons/palette/modes, propose cuts in `PRUNE_REPORT.md`. Target: ≥30 LOC of cuts identified for Days 70-73 execution.
+
+
+---
+
+## Day 80 — 2026-06-08 — Harden Week 4 Day 2: Puzzle & Mode Testing
+
+**Date:** Mon Jun 8, 2026
+**Tester:** Mochi (QA Agent)
+**Testing Environment:** Desktop Chromium, https://mikedyan.github.io/train-tracks/?v=80&fresh=1
+**Goal:** Re-validate every puzzle, the passenger end-to-end loop, progression/unlocks, share-link round-trip (v2 + v3), screenshot/download, and all five Cycle-4 build-week features (Critters / Station Signal / Confetti Cannon / Puddle Splashes / Train Trail).
+
+### All 10 Puzzles — Auto-Solved Within Official Budget
+
+Each puzzle was loaded via `loadPuzzle(id)`, solved programmatically by placing pieces via `placePiece(row, col, type, rotation)` (which respects `puzzleState.pieceCounts`), then `checkPuzzleSolution()` was called and `puzzleState.completed[id]` inspected. Zero `placeFails` across all 90 placements (every requested cell was accepted within the puzzle's `available` inventory).
+
+| # | Name | Difficulty | Budget | Solution Topology | Player Pieces | Optimal | Stars |
+|---|---|---|---|---|---|---|---|
+| 1 | First Loop | Easy | 4s | 4-cell rectangle perimeter (2,5)H + (3,4)V + (3,6)V + (4,5)H | 4 | 4 | ⭐⭐⭐ |
+| 2 | Around the Lake | Easy | 10s | 10-cell rectangle perimeter, rows 2–5 × cols 3–7 around 6 water cells | 10 | 10 | ⭐⭐⭐ |
+| 3 | Figure Eight | Medium | 6c | 6 curves around locked crossover at (3,5): (2,4) rot90 + (2,5) rot180 + (3,4) rot0 + (3,6) rot180 + (4,5) rot0 + (4,6) rot270 — N-S + E-W traversals of crossover | 6 | 6 | ⭐⭐⭐ |
+| 4 | Tunnel Run | Medium | 6s + 2t | Rectangle perimeter (2,4)→(5,7), two tunnels in col 4 (rows 3–4) substituting for water-blocked straights | 8 | 8 | ⭐⭐⭐ |
+| 5 | **Grand Station** | Hard | 9s + 8c | **Big-perimeter non-rectangular: row 2 stations + cols 2 & 9 vertical stems + row 5 across (5,5) station, with extra elbow at (4,2)+(4,3) to consume all 8 curves while staying inside the 9-straight cap** — uses entire inventory | 17 | 17 | ⭐⭐⭐ |
+| 6 | Switchyard | Medium | 7s + 2tj | Rectangle perimeter + T-junctions at (3,4) rot0 & (3,7) rot180 bridging the horizontal station via straight (3,6) | 9 | 9 | ⭐⭐⭐ |
+| 7 | Speed Run | Medium | 20s | Large rectangle (1,2)→(5,9), 18 straights used (par=20, optimal=18) — 2 straights left in inventory | 18 | 18 | ⭐⭐⭐ |
+| 8 | Cow Pasture | Easy | 14s | Rectangle perimeter (2,3)→(5,8) around 4 cow scenery cells, 12 straights (par=14, optimal=12) | 12 | 12 | ⭐⭐⭐ |
+| 9 | Night Express | Hard | 8s + 1t | Rectangle (1,4)→(4,8): 8 straights everywhere + tunnel substitution at (3,4) (the (2,4) tunnel is locked) | 9 | 9 | ⭐⭐⭐ |
+| 10 | Twin Loops | Hard | 8s | Two separate 2×2 loops (cols 2–4 + cols 7–9 at rows 2–4), 4 straights each — puzzle's `trains.length=2` permits the 2 connected components | 8 | 8 | ⭐⭐⭐ |
+
+**Puzzle 5 note (still tricky after a year):** The Day-65 finding that the naive rectangle perimeter requires 13 straights + 4 curves (over the 9-straight budget) still holds. The fits-in-budget solution today routed clockwise (2,3)→row 2 stations→(2,9) curve→col 9 stem→(4,9) curve→(4,8)H→(4,7) curve→(5,7) curve→row 5 across (5,5) station→(5,3) curve→(4,3) curve→(4,2) curve→col 2 stem→(2,2) curve back into (2,3) — 8 curves + 9 straights, every piece in the inventory consumed.
+
+### Star Logic Validation
+
+- Each `puzzleState.completed[id]` came back `{stars: 3}` after `checkPuzzleSolution()`.
+- Each `playerPieces` count exactly matched the expected solution length (4, 10, 6, 8, 17, 9, 18, 12, 9, 8) — validator counts non-locked track cells, scenery excluded.
+- Star upgrade gating works (re-solving with fewer pieces would upgrade; never downgrades).
+- Multi-component allowance for Puzzle 10 (`trains.length > 1` → 2 allowed components) verified — two disjoint rectangle loops accepted.
+
+### Passenger Delivery System — End-to-End
+
+Setup: cleared sandbox, built a 2-station vertical loop (curve at (2,4)/(2,6)/(4,4)/(4,6) + station at (2,5)/(4,5) + straight at (3,4)/(3,6)), placed one **red** train at (2,4), enabled passengers, called `startPlay()`.
+
+| Check | Result |
+|---|---|
+| `togglePassengers()` → `passengerState.enabled = true` | ✅ |
+| `startPlay()` registers stations into `passengerState.stations` | ✅ Both `"2,5"` and `"4,5"` keys present |
+| Passengers spawn during play | ✅ After ~18s, `onboard.red = 3` |
+| Train picks up + delivers between stations | ✅ `passengerState.delivered = 1` |
+| HUD `#passenger-hud` activates + updates | ✅ `.active` class set, text = "🧑 Delivered: 1 🏆 Best: 1" |
+| LocalStorage `trainTracks_stats.passengersDelivered` persists | ✅ = 1 immediately after first delivery |
+| `gameStats.passengersDelivered` in-memory tally | ✅ = 1 |
+
+### Progression & Unlock System
+
+After a fresh load (with prior puzzle/sticker progress carried over from the v=80 cache), all check-able piece/train types were already unlocked:
+
+| Check | Result |
+|---|---|
+| `isPieceUnlocked('straight'/'curve')` | ✅ true (baseline) |
+| `isPieceUnlocked('tjunction'/'crossover'/'bridge'/'tunnel'/'rainbow')` | ✅ all true |
+| `isPieceUnlocked('train-red'/'train-blue'/'train-green')` | ✅ all true |
+| `gameStats` pumped to milestone-triggering values (tracksPlaced=200, trainsRun=50, loopsCompleted=25, puzzlesSolved=10) + `saveGameStats()` | ✅ persisted to `trainTracks_stats` |
+| `checkAndUnlockMilestones()` callable without throw | ✅ no exceptions; idempotent when nothing new to unlock |
+| `localStorage.trainTracks_unlocks.pieces` array | ✅ 21 entries saved |
+
+### Share Links — v2 & v3 Round-Trip
+
+Built an 8-cell perimeter loop + 1 red train at (2,2), encoded, wiped, decoded:
+
+| Check | Result |
+|---|---|
+| v2 share hash via `encodeGridState()` | ✅ **140 chars**, first base64-decoded byte = **0x02** (v2 marker) |
+| v2 decode → `decodeGridState(hash)` returns true | ✅ |
+| v2 cell-for-cell round-trip | ✅ 8 → 8 cells, byte-identical `(r,c,type,rotation)` tuples |
+| v2 train round-trip | ✅ 1 → 1 train at (2,2) color `red` |
+| v3 replay share (`snapshotForReplayBaseline()` + 2 record actions + `encodeReplayShareState()`) | ✅ **154 chars**, first base64-decoded byte = **0x03** (v3 marker) |
+| v3 actions captured in `state.replayActions` | ✅ length=2 |
+
+### Screenshot / Download
+
+| Check | Result |
+|---|---|
+| `openScreenshotModal()` opens `#screenshot-overlay` | ✅ `.open` class added |
+| Canvas `#screenshot-preview` renders | ✅ **2924 × 1948** px |
+| Canvas has real scene content | ✅ 40,000 non-zero pixels in 200×200 center sample |
+| `canvas.toDataURL('image/png')` produces valid PNG | ✅ 222,646-char data URL, prefix `data:image/png;base64,iVBORw0K…` |
+| `downloadScreenshot()`, `copyScreenshot()`, `closeScreenshotModal()` defined | ✅ all `function` typeof |
+| `closeScreenshotModal()` removes `.open` class | ✅ |
+
+### Cycle 4 Build-Week Spot Checks (live, during 8s sunny play with one red train + 6 tree scenery cells)
+
+| Feature (Day) | Live observation | Cleanup on `stopPlay` |
+|---|---|---|
+| 🐛 Ambient Critters (D74) | ✅ 6 `.ambient-critter` spawned over the scenery cluster | ✅ 0 after stopPlay |
+| 🚦 Station Signals (D75) | ✅ 2 `.station-signal` rendered during the 2-station passenger run | ✅ 0 after stopPlay |
+| 🎉 Confetti Cannon (D76) | ✅ `triggerConfettiCannon(2,3)` produced 54 `.confetti-particle` + 24 `.confetti-streamer` + 1 `.party-banner` at +500ms; SFX.celebrate fires; "🎉 PARTY!" toast shown | ✅ banner auto-removes at 1.7s |
+| 💧 Puddle Splashes (D77) | ✅ During earlier rain run, 2 `.puddle` elements visible on horizontal-passable tiles | ✅ 0 after stopPlay |
+| 🛤️ Train Trail (D78) | ✅ 10 `.train-trail-dot` steady-state behind the red train mid-play | ✅ 0 after stopPlay |
+
+All five features render under play, share the live grid coordinate system, and the existing stopPlay teardown sweep removes every dynamic element back to zero — no DOM leak across the session.
+
+### Console Errors
+
+`browser console (level=error)` after the entire session: **0 errors**, **0 warnings beyond AudioContext-autoplay** (standard pre-user-gesture browser policy — not a bug).
+
+### Code Health
+
+- **File size:** **12,481 lines** (unchanged from Day 78 build close + Day 79 audit — Harden Week 4 zero-growth anchor holds for Day 2/5).
+- **JS parse:** clean (no edits today).
+- **All cells reachable, all puzzles solvable, all systems wired end-to-end.**
+
+### Bugs Found Today: 0
+
+### Summary
+
+Second clean day of Harden Week 4. All 10 puzzles solve at 3⭐ within their advertised piece budgets — including Puzzle 5's non-rectangular 17-piece traversal (still the only puzzle whose optimal is topologically non-obvious). Passenger delivery loop, share-link v2/v3 byte-identical round-trip, screenshot canvas + data URL, progression-unlocks system, and all five Cycle-4 build features (Critters, Station Signals, Confetti Cannon, Puddle Splashes, Train Trail) are operational and self-clean on `stopPlay()`. File size stable at the 12,481 ceiling, console clean.
+
+Tomorrow (Day 81, weekDay 3) = **Harden Week 4 Day 3: Platform & Edge Cases** — mobile viewport, keyboard-only nav, accessibility modes (high-contrast / night-mode / reduced-motion), biome × night × weather × Cycle-4-feature matrix, fresh localStorage start, rapid-placement stress test under the new Critters/Trail/Puddle systems.
