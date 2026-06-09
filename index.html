@@ -8724,9 +8724,12 @@ function stopPlay() {
 // ============================================================
 // RANDOM TRACK GENERATOR (Feature #4)
 let randomTrackCount = 0;
+let randomGenInProgress = false; // BUG-019 guard: ignore rapid re-entry
 function generateRandomTrack() {
+  if (randomGenInProgress) return; // BUG-019: prevent stale train SVGs from overlapping cascades
   if (puzzleState.active) { showToast('🧩 Exit puzzle first!'); return; }
   if (state.playing) stopPlay();
+  randomGenInProgress = true;
   // Note: randomTrackCount is incremented AFTER the cargo check below so the
   // first invocation of the session sees randomTrackCount === 0 (95% cargo).
   
@@ -8745,6 +8748,7 @@ function generateRandomTrack() {
   
   if (!path || path.length < 4) {
     showToast('Generation failed, try again!');
+    randomGenInProgress = false; // BUG-019: release lock on early failure
     return;
   }
   
@@ -8831,6 +8835,7 @@ function generateRandomTrack() {
       placeTrainOnLoop(path);
       autoSave();
       showToast('🚂 Track ready! Press Play!');
+      randomGenInProgress = false; // BUG-019: release re-entry guard once cascade completes
     }, 200);
   }, delay + 100);
 }
