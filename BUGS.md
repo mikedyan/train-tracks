@@ -1319,3 +1319,71 @@ All five features render under play, share the live grid coordinate system, and 
 Second clean day of Harden Week 4. All 10 puzzles solve at 3⭐ within their advertised piece budgets — including Puzzle 5's non-rectangular 17-piece traversal (still the only puzzle whose optimal is topologically non-obvious). Passenger delivery loop, share-link v2/v3 byte-identical round-trip, screenshot canvas + data URL, progression-unlocks system, and all five Cycle-4 build features (Critters, Station Signals, Confetti Cannon, Puddle Splashes, Train Trail) are operational and self-clean on `stopPlay()`. File size stable at the 12,481 ceiling, console clean.
 
 Tomorrow (Day 81, weekDay 3) = **Harden Week 4 Day 3: Platform & Edge Cases** — mobile viewport, keyboard-only nav, accessibility modes (high-contrast / night-mode / reduced-motion), biome × night × weather × Cycle-4-feature matrix, fresh localStorage start, rapid-placement stress test under the new Critters/Trail/Puddle systems.
+
+---
+
+## Day 81 — Harden Week 4 Day 3: Platform & Edge Cases
+
+### Test Coverage
+
+**Mobile viewport (375×812):**
+- ✅ Zero horizontal scroll on cold boot (`scrollW === innerWidth === 375`)
+- ✅ `#drawer-toggle` button visible at full width (offsetW=375, text "▲ Pieces")
+- ✅ Click toggles `#mobile-drawer` `collapsed` class on/off correctly; toggle text flips ▲↔▼
+- ✅ 50 buttons render at mobile width without overlap/overflow
+- ✅ `#sidebar` hidden on mobile (display: none), drawer takes its place
+
+**Keyboard shortcuts (14 keys: p, n, h, r, c, s, z, y, ?, b, t, m, d, l):**
+- ✅ All dispatch via `KeyboardEvent('keydown')` with zero `window.onerror` and zero thrown exceptions
+- ✅ `n` toggles `body.night-mode`, `h` (via `toggleHighContrast`) toggles `body.high-contrast`, `b` (via `cycleBiome`) cycles biomes
+
+**Accessibility modes:**
+- ✅ `toggleNightMode()` and `toggleHighContrast()` are idempotent on round-trip (`'' → 'night-mode' → ''`, `'' → 'high-contrast' → ''`)
+- ✅ `prefers-reduced-motion` CSS rule present in stylesheets (`Array.from(document.styleSheets).some(...)`)
+
+**Biome × theme matrix:**
+- ✅ Full 4-step biome cycle: spring (`''`) → winter → desert → autumn → spring round-trip clean
+- ✅ Biome + night-mode combo: `"biome-winter night-mode"` — class collision regex `(biome-\w+)(.*biome-\w+)` matches 0
+- ✅ Biome + high-contrast combo: `"biome-desert high-contrast"` clean
+
+**Weather system:**
+- ✅ `applyWeather('sunny'|'rain'|'snow')` all set `currentWeather` correctly with no throws
+
+**Fresh localStorage cold boot:**
+- ✅ Tutorial step 1 ("🛤️ Drag a Track Piece!") auto-opens
+- ✅ Only `trainTracks_stickers` key written on init (clean baseline)
+- ✅ `tutSeen` flag null pre-tutorial-close
+
+**Big Grid round-trip:**
+- ✅ `toggleBigGrid()` flips 8×12 ↔ 10×16; state.grid dimensions clean on both directions
+
+**Play / Stop lifecycle:**
+- ✅ `startPlay()` + `stopPlay()` cycle: no throws
+- ✅ All 4 Cycle-4 ephemeral DOM artifacts drained to 0 after stopPlay: `.train-trail-dot=0, .ambient-critter=0, .station-signal=0, .puddle=0`
+
+**Rapid-stress test (10× `generateRandomTrack()`):**
+- 🐛 **Found BUG-019** (see below)
+- ✅ After fix: 10× rapid call settles to exactly 1 `.train-svg` in DOM + 1 `state.trains` entry
+
+**Console errors during entire test pass: 0**
+
+### Bugs Found Today: 1
+
+#### BUG-019 | 🟢 FIXED | Rapid `generateRandomTrack()` re-entry leaves stale train SVGs + cargo badges
+- **Found:** Tue Jun 9 — Mochi (Day 81, weekDay 3 Platform & Edge Cases stress test)
+- **Fixed:** Tue Jun 9 (commit 27f7ddc, same Day 81 cycle — surgical Harden-week guard)
+- **Severity:** P2 cosmetic (state is correct, but DOM has visible stale artifacts)
+- **Reproduction:** Call `generateRandomTrack()` twice in immediate succession (a real-world double-click on the 🎲 Random button, or pressing `r` twice quickly). After ~3s settle: `document.querySelectorAll('.train-svg').length === 2` while `state.trains.length === 1`. Stress with 10× rapid → 8 stale train SVGs + 8 stale `.station-cargo-badge` elements in DOM.
+- **Root cause:** `generateRandomTrack()` synchronously clears `state.grid` and `state.trains`, then queues a long cascade of `setTimeout`s (40ms apart) to place each piece + train + scenery. There is no re-entry guard. When called again before the first cascade finishes, the old cascade's timers continue firing into the new state — including the inner `setTimeout(() => placeTrainOnLoop(path), 200)` at the end of each cascade. Each cascade ends with its own `placeTrainOnLoop()` call. BUG-003's fix (clear old train SVG before placing new) protects single-train-replace within one cascade but doesn't help when 2-10 cascades each finish independently and each appends a train SVG before the other's cleanup pass runs. Same shape applies to `renderStationCargo()` cascades writing `.station-cargo-badge` elements.
+- **Fix applied:** Added module-scope `let randomGenInProgress = false;` next to existing `randomTrackCount`. The function entry guards `if (randomGenInProgress) return;` and immediately after the early-exit branches (`puzzleState.active`, `state.playing`) sets `randomGenInProgress = true`. The flag is released in three places:
+  1. The "Generation failed, try again!" early-return after a failed `generateLoopPath()`
+  2. The innermost `setTimeout` that fires after `placeTrainOnLoop()` + `autoSave()` succeed (release here means the whole cascade is over)
+  3. (Implicit) any other throw would leak the flag, but no other throw paths exist in the function body — all post-guard work is straight-line DOM writes inside well-tested branches
+- **Verification:** Live deploy `?v=81d&cb=verify2`. 10× rapid `generateRandomTrack()` → after 3.5s settle: `trainSvgs=1, cargoBadges=0 (no station in this random), stateTrains=1, gridPieces=46`. Pre-fix 10× run had `trainSvgs=8, cargoBadges=2, stateTrains=1`. JS parse clean (`node --check`-equivalent inline `new Function()` test passed at 336,041 chars). 0 console errors during fix verification.
+- **LOC impact:** +5 LOC (12,481 → 12,486, 448,310 → 448,679 bytes). First +LOC day of Harden Week 4 — accepted as bugfix exception (Harden mandate is "no new features", not "no LOC growth"; previous Harden weeks have similarly accepted bugfix-driven +LOC, e.g., Day 51's BUG-015/016 fix).
+
+### Summary
+
+Day 3 of Harden Week 4 surfaced one real bug (BUG-019) via the rapid-placement stress test the prompt explicitly recommends. The bug was reachable by a normal user double-clicking the 🎲 Random button — not a pathological-only edge case — making the fix worth shipping same-day rather than queueing for Day 4. Fix is a single boolean re-entry guard with release on success and on the one early-failure path, consistent with the project's preference for surgical, low-LOC interventions. All other platform/keyboard/accessibility/biome/weather/Big-Grid/cold-boot dimensions tested clean. 0 console errors across the full session.
+
+Tomorrow (Day 82, weekDay 4) = **Harden Week 4 Day 4: Fix Everything** — bug queue is now empty (BUG-019 closed same-day), so Day 4 becomes a proactive code-health pass: scan for any post-BUG-019-style re-entry races on other timer-cascade functions (likely candidates: `addRandomScenery`, `placeTrainOnLoop`, `spawnAmbientCritters`, puddle-system), look for duplicate code, validate the file-size delta and consider whether the +5 LOC can be reabsorbed elsewhere via dead-code cleanup.
