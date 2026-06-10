@@ -1322,6 +1322,80 @@ Tomorrow (Day 81, weekDay 3) = **Harden Week 4 Day 3: Platform & Edge Cases** �
 
 ---
 
+## Day 82 — Harden Week 4 Day 4: Fix Everything (proactive code-health)
+
+**Date:** Wed Jun 10, 2026
+**Tester:** Mochi (QA Agent)
+**Mission:** Bug queue entered the day at 0 (BUG-019 closed same-day on Day 81). Day 4 of Harden week became a proactive code-health pass: (1) audit other timer-cascade functions for re-entry hazards similar to BUG-019, (2) hunt dead code to reabsorb yesterday's +5 LOC.
+
+### Hunt 1 — Cascade Re-Entry Audit Across All Candidates
+
+Walked every setTimeout/setInterval-spawning function suspected of having a BUG-019-shaped re-entry hazard:
+
+| Function | Cascade shape | Re-entry safe? | How |
+|---|---|---|---|
+| `generateRandomTrack()` | setTimeout chain mutating state.grid + DOM | ✅ | `randomGenInProgress` boolean guard (Day 81 BUG-019 fix) |
+| `spawnAmbientCritters()` | Synchronous DOM append (no setTimeout) | ✅ | Not actually a cascade; idempotent under single-flight via `startPlay → spawnAmbientCritters` pairing with `stopPlay → cleanupAmbientCritters` |
+| `setupStationSignals()` | Synchronous DOM append (no setTimeout) | ✅ | `cleanupStationSignals()` called at entry; idempotent re-entry just rebuilds clean |
+| `startPuddleSystem()` | `setInterval` only | ✅ | Self-guards via `if (puddleSpawnInterval) return;` — single-flight by design |
+| `playReplay()` | Async setTimeout loop | ✅ | `replayCancelTokenId` incrementing token (LESSON-DAY47-C); each re-entry bumps the token, prior loops bail on next tick |
+| `addRandomScenery()` | setTimeout for `renderCell` only | ✅ | State writes (`state.grid[r][c] = ...`) are synchronous; only the *render* is staggered. A stale render from a prior cascade re-renders a now-current cell — harmless |
+| `startSkyCycle()` | Pure CSS animation (no JS loop) | ✅ | CSS handles the animation; JS just toggles a class |
+| `startMusicScheduler()` (Day 27) | Recursive setTimeout (look-ahead) | ✅ | Self-guards via `musicSchedulerRunning` flag, plus single-bar look-ahead |
+
+No new re-entry hazards found. **`generateRandomTrack()` was the only function in the codebase that needed a re-entry guard** — every other cascade either self-guards, uses a cancel-token pattern, or writes state synchronously and stagers only the visual layer.
+
+### Hunt 2 — Dead-Function Audit
+
+Ran a `function NAME → count of bare-name occurrences across whole file` sweep. Threshold: count ≤ 1 means *defined but never called*.
+
+- **`resetDeliveryStreak()` (line 11576, defined Day 76)** — only occurrence is its definition. Day 76 Confetti Cannon was originally going to reset the streak on stopPlay/clearAll, but the streak intentionally persists across plays so the kid feels their session-long progress (5, 10, 15... deliveries). The helper became orphaned and never deleted. **Removed.** -1 LOC.
+
+All 343 other function declarations have ≥ 2 occurrences (definition + ≥ 1 call). No further dead code.
+
+### Hunt 3 — Dead CSS Audit
+
+Python script: scan style block for class definitions, scan the rest of the file (HTML + JS) for usages (including dynamic prefix construction like `'biome-' + name`, `'animal-react-' + type`). Found 7 dynamic prefixes (animal-react-, biome-, difficulty-, palette-train-, train-, train-tracks-, weather-) that legitimately compose class names at runtime. After filtering: **0 dead CSS classes.** Day 67's dead-CSS pass already harvested the last orphans (`.puzzle-card-complete`, `.station-passenger.arriving`).
+
+### Hunt 4 — Redundant Blank-Run Audit
+
+Looked for runs of 3+ consecutive blank lines. Day 71's pass had collapsed those; today found **0 runs.** Code is dense, no whitespace to reclaim.
+
+### Code Health
+
+- **File size before:** 12,486 LOC / 448,679 bytes (Day 81 close)
+- **File size after:** **12,485 LOC / 448,624 bytes** (-1 LOC, -55 bytes)
+- **JS parse:** clean (`node --check` on 335,795-byte extracted inline script)
+- **Net Harden Week 4 LOC Δ:** +4 (build week +691 → harden week so far: D79 +0, D80 +0, D81 +5 BUG-019, D82 -1 dead-fn → +4 net through Day 4)
+
+### Live Verification (post-deploy)
+
+Live site at `https://mikedyan.github.io/train-tracks/?v=82&fresh=1` after `localStorage.clear()` + reload:
+
+| Probe | Result |
+|---|---|
+| `typeof resetDeliveryStreak` | `undefined` ✅ (dead fn removed live) |
+| `typeof recordDelivery` + `typeof triggerConfettiCannon` | both `function` ✅ (Day 76 confetti cannon intact) |
+| `typeof deliveryStreak` | defined ✅ (state preserved) |
+| `typeof randomGenInProgress` | defined, init=`false` ✅ (BUG-019 guard intact) |
+| 10× rapid `generateRandomTrack()` (BUG-019 regression check) | 1 train SVG, 1 state.trains, 0 errors ✅ |
+| Play after rapid-gen | 1 animated train, 6 trail dots, 6 critters, 2 station signals ✅ |
+| Stop cleanup | 0 trail / 0 critters / 0 signals / 0 puddles ✅ |
+| Console errors during full session | **0** ✅ |
+
+### Bugs Found Today: 0
+### Bugs Fixed Today: 0 (none in queue)
+### Dead Code Removed: 1 function (`resetDeliveryStreak`, -1 LOC)
+### Open Bugs at End-of-Day: **0**
+
+### Summary
+
+Proactive code-health pass closed the most obvious dead-code item without touching any live feature. Cascade re-entry audit across 8 candidates confirms `generateRandomTrack()` was indeed the only function needing the BUG-019-style guard — every other timer-cascade in the codebase either self-guards, uses a cancel-token, or stages only the visual layer. -1 LOC partially absorbs yesterday's BUG-019 +5 LOC, leaving Harden Week 4 at +4 net through Day 4 vs. Cycle 4 Build close (12,481).
+
+Tomorrow (Day 83, weekDay 5) = **Harden Week 4 Day 5: Regression Pass** — final ship-readiness check on the live deployed site. Day-1 promise (build · play · save · share) + every Cycle-4 feature (Critters, Station Signals, Confetti Cannon, Puddle Splashes, Train Trail). After Day 83, cycle moves into Prune Week 4 (Days 84-88).
+
+---
+
 ## Day 81 — Harden Week 4 Day 3: Platform & Edge Cases
 
 ### Test Coverage
