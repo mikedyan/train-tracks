@@ -1,48 +1,52 @@
-# PRUNE Report — Cycle 3 (May 28, 2026)
+# PRUNE Report — Cycle 4 (June 12, 2026)
 
-**Auditor:** Mochi (fresh-eyes audit, Day 69 of factory cycle / Day 1 of Prune Week 3)
-**Site under review:** https://mikedyan.github.io/train-tracks/?v=69&fresh=1
-**Code size entering Prune Week 3:** **11,866 lines / 422,935 bytes** (single `index.html`)
-**Hard rule (end of Prune Week 3):** ≤ **11,866 lines** (net negative code = pass)
-**Stretch goal:** ≤ **11,830 lines** (match Cycle 2's −36 LOC cut)
-**Previous prune outcomes:** Cycle 1 missed (+55 LOC). **Cycle 2 hit (-36 LOC, first net-negative.)** Cycle 3 must match or beat Cycle 2.
+**Auditor:** Mochi (fresh-eyes audit, Day 84 of factory cycle / Day 1 of Prune Week 4)
+**Site under review:** https://mikedyan.github.io/train-tracks/?v=84&fresh=1&cb=prune4d1
+**Code size entering Prune Week 4:** **12,485 lines / 448,624 bytes / 343 functions** (single `index.html`)
+**Hard rule (end of Prune Week 4):** ≤ **12,485 lines** (net negative code = pass)
+**Stretch goal:** ≤ **12,449 lines** (Cycle 2 parity, −36)
+**Aspirational goal:** ≤ **12,409 lines** (Cycle 3 parity, −76)
+**Byte rule:** ≤ **448,624 bytes** (added in Cycle 3 — both axes must shrink)
+**Previous prune outcomes:** Cycle 1 missed (+55). **Cycle 2 first net-negative (−36).** **Cycle 3 best so far (−76 LOC, −3,404 bytes, +0.2 score).**
 
 ---
 
 ## TL;DR
 
-The game is in **excellent kid-UX shape** after Cycle 3. Build Week 3 shipped 5 features (Time-of-Day Sky 🌅, Animal Passengers 🐄, Whistle Songs 🎵, Replay Sharing v3 🎬, Sticker Book ⭐) for **+717 net LOC**, but **zero new toolbar buttons** and only **+1 settings tile** (Sticker Book). That's the right discipline — feature surface should be discoverable, but it shouldn't crowd the chrome. Harden Week 3 closed clean with 0 open bugs, 0 console errors, and the first net-negative Harden week in the 90-day plan (-7 LOC, Day 67).
+Cycle 4 shipped the most ambitious build week in the 90-day factory's life: **+691 LOC across 5 features** (Ambient Critters 🦋, Station Arrival Signal 🚦, Confetti Cannon 🎉, Puddle Splashes 🌧️, Train Trail 🛤️). Harden Week 4 added +4 net (BUG-019 re-entry guard +5, dead-fn `resetDeliveryStreak` −1). Entering Prune Week 4 at **12,485 / 448,624 / 343** — the largest game the factory has ever pruned.
 
-The fresh-eyes audit confirms the toolbar passed (15 visible buttons, same as Cycle 2). Settings drawer at 8 tiles is still walkable for a 5-year-old (and Sticker Book is genuinely a *reward* — kids want to find it). The piece-progression system is working as intended this cycle — **20 of 26 palette pieces are visually locked** on a fresh `localStorage` (Cycle 2's "0/26 locked" flag is no longer a regression). Tutorial auto-opens, step 3 teaches HONK (Day 57), first-random of the session hits cargo missions ~97% (Day 57). All UX wins from prior prunes held.
+The good news: the **UX surface stayed disciplined**. All 5 Cycle-4 features are auto-on or auto-trigger, **zero new toolbar buttons**, **zero new settings tiles**, **zero new modals** added vs. Cycle 3 exit. Build Week 4 followed LESSON-DAY46-F and LESSON-DAY59-A — *add behavior, not chrome*. The toolbar still reads as **15 visible buttons + HONK during play**, the same shape it had at the end of Cycle 1. The settings drawer is still **8 tiles in 3 groups** (Audio/Display/Game). The palette is still **26 pieces in 4 sections**, and progression is healthy — **20/26 locked** on a fresh `localStorage` page load.
 
-The audit-priority cuts are **code-side, not UX**. The script section has **107 `// =====` separator lines** with **51 redundant closing fences** (sandwich pattern: header line surrounded by `=====` both above and below). Trimming the closing fences alone clears the hard rule with a ~50-line margin and zero feature/readability loss. Smaller code-health targets (sticker-modal CSS variants, Day 60 verbose comment block, blank-divider runs) round out a realistic **-50 to -65 LOC** budget for the week — comfortably beating Cycle 2.
+The cuts this week are **code-side, not UX-side**. The closing-fence dedup pattern from Cycle 3 Day 70 is exhausted (0 redundant fences remain), and the consecutive-blank-run pattern from Cycle 3 Day 71 is exhausted (0 runs ≥2 blanks). But Cycle 4's three big additions (Puddle Splashes, Confetti Cannon, Train Trail) each shipped with verbose Day-NN preamble comment blocks (~30 LOC combined), and 4 of the original 10 puzzles still carry **kid-comprehension scaffolding comments from the development phase** (~46 LOC across puzzles 6/7/9/10) that are no longer needed for understanding — the actual `pieces:` array is the source of truth. A new DRY target also appears in the audio engine: **15 SFX functions share a 3-line prelude** (`if (!soundEnabled) return; const ctx = getAudioCtx(); if (!ctx) return;`) that can be collapsed via a single `audioBegin()` helper.
 
-**One non-prune UX flag for the next Build week** (not actionable this week): the **🧑 Passengers** toolbar button is the only round-row item that holds *state* (Off/On). Kids see a face icon and don't know it's a switch until the tooltip. Consider either (a) making it a settings-drawer tile in a future cycle, or (b) renaming the icon to read more obviously like a toggle. Out of scope for prune week — flagging for the next Build roadmap.
+**Realistic prune budget for the week: −60 to −90 LOC** across (A) verbose preamble comment trim, (B) puzzle dev-scaffold comment trim, (C) audio prelude DRY. That comfortably clears the hard rule (≤12,485) and beats the stretch goal (≤12,449); the aspirational goal (≤12,409, Cycle 3 parity) is in reach if all 3 targets land cleanly.
+
+**One non-prune UX flag for the (hypothetical) next Build week:** the **🦋 Ambient Critters** are subtle enough that some kids may not notice them — they're scoped to scenery-adjacent cells, animated via pure CSS, and only spawn during play. Consider a "first session, draw one bigger" surfacing or a settings tile to bump the count. Out of scope for prune week — flagging only.
 
 ---
 
-## 1. Fresh Eyes Walk-Through (the 5-year-old test, take 3)
+## 1. Fresh Eyes Walk-Through (the 5-year-old test, take 4)
 
-Cleared `localStorage` → reloaded `?v=69&fresh=1`. Captured a full-page screenshot. Here's what a 5-year-old sees:
+Cleared `localStorage` → reloaded `?v=84&fresh=1&cb=prune4d1`. Captured full-viewport screenshot. Here's what a 5-year-old sees:
 
 | Element | First impression | Verdict |
 |---|---|---|
-| Big "🚂 Train Tracks" header | Friendly, on-brand | ✅ Keep |
-| Tutorial overlay auto-pops ("Drag a Track Piece!") with Skip/Next | Step 1 of 3, welcoming, dismissible | ✅ Keep |
-| Left palette: TRACKS / TRAINS / CARS / SCENERY headers | Clear grouping | ✅ Keep |
-| Locked pieces dim to opacity 0.35 + 🔒 emoji overlay | Reads as "earn this later" without being scary | ✅ Keep — **better than Cycle 2** |
-| Grid (12×8 default, green felt aesthetic) | "I can put things there" | ✅ Keep |
-| Row 1 toolbar (▶️ Play · 🎲 Random · 🗑️ Clear · ↩️ ↪️ · speed slider · 🔊 + volume slider · ☀️ · 💾 Save · 🧩 Puzzles) | Reads as "the buttons that matter" | ✅ Keep |
-| Row 2 round cluster (🌤️ · 🌸 · 🧑 · 📤 · ❓ · ⚙️) | Visually distinct, lower-stakes | ✅ Keep — 1 caveat (see §6) |
-| 📯 HONK (only when playing) | Still chef's kiss | ✅ Sacred |
+| 🚂 Train Tracks header | Friendly, on-brand | ✅ Keep |
+| Tutorial overlay auto-pops ("Drag a Track Piece!") | Step 1 of 3, welcoming dot 1/3, Skip + Next visible | ✅ Keep |
+| Left palette: TRACKS · TRAINS · CARS · SCENERY | 4 clear sections, 6 unlocked items visible at fresh start (Straight, Curve, Red train, Tree, House, Cow) | ✅ Keep |
+| Locked pieces dim to opacity 0.35 with `palette-locked` class | 20/26 dimmed — reads as "earn this later" | ✅ Keep — progression healthy |
+| Grid (12×8 default, green felt) | "I can put things there" | ✅ Keep |
+| Row 1 toolbar (▶️ · 🎲 · 🗑️ · ↩️ · ↪️ · speed · 🔊 · ☀️ · 💾 · 🧩) | 9 rectangular buttons + 2 sliders | ✅ Keep |
+| Row 2 round cluster (🌤️ · 🌸 · 🧑 · 📤 · ❓ · ⚙️) | 6 round buttons (lower-stakes) | ✅ Keep |
+| 📯 HONK (play-only) | Hidden until ▶️ is hit — surprise reward | ✅ Sacred |
 
-**Verdict:** The UX prune work from Cycles 1 and 2 held. Cycle 3's feature additions are *invisible* in the chrome on fresh load — they live in the Settings drawer (Sticker Book) or auto-trigger during gameplay (Sky, Animals, Whistles, Replay-sharing on inbound link). Nothing new to cut.
+**Verdict:** The UX prune work from Cycles 1, 2, and 3 held through a 5-feature build week. Cycle 4's additions are *invisible in the chrome* on fresh load — they live entirely in play-time behavior (critters spawn during play, station signals appear on stations during play, puddles spawn during rain, confetti cannon fires at delivery #5, train trails appear behind running trains). **Nothing new to cut from the chrome.** The chrome has now survived 4 consecutive build cycles without growing.
 
 ---
 
-## 2. Inventory & Counts (vs Cycle 2 baseline)
+## 2. Inventory & Counts (vs Cycle 3 baseline)
 
-### Toolbar (visible: **15** + HONK while playing — unchanged)
+### Toolbar (visible: **15** + HONK while playing — unchanged for 4 cycles)
 **Row 1 (rectangular, 9 buttons + speed slider + volume slider):**
 1. ▶️ Play
 2. 🎲 Random
@@ -50,7 +54,7 @@ Cleared `localStorage` → reloaded `?v=69&fresh=1`. Captured a full-page screen
 4. ↩️ Undo
 5. ↪️ Redo
 6. _Speed slider (🐢↔🐰)_
-7. 🔊 Sound (mute toggle) + volume slider
+7. 🔊 Sound (mute) + volume slider
 8. ☀️ Day/Night
 9. 💾 Save
 10. 🧩 Puzzles
@@ -58,21 +62,21 @@ Cleared `localStorage` → reloaded `?v=69&fresh=1`. Captured a full-page screen
 **Row 2 (round, 6 buttons):**
 1. 🌤️ Weather (sunny / rain / snow)
 2. 🌸 Biome (spring / summer / autumn / winter / desert)
-3. 🧑 Passengers toggle (Off / On — *flagged in §6*)
+3. 🧑 Passengers toggle (Off / On — *still flagged from Cycle 3*)
 4. 📤 Share / Save image
 5. ❓ How to play
 6. ⚙️ Settings
 
 **Play-only:** 📯 HONK (appears bottom-right while a train is running)
 
-→ **No change from Cycle 2 end (Day 58).** Cycle 3 shipped 5 features without adding a single toolbar button.
+→ **No change from Cycle 3 end (Day 73).** Cycle 4 shipped 5 features without adding a single toolbar button. **4-cycle streak.**
 
-### Settings Drawer (**8 tiles + music volume slider**)
-- AUDIO: 🎵 Music (Off/On), 🔊 Sound pack (Classic / Toy / Diesel)
-- DISPLAY: ♿ High Contrast, ⬛ Big Grid (12×8 / 16×10)
-- GAME: 🏷️ Name Your Trains, 🎬 Track Replay, 📊 Stats & Milestones, ⭐ Sticker Book
+### Settings Drawer (**8 tiles + music volume slider — unchanged**)
+- 🔊 AUDIO: 🎵 Music (Off/On), 🔊 Sound pack (Classic / Toy / Diesel)
+- 🖼️ DISPLAY: ♿ High Contrast, ⬛ Big Grid (12×8 / 16×10)
+- 🎮 GAME: 🏷️ Name Your Trains, 🎬 Track Replay, 📊 Stats & Milestones, ⭐ Sticker Book
 
-→ **+1 from Cycle 2 end (was 7).** The new Sticker Book is the right addition — collectibles belong in GAME, not floating on the toolbar. Drawer still passes the "scannable in 2 seconds" test.
+→ **Identical to Cycle 3 end.** Cycle 4 shipped 5 features without adding a single settings tile. **First cycle ever with zero settings-drawer growth.**
 
 ### Palette (**26 pieces, 4 sections** — unchanged)
 - TRACKS (9): Straight, Curve, T-Split, Cross, Bridge, Tunnel, Station, Crossing, Rainbow
@@ -80,188 +84,152 @@ Cleared `localStorage` → reloaded `?v=69&fresh=1`. Captured a full-page screen
 - CARS (3): Freight, Passenger, Caboose
 - SCENERY (9): Tree, House, Cow, Water, Flower, Sheep, Horse, Duck, People
 
-**Locked at fresh start: 20 / 26** (opacity 0.35 + 🔒 overlay)
+**Locked at fresh start: 20 / 26** (opacity 0.35 + `.palette-locked` class)
 Unlocked: Straight, Curve, Red train, Tree, House, Cow.
 
-→ **Progression is working again this cycle.** Cycle 2's PRUNE_REPORT flagged "0/26 locked" as a quiet regression — verified today that the milestone unlock system is healthy, no action needed.
+→ **Progression system held through Cycle 4 Harden.** Verified live this morning. **Difficulty Curve score should stay at 9.**
 
-### Modals (**11 total** — unchanged since Day 64)
-`save-modal`, `settings-modal`, `track-replay-modal`, `train-names-modal`, `share-modal`, `shortcuts-modal`, `puzzle-modal`, `screenshot-modal`, `stats-modal`, `sticker-modal`, plus `tutorial-overlay`. Each uses the delegated `event.target===this` outside-click pattern from Cycle 2 Day 56.
+### Modals (**11 total + tutorial-overlay = 12 — unchanged**)
+`save-overlay`, `settings-overlay`, `track-replay-overlay`, `train-names-overlay`, `share-overlay`, `shortcuts-overlay`, `puzzle-overlay`, `screenshot-overlay`, `stats-overlay`, `sticker-overlay`, plus the persistent `tutorial-overlay` and `replay-rec-indicator`. All use the Cycle 2 Day 56 delegated `event.target===this` outside-click pattern.
 
-### Code health
-- **Lines:** 11,866 (entering Prune)
-- **Bytes:** 422,935 (~413 KB)
-- **Total functions:** 325 (vs 306 end of Cycle 2 — +19 from Cycle 3 build week, of which Sticker Book + Replay-share v3 are the biggest contributors)
-- **Duplicate function declarations:** 0 (Day 67 cleared the last one — `svgEl` hoist)
-- **CSS classes defined:** 215 unique
-- **Dead CSS suspects:** 0 confirmed (`.animal-react-*` and `.difficulty-*` look like dead-rule candidates by lexical count, but verified — all are dynamically applied via `'animal-react-' + animalType` and `'difficulty-' + p.difficulty.toLowerCase()`)
-- **Console errors live:** 0
-- **Open bugs entering Prune week:** 0
+### Code health (entering Prune Week 4)
 
----
+| Metric | Cycle 3 entry (Day 69) | Cycle 3 exit (Day 73) | Cycle 4 entry (Day 84) | Δ vs C3 exit |
+|---|---|---|---|---|
+| Lines | 11,866 | 11,790 | **12,485** | **+695** |
+| Bytes | 422,935 | 419,531 | **448,624** | **+29,093** |
+| Functions | 325 | 325 | **343** | **+18** |
+| Modals | 11 | 11 | **11** | 0 |
+| Toolbar buttons | 15 + HONK | 15 + HONK | **15 + HONK** | 0 |
+| Settings tiles | 8 | 8 | **8** | 0 |
+| Palette pieces | 26 | 26 | **26** | 0 |
+| Open bugs | 0 | 0 | **0** | 0 |
+| Console errors live | 0 | 0 | **0** | 0 |
 
-## 3. Code-Health Targets (the actual prune budget)
-
-Hard rule: end ≤ 11,866 LOC. Stretch: ≤ 11,830 LOC (Cycle 2 parity at -36).
-
-### 🎯 Target A — Section-divider de-duplication (~50 LOC)
-
-The script section uses a `// ====================` "outer fence" pattern around every section header:
-
-```
-// ============================================================
-// SECTION LABEL
-// ============================================================
-```
-
-There are **107 fence-divider lines** in the script section, paired with **~50 section headers**. **51 of those fences are sandwich-closers** (the line *after* a `// LABEL` header). Removing the closing fences keeps every section break visible (each section still starts with `===\nLABEL`) and saves ~50 LOC with **zero readability loss**.
-
-Concretely, transform every:
-```
-// ============================================================
-// LABEL
-// ============================================================
-```
-into:
-```
-// ============================================================
-// LABEL
-```
-
-→ **Estimated saving: ~50 LOC.** Day 3 (Code Cleanup) target.
-
-### 🎯 Target B — Verbose Day 60 / Day 63 explainer comments (~5–8 LOC)
-
-Two block comments are *very* prose-heavy (8–10 lines each describing rationale for a single small function). They were useful during build week, but the code itself is now well-named enough that a one-line summary is fine. Specific candidates:
-- `// ============================================================` + 8-line essay above `ANIMAL_PASSENGERS` (lines ~11149–11157)
-- 6-line preamble above `STICKER_STORAGE_KEY` (lines ~11514–11521)
-
-Tighten to ~2 lines each. → **Estimated saving: ~10 LOC.** Day 3 target.
-
-### 🎯 Target C — Sticker constant array compaction (~2 LOC)
-
-`STICKERS` array (12 entries) currently has the `train-master` meta-sticker on 4 lines (the `check` function takes a multi-line body). Could be inlined to 2 lines with `function () { return STICKERS.every(s => s.id === 'train-master' || stickerState.earned[s.id]); }`. **Marginal but free.**
-
-→ **Estimated saving: ~2 LOC.** Day 3 target.
-
-### 🎯 Target D (defer if margin is comfortable) — Sky CSS variant consolidation
-
-`@keyframes sky-tint-cycle` and `@keyframes sky-tint-cycle-night` are 9 + 4 lines respectively. They could share keyframes via CSS custom properties for the gradient stops, but the cleanup adds ~6 lines of CSS-variable plumbing. **Net wash. Skip.**
-
-### 🎯 Target E (defer) — Modal `.close-btn` rule consolidation
-
-Each modal style block re-declares its `.close-btn` selector with the same 6-property body. There are 8 such repetitions. A single `.modal .close-btn { ... }` rule would save ~24 LOC, but the existing rules use modal-id selectors (`#sticker-modal .close-btn`), and the bodies aren't byte-identical (some override night-mode). **Higher refactor risk for ~15 net LOC. Defer to a future cycle.**
-
-### Realistic Day-3 budget
-
-| Target | Saving | Risk |
-|---|---|---|
-| A. Section-divider de-dup | ~50 LOC | None |
-| B. Verbose comments | ~10 LOC | None |
-| C. Sticker meta inline | ~2 LOC | None |
-| **Subtotal** | **~62 LOC** | **None** |
-
-→ **Projected end-of-week LOC: 11,866 − 62 = 11,804.** Beats the hard rule (≤11,866) by 62 lines, beats Cycle 2's −36 by ~26 lines. **Stretch goal achievable.**
+**The chrome held; the engine grew.** Cycle 4 added 5 behavior features (critters, station signals, confetti cannon, puddle splashes, train trail) without spending one byte of UX real estate. That's the right architecture, and it's the reason Cycle 4 was the heaviest build week (+691 LOC) in factory history — every feature is internal behavior with no UI cost.
 
 ---
 
-## 4. UX Simplification Targets (Day 2 — Simplify)
+## 3. Audit Targets — Code-Side Cuts
 
-The Cycle 2 prune already absorbed the obvious UX wins (settings grouping, Fullscreen demoted to F-key, Track Replay icon 👻→🎬, HONK in tutorial). For Cycle 3, the deck is **mostly clean**. Two small candidates:
+The Cycle 3 prune patterns (closing-fence dedup, blank-run dedup) are **exhausted**: 0 redundant fences in the codebase today, 0 multi-blank runs. The Cycle 4 cuts have to come from new sources.
 
-### 4a. Sticker Book progress on first-visit modal (delight polish, candidate)
-First-time sticker-book visitor sees `0 / 12 stickers earned`. A gentle hint — *"Play to earn your first sticker!"* — under the progress bar would warm up the empty state. **+4 LOC, kid-friendly delight.** (This is actually a Day 4 *Delight Polish* candidate, not a Day 2 cut. Flagged here for visibility.)
+### Target A — Verbose Day-NN preamble comments (~30 LOC)
 
-### 4b. Settings drawer Sticker Book entry — icon variant
-Currently `⭐ Sticker Book`. Considered: leave it. The ⭐ matches the meta-sticker reward and the Stats & Milestones tile already uses 📊, so star is the right read. **No change.**
+The 3 biggest Cycle-4 features each shipped with explanatory preamble comment blocks intended to document *why* the feature exists. The kid-pitch context is already in FACTORY_STATE.json history entries; the code-level "why" can be 1-2 lines per feature.
 
-### 4c. (Defer) Passengers 🧑 button surface
-Round-row Passengers button is the only stateful icon in row 2 (Off/On switch). Discoverability nit but **not** a prune target — moving it to settings would *grow* the file (drawer tile + remove toolbar button = net wash or growth). **Flag for Build Week 4 roadmap discussion.**
+Identified:
+- **Lines 4301–4307: Day 77 PUDDLE SPLASHES preamble** (7 lines) → collapse to 2.
+- **Lines 4403–4412: Day 78 TRAIN TRAIL preamble** (10 lines) → collapse to 2.
+- **Lines 4886–4891: Day 77 puddle module-state preamble** (6 lines) → collapse to 1.
+- **Lines 4227–4230: Day 75 STATION SIGNAL preamble** (4 lines) → leave (already terse).
+- **Lines 8403–8420: Day 47 TRACK REPLAY preamble** (18 lines) → collapse to 4. *Earlier-cycle code, fair game now that the system is mature and bug-free across 2 harden weeks.*
+- **Lines 3205–3213: Day 61 WHISTLE SONGS preamble** (9 lines) → collapse to 2.
+- **Lines 3126–3131: Day 48 SOUND PACKS preamble** (6 lines) → collapse to 2.
+- **Lines 8280–8285: Day 44 TRAIN NAMES preamble** (6 lines) → collapse to 1.
 
-→ **Day 2 plan: no UX cuts.** Cycle 3 Prune Week is a code-health week, by design.
+**Estimated savings: 33 LOC.** Zero functional change, zero readability loss (the *what* the code does is obvious from the function names; the *why* was scaffolding for the build-week scribe).
+
+### Target B — Puzzle dev-scaffold comments (~46 LOC)
+
+Puzzles 6, 7, 9, and 10 each ship with multi-line "here's how I designed this puzzle" comment blocks left over from the Day 16 build session. The actual puzzle is defined by the `pieces:` array right below the comment; the comments are obsolete development notes.
+
+Identified:
+- **Lines 10673–10691: Puzzle 6 Switchyard design notes** (19 lines) → collapse to 1.
+- **Lines 10706–10717: Puzzle 7 Speed Run design notes** (12 lines) → collapse to 1.
+- **Lines 10731–10736: Puzzle 8 Cow Pasture design notes** (6 lines) → collapse to 1.
+- **Lines 10756–10766: Puzzle 9 Night Express design notes** (11 lines) → collapse to 1.
+- **Lines 10782–10789: Puzzle 10 Multi-Train design notes** (8 lines) → collapse to 1.
+
+**Estimated savings: 51 LOC.** Zero functional change. The puzzle definitions are exhaustively unit-tested (Day 65 + Day 80 each auto-solved all 10 puzzles at 3⭐ with `placePiece`).
+
+### Target C — Audio prelude DRY helper (~12-18 LOC)
+
+15 SFX functions share an identical opening:
+```js
+if (!soundEnabled) return;
+const ctx = getAudioCtx();
+if (!ctx) return;
+// (often followed by) const mg = getMasterGain();
+```
+
+Sites: lines 3227, 3498, 3513, 3570, 3680, 3709, 3737, 3771, 3802, 3835, 3877, 3910, 3943, 3975, 4025.
+
+Proposed helper:
+```js
+function audioBegin() {
+  if (!soundEnabled) return null;
+  const ctx = getAudioCtx();
+  if (!ctx) return null;
+  return { ctx, mg: getMasterGain() };
+}
+```
+
+Each caller collapses to:
+```js
+const a = audioBegin(); if (!a) return;
+const { ctx, mg } = a;
+```
+
+That's 2 lines instead of 3-4 per site. With 15 sites and a 6-line helper, net saving is roughly **15 × 1.5 = 22 LOC saved − 6 LOC for the helper = ~16 LOC net**. Conservative estimate. *But:* some callsites only need `ctx` and don't fetch `mg` — we can preserve that micro-optimization by exposing both `audioBegin()` (returns `{ctx,mg}`) and the existing `getAudioCtx()` for the rare ctx-only sites. **Estimated savings: 12-18 LOC.**
+
+Safer alternative if the helper feels lossy: leave the audio engine alone and route the remaining LOC budget elsewhere. Day 71 cycle-3 cleanup taught us that **forcing DRY where the duplication is intentional micro-optimization** hurts readability without saving meaningful bytes.
+
+### Target D — Confetti particle spawn helper (~10-15 LOC, OPTIONAL)
+
+`triggerMiniConfetti` (12-particle loop, line 11539) and the inner loop of `triggerConfettiCannon` (3 × 18-particle bursts, line 11598-ish) share the bulk of the particle setup pattern. Could extract `spawnConfettiParticle(container, cx, cy, colors, sizeMin, sizeMax, distBase, distRand, durMs)`.
+
+But the two patterns differ in *size, distance, dy bias, and lifetime*, so the helper signature gets noisy. **Verdict: skip unless the budget is short.** Day 67's `svgEl` hoist was clean because the inner helper was byte-identical; this one isn't.
+
+### What I'm NOT cutting
+
+- **Closing fences (`// =====`).** All 62 in the file today are legitimate multi-line block delimiters (top fence + section header + bottom fence). The redundant closing fences from Cycle 2 were harvested on Day 70. Don't re-prune dry wood.
+- **Consecutive blank-line runs.** Zero ≥2-run blanks remain in the file (verified by python sweep). Day 71 already harvested these.
+- **Function count.** Cycle 3 closed flat at 325 because the DRY meat was eaten. Cycle 4 added 18 functions across 5 features (average 3-4 fns/feature, all named, all referenced); cutting them would hurt readability. *Don't force a function-count cut.*
+- **CSS classes.** No dead-rule suspects emerged from a quick scan; the Cycle 3 Day 67 dead-CSS audit cleared the file and nothing new looks orphan.
+- **Day 75 Station Signal preamble** (4 lines) — already terse, leaves no room.
 
 ---
 
-## 5. Delight Polish (Day 4 candidates)
+## 4. Day-by-Day Plan
 
-These are *additions*, not cuts — Day 4 of Prune Week is where small kid-magic gets added back inside the saved-LOC margin.
-
-1. **Sticker Book empty-state hint** (~4 LOC, see §4a) — warms up the 0/12 state.
-2. **Honk-from-keyboard tells you what train honked** — currently HONK sounds for the active train, but on first run a kid might press it and not see which train made the sound. A 1-frame badge over the active loco when HONK fires? **Optional, ~10 LOC.**
-3. **First-sticker celebration upgrade** — Day 63's award path uses `SFX.celebrate()` + toast. For the *first* sticker only, consider a brief whole-screen confetti burst (the function already exists from cargo deliveries). **~5 LOC.**
-
-→ Pick the cheapest one (1) on Day 4. Save the rest for Build Week 4 or beyond.
-
----
-
-## 6. Non-Prune Flags (for the next Build Week roadmap, not actionable here)
-
-- **🧑 Passengers button discoverability** (§4c) — Off/On state isn't obvious. Consider rename, indicator dot, or settings-drawer relocation in Cycle 4.
-- **Tutorial coverage** — Tutorial still has 3 steps. Cycle 3 shipped 5 features. Kids who skip tutorial won't see Sticker Book, Animal Passengers, or Whistle Songs surfaced anywhere. Consider a "What's New" reveal after the 3rd run, or extending the tutorial to 4 steps. **Build Week 4 candidate.**
-- **Big Grid + Sky-cycle interaction** — On a 16×10 grid, the sun-arc keyframe percentages still target the viewport, so the sun's trajectory looks fine. Verified in Harden Week. No action.
-
----
-
-## 7. Day-by-Day Plan for Prune Week 3
-
-| Day | Date | Goal | Specifics |
+| Day | Theme | Target LOC Δ | Notes |
 |---|---|---|---|
-| **Day 69 (Mon)** | May 28 | Fresh-Eyes Audit | _(this report)_ |
-| **Day 70 (Tue)** | May 29 | Simplify | **Target A executed (closing-fence dedup, −49 LOC).** Hard rule cleared, stretch goal beaten by 13 lines. Game verified live on deploy: 0 console errors, random-track generates 40 cells + train clean. |
-| **Day 71 (Wed)** | May 30 | Code Cleanup | **Targets B + C executed + bonus blank-run dedup, −33 LOC.** See Day 71 Result below. |
-| **Day 72 (Thu)** | May 31 | Delight Polish | **Sticker Book empty + complete hints shipped (+6 LOC).** See Day 72 Result below. |
-| **Day 73 (Fri)** | June 1 | Expert Panel + Validation | Cycle 3 close-out review, score vs Day 58 (8.4 baseline), commit to `reviews/prune-cycle-3-review.md` |
+| **84 Mon** | Fresh Eyes Audit | 0 | This report. Hard rule ≤12,485, stretch ≤12,449, aspirational ≤12,409. |
+| **85 Tue** | Simplify (Target A) | **−30** | Collapse 7 verbose Day-NN preamble blocks (Puddle/Trail/Module-State/Replay/Whistle/Sound-Pack/Train-Names). |
+| **86 Wed** | Code Cleanup (Target B + audio prelude scan) | **−50** | Trim 5 puzzle dev-scaffold comment blocks. Then evaluate Target C feasibility live — only ship it if the diff stays clean. |
+| **87 Thu** | Delight Polish | **+0 to +8** | Tiny kid-friendly addition inside a margin we control. Candidates: brighter confetti color palette in night mode; subtle "first puddle ever" sticker; faster initial critter spawn delay. *Polish must stay net ≤ +8 LOC and live inside an existing surface.* |
+| **88 Fri** | Validation + Cycle 4 Review | 0 | Live smoke test on the deployed site (`?v=88&fresh=1`), full 9-action user flow, screenshot evidence, JS parse clean, 0 console errors. Write `reviews/prune-cycle-4-review.md`. Commit + push + Telegram report. |
 
-### Day 72 Result (May 31)
-
-- **LOC:** 11,784 → **11,790** (+6)
-- **Bytes:** 418,970 → **419,335** (+365)
-- **Cycle 3 Prune cumulative:** **−76 LOC** (entry 11,866 → 11,790; hard rule cleared by 76, stretch ≤11,830 beaten by 40, Cycle 2's −36 beaten by 40)
-- **What changed:** Inside `renderStickerContent()`, two single-line conditionals append a hint after the progress bar: `earnedCount === 0` shows *“Play to earn your first sticker! 🚂”* in italic warm-brown; `earnedCount === total` shows *“🌟 Collection complete! 🌟”* in bold celebration orange. Mid-state (1–11 stickers) shows nothing, keeping the modal clean. 4 CSS rules (`.sticker-empty-hint`, night-mode variant, `.sticker-complete` variant, night-mode complete) total ~4 LOC.
-- **Verification (live `?v=72&fresh=1`):**
-  - 0/12 state: hint text `Play to earn your first sticker! 🚂`, class `sticker-empty-hint` ✅
-  - 1/12 state: no hint element rendered ✅
-  - 12/12 state: hint text `🌟 Collection complete! 🌟`, class `sticker-empty-hint sticker-complete` ✅
-  - 0 console errors, JS parse clean (`node --check` on extracted script)
-  - Screenshot evidence saved in build-reports
-- **Mandate respected:** No new UX surface (toolbar / settings drawer untouched); the hint lives inside the existing Sticker Book modal that was already on the chrome since Day 63. Net +6 LOC inside the comfortable Day-2/Day-3 saved-LOC margin (−82 LOC saved → −76 LOC after polish).
-
-### Day 71 Result (May 30)
-
-- **LOC:** 11,817 → **11,784** (−33)
-- **Bytes:** 419,799 → **418,970** (−829)
-- **Cycle 3 Prune cumulative:** −82 LOC (hard rule ≤11,866 cleared by 82, stretch ≤11,830 beaten by 46 — already past Cycle 2's −36 with 2 days to spare)
-- **What changed:**
-  - Target B: Day 60 `ANIMAL_PASSENGERS` 10-line preamble → 3-line summary; Day 63 `STICKER_STORAGE_KEY` 8-line preamble → 3-line summary (−15 LOC)
-  - Target C: `train-master` meta-check inlined (4 → 1 line, −3 LOC)
-  - Bonus: 18 redundant blank lines removed (5 known 3+-run locations plus all 2-blank runs across the file collapsed to a single blank — readability unchanged)
-- **Verification:** `node --check` on extracted script: clean. Live deploy at `?v=71`: 0 console errors, 52 palette pieces, 50 buttons, 12 stickers, 4 animal types (cow/sheep/duck-land/horse), `generateRandomTrack()` succeeds.
-- **Day 4 / Day 5 plan unchanged:** Delight polish (Sticker Book empty-state hint, §5.1) Thursday; Cycle 3 close-out review Friday. Margin is so generous Day 4 could absorb an extra small polish if one surfaces.
-
-### Day 70 Result (May 29)
-
-- **LOC:** 11,866 → **11,817** (−49)
-- **Bytes:** 422,935 → **419,799** (−3,136)
-- **Hard rule** (≤11,866): ✅ cleared by 49 lines
-- **Stretch goal** (≤11,830): ✅ beaten by 13 lines
-- **What changed:** 49 redundant closing `// =====` fences removed from 3-line sandwich section headers. 58 fences remain — all legitimate multi-line block comment delimiters (correctly preserved).
-- **Verification:** `node --check` on extracted script clean. Live deploy at v=70 renders grid, palette (52 pieces), 50 buttons. `generateRandomTrack()` produces 40 occupied cells + train with 0 console errors.
-- **Schedule impact:** Targets B + C deferred to Day 3 (Code Cleanup). Margin is generous — Day 3 can pursue further code-health wins beyond the original budget.
+**Cumulative target: −80 to −90 LOC.** Clears the hard rule with a 80-line margin and beats the stretch goal (≤12,449, −36) by 44; aspirational (≤12,409, −76) is achievable if all 3 targets ship clean.
 
 ---
 
-## 8. The Number That Matters
+## 5. Risks & Watch-Items
 
-**Entering:** 11,866 lines / 422,935 bytes
-**Hard rule end-of-week:** ≤ 11,866
-**Realistic projection:** ~11,804 (-62)
-**Stretch:** ≤ 11,830 (-36, parity with Cycle 2)
-
-**Prediction:** Cycle 3 Prune will be the **second consecutive net-negative prune** in the 90-day plan. Code-debt momentum compounding.
+1. **The Day 47 Track Replay preamble cut is the riskiest.** That feature has 2 follow-on integrations (Day 62 share-replay v3, Day 67 sticker-book hook). Keep the *implementation* comments inside `playReplay`/`recordAction` intact; only collapse the top-of-section block.
+2. **Audio prelude DRY (Target C) needs a live smoke test before push.** Test all 10+ SFX paths after the refactor: station horn, whistle songs, chug, brake, celebrate, mini-confetti party, puddle "kssh", sound-pack switch.
+3. **Don't add a Delight Polish that's UX-surface.** Cycle 3 Day 72 nailed this by adding hints *inside* the sticker modal. Cycle 4 Day 87 must follow the same discipline — additions live inside existing modals or inside play-time behavior, never on the toolbar.
+4. **Byte rule.** Cycle 3 was the first cycle where both LOC and bytes shrank. Cycle 4 needs to repeat. Tracking byte delta in build-reports/.
+5. **Don't relitigate the 90-day plan.** The Cycle 3 review called the 90-day plan complete. Cycle 4 is bonus-content — the factory has demonstrated the build/harden/prune rhythm and is now exploring whether it can sustain a 4th cycle without regressing the kid-UX wins.
 
 ---
 
-*Auditor: Mochi 🐯
-Date: May 28, 2026
-File: `PRUNE_REPORT.md`
-Cycle: 3 of the 90-day program (Apr 18 – Jul 16, 2026)*
+## 6. Live Smoke Test (this morning, Day 84)
+
+Verified live on `https://mikedyan.github.io/train-tracks/?v=84&fresh=1&cb=prune4d1` after `localStorage.clear()` + reload:
+
+- ✅ Tutorial overlay auto-opens (step 1 of 3, "Drag a Track Piece!", Skip + Next visible)
+- ✅ Palette renders 26 pieces; 20 dimmed with `palette-locked` class (Straight/Curve/Red train/Tree/House/Cow unlocked)
+- ✅ Toolbar shows 15 visible buttons (9 row-1 + 6 row-2 round), HONK hidden until play
+- ✅ Settings modal: 3 section headers (🔊 Audio / 🖼️ Display / 🎮 Game), 8 settings items
+- ✅ Share modal: 3 buttons (Copy Link / Replay Link / Save Image — v3 still wired)
+- ✅ Drawer sections: Tracks · Trains · Cars · Scenery (4 labels)
+- ✅ `localStorage` after fresh load: only `trainTracks_stickers` key (Sticker Book init from Day 63)
+- ✅ Zero console errors across page-load + sidebar render + tutorial render
+
+**Anchor confirmed: 12,485 LOC / 448,624 bytes / 343 functions. Prune Week 4 is live.**
+
+---
+
+*Audit by Mochi. The hard rule is numbers, not vibes. Cycle 2 and Cycle 3 both cleared their numeric rules. Cycle 4 will too.*
