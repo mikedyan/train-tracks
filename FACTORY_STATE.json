@@ -1,13 +1,13 @@
 {
   "project": "Train Tracks",
-  "currentDay": 84,
+  "currentDay": 85,
   "status": "active",
   "weekType": "prune",
-  "weekDay": 1,
+  "weekDay": 2,
   "cycleNumber": 4,
-  "cycleDay": 10,
-  "lastRun": "2026-06-12T09:30:00-07:00",
-  "lastRunDate": "2026-06-12",
+  "cycleDay": 11,
+  "lastRun": "2026-06-13T09:30:00-07:00",
+  "lastRunDate": "2026-06-13",
   "cycleClosed": false,
   "cycle3Review": "reviews/prune-cycle-3-review.md",
   "completedDays": [
@@ -94,10 +94,14 @@
     81,
     82,
     83,
-    84
+    84,
+    85
   ],
-  "nextDay": 85,
-  "phase": "Cycle 4 Prune Week (Day 84/88)",
+  "nextDay": 86,
+  "phase": "Cycle 4 Prune Week (Day 85/88)",
+  "pruneWeek4LocDelta": -48,
+  "pruneWeek4BytesDelta": -2874,
+  "pruneWeek4Anchor": 12437,
   "hardenAnchorLOC": 12485,
   "hardenAnchorBytes": 448624,
   "hardenAnchorNote": "Anchor at Harden Week 4 close (Day 83): 12,485 LOC / 448,624 bytes. Net Harden Week 4 LOC Δ: +4 vs. 12,481 build-week close (BUG-019 guard +5, resetDeliveryStreak dead-fn -1). Prune Week 4 hard rule: ≤12,485 LOC.",
@@ -614,6 +618,12 @@
       "day": 83,
       "date": "2026-06-11",
       "feature": "Cycle 4 Harden Week Day 5: Regression Pass — 16/16 checks ✅ on live ?v=83&fresh=1, 0 bugs found, 0 regressions, 0 console errors. Cold-boot tutorial auto-opens, 52 palette pieces / 40 locked (progression healthy), generateRandomTrack settles to 38 cells + 1 train, BUG-019 guard holds on 10× rapid stress, startPlay spawns 6 critters + 1 station-signal + 10 trail dots, applyWeather('rain') spawns 2 puddles mid-play without disturbing other ephemerals, Confetti Cannon at delivery #5 fires 18 confetti + 24 streamers + 1 banner, stopPlay drains all 4 ephemeral DOM types to 0, share v2 = 140 chars/0x02 byte-identical, save→clearAll→load preserves 42 cells + 1 train, Big-Grid 8x12↔10x16 round-trip, night-mode + high-contrast both idempotent, Puzzle modal loads 10 cards, Sticker Book modal shows 12 cells, screenshot 2924×1948 valid PNG (886KB). Harden Week 4 closes at 12,485 LOC / 448,624 bytes — +4 LOC net (BUG-019 guard +5, dead-fn -1). SHIP READY. Prune Week 4 hard rule ≤12,485 LOC.",
+      "status": "complete"
+    },
+    {
+      "day": 85,
+      "date": "2026-06-13",
+      "feature": "Cycle 4 Prune Week Day 2: Simplify (Target A) — collapsed 7 verbose Day-NN preamble comment blocks into terse 1-2 line behavior descriptions. SOUND PACKS (Day 48) 6→2 (-4), WHISTLE SONGS (Day 61) 10→2 (-8), PUDDLE SPLASHES preamble (Day 77) 7→2 (-5), TRAIN TRAIL preamble (Day 78) 10→2 (-8), Puddle module-state (Day 77) 6→1 (-5), TRAIN NAME LABELS (Day 44) 6→1 (-5), TRACK REPLAY / GHOST TRAIN (Day 47) 18→4 (-14). Total -48 LOC, -2,874 bytes (12,485→12,437 LOC, 448,624→445,750 bytes). Hard rule ≤12,485 cleared by 48; stretch ≤12,449 (C2 parity) beaten by 12; aspirational ≤12,409 (C3 parity) reachable with Target B on Day 86. Live-verified ?v=85&fresh=1&cb=d85simplify: tutorial auto-opens, 40 locked palette pieces, generateRandomTrack settles to 12 cells + 1 train (BUG-019 guard holds), startPlay spawns 6 critters + 1 station-signal + 11 trail-dots, applyWeather('rain') spawns 1 puddle mid-play, stopPlay drains all 4 ephemerals to 0, all 7 affected symbols (SOUND_PACKS/WHISTLE_SONGS/maybeSpawnPuddle/startPuddleSystem/spawnTrainTrailDot/normalizeTrainsName/openTrainNamesModal/snapshotForReplayBaseline/playReplay/triggerConfettiCannon/recordDelivery) typeof-checked OK. 0 console errors, JS parse clean. Zero functional change — prune mandate held.",
       "status": "complete"
     },
     {
