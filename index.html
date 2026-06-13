@@ -3123,12 +3123,8 @@ let soundState = 'full'; // 'full' | 'low' | 'mute'
 const VOLUME_KEY = 'trainTracks_volume';
 const SOUND_STATE_KEY = 'trainTracks_soundState';
 
-// ============================================================
-// SOUND PACKS (Day 48 — Cycle 2 Build Day 5)
-// Three timbral palettes for whistle/chug/horn/station. All synthesized,
-// no audio assets. Pack picks waveforms, frequency multipliers, and gains —
-// the SFX functions themselves stay shared. Persisted in localStorage.
-// ============================================================
+// SOUND PACKS (Day 48): 3 timbral palettes — pack picks waveforms/freq/gain,
+// SFX shared. Persisted via SOUND_PACK_KEY.
 const SOUND_PACK_KEY = 'trainTracks_soundPack';
 const SOUND_PACK_ORDER = ['classic', 'toy', 'diesel'];
 const SOUND_PACKS = {
@@ -3202,15 +3198,8 @@ function updateSoundPackSettingsLabel() {
   lbl.textContent = 'Sound: ' + p.short;
 }
 
-// ============================================================
-// WHISTLE SONGS (Day 61 — Cycle 3 Build Day 3)
-// Each train color sings a tiny 4-note pentatonic melody at
-// stations, right after the horn fades. Gives every train a
-// recognizable musical voice. Pentatonic-only so the songs
-// layer gracefully over the ambient music engine. Timbre is
-// tied to the color (not the sound pack) — the color *is* the
-// identity. Volume kept low so it sits under the horn tail.
-// ============================================================
+// WHISTLE SONGS (Day 61): per-color 4-note pentatonic melody fires at stations
+// after the horn tail. Timbre tied to color (color = identity), not sound pack.
 const WHISTLE_SONG_OFFSET = 0.60; // start after station horn body
 const WHISTLE_SONG_NOTE_DUR = 0.24;
 const WHISTLE_SONG_STEP = 0.19;   // note-to-note spacing (slight overlap → legato)
@@ -4298,13 +4287,8 @@ function updateStationSignals(now) {
   }
 }
 
-// =============================================================
-// Day 77: 🌧️ PUDDLE SPLASHES
-// Small rainwater puddles randomly form on horizontal track tiles during
-// rain. When a train rolls into a puddled cell, a 4-droplet splash and a
-// "kssh" SFX fire. Cleans up 5s after rain stops (or immediately on Stop).
-// Auto-on — no new toolbar surface (LESSON-DAY46-F, LESSON-DAY59-A).
-// =============================================================
+// Day 77: 🌧️ PUDDLE SPLASHES — rain spawns puddles on horizontal track;
+// trains splash with 4 droplets + "kssh" SFX. 5s fadeout when rain stops.
 function isHorizontalTrackCell(row, col) {
   const piece = state.grid[row] && state.grid[row][col];
   if (!piece || SCENERY_TYPES.includes(piece.type)) return false;
@@ -4400,16 +4384,8 @@ function triggerPuddleSplash(row, col) {
   }
 }
 
-// =============================================================
-// Day 78: 🛤️ TRAIN TRAIL
-// Each train drops a small color-matched dot at its visual center every
-// TRAIN_TRAIL_SPAWN_DIST pixels of travel. CSS animates the dot from a
-// soft glow to transparent over 1.5s; JS schedules removal at +100ms past
-// the animation end so finished dots don't accumulate in the DOM.
-// Auto-on. Skipped while a train is inside a tunnel (the loco itself is
-// fading/invisible there) and entirely off under prefers-reduced-motion.
-// Cleanup hooks into stopPlay()'s existing querySelectorAll sweep.
-// =============================================================
+// Day 78: 🛤️ TRAIN TRAIL — color-matched dot every TRAIN_TRAIL_SPAWN_DIST px
+// of travel, fades over 1.5s. Skipped in tunnels + under prefers-reduced-motion.
 const TRAIN_TRAIL_SPAWN_DIST = 14;     // px between successive dots
 const TRAIN_TRAIL_SPAWN_DIST_SQ = TRAIN_TRAIL_SPAWN_DIST * TRAIN_TRAIL_SPAWN_DIST;
 const TRAIN_TRAIL_DURATION_MS = 1500;  // matches CSS keyframe length
@@ -4883,12 +4859,7 @@ let weatherParticles = [];
 const MAX_WEATHER_PARTICLES = 60;
 let weatherAmbientNodes = []; // active ambient sound oscillators/nodes
 let weatherAmbientGain = null;
-// Day 77: Puddle Splashes — module state for the rain-only puddle pool.
-// `puddleEls` is keyed by 'row,col'; values are the .puddle DOM elements
-// currently anchored to that cell. `puddleSpawnInterval` ticks every
-// PUDDLE_SPAWN_RATE_MS to maybe add one new puddle (capped at MAX_PUDDLES).
-// `puddleFadeoutTimeout` schedules a 5s delayed cleanup when rain stops
-// mid-play so the puddles drain naturally instead of vanishing instantly.
+// Day 77: Puddle module state — puddleEls keyed by 'row,col', capped at MAX_PUDDLES.
 const MAX_PUDDLES = 6;
 const PUDDLE_SPAWN_RATE_MS = 2200;
 const PUDDLE_SPAWN_CHANCE = 0.55; // each tick: only 55% chance to actually add
@@ -8277,12 +8248,7 @@ function openShareMenu() {
 function closeShareMenu() {
   document.getElementById('share-overlay').classList.remove('open');
 }
-// ============================================================
-// TRAIN NAME LABELS (Day 44 — Cycle 2 Build Day 1)
-// Lets kids type a name per placed train ("MARK'S TRAIN", "RAINBOW EXPRESS")
-// which floats above the loco during play. Names persist via the existing
-// state.trains JSON serialization (auto-save, save slots) for free — they
-// are just an additional `name` field on each train object.
+// TRAIN NAME LABELS (Day 44): per-train name string floats above loco; persists via state.trains JSON.
 function openTrainNamesModal() {
   normalizeTrainsName();
   const list = document.getElementById('train-names-list');
@@ -8400,24 +8366,10 @@ function normalizeTrainsName() {
   }
 }
 
-// ============================================================
-// TRACK REPLAY / GHOST TRAIN (Day 47 — Cycle 2 Build Day 4)
-// Kid pitch: Press 🔴 Record, build your track. Press ▶️ Replay,
-// a ghost rebuilds it for you piece-by-piece, then the train auto-runs.
-// Coding-lite. Mark replays his masterpiece for dad.
-//
-// Implementation:
-// - When recording, every placePiece / removePiece / rotatePiece /
-//   placeTrain / clearAll appends an action record to state.replayActions.
-//   Recording also captures a baseline snapshot of the grid so replay
-//   can restore the exact starting state.
-// - During replay we set replayApplying=true so action hooks don't
-//   re-record, then we re-call the same low-level functions on a fixed
-//   600ms cadence (kids can follow it; honors prefers-reduced-motion by
-//   collapsing to 200ms). After the last step, if any train is placed,
-//   startPlay() runs automatically.
-// - Persists across reload via localStorage. Disabled while a puzzle is
-//   active (puzzles already lock most of the grid; conflicting flow).
+// TRACK REPLAY / GHOST TRAIN (Day 47): 🔴 Record → action log + baseline snapshot;
+// ▶️ Replay → replayApplying=true (hooks don't re-log), re-calls low-level fns at
+// REPLAY_STEP_MS cadence (200ms under reduced-motion), auto-startPlay if a train
+// is placed. Persists via REPLAY_KEY; disabled during puzzles.
 const REPLAY_KEY = 'trainTracks_replay';
 const REPLAY_STEP_MS = 600;
 const REPLAY_STEP_MS_REDUCED = 200;
