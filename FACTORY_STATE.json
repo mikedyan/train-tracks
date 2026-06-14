@@ -1,13 +1,13 @@
 {
   "project": "Train Tracks",
-  "currentDay": 85,
+  "currentDay": 86,
   "status": "active",
   "weekType": "prune",
-  "weekDay": 2,
+  "weekDay": 3,
   "cycleNumber": 4,
-  "cycleDay": 11,
-  "lastRun": "2026-06-13T09:30:00-07:00",
-  "lastRunDate": "2026-06-13",
+  "cycleDay": 12,
+  "lastRun": "2026-06-14T09:30:00-07:00",
+  "lastRunDate": "2026-06-14",
   "cycleClosed": false,
   "cycle3Review": "reviews/prune-cycle-3-review.md",
   "completedDays": [
@@ -95,13 +95,14 @@
     82,
     83,
     84,
-    85
+    85,
+    86
   ],
-  "nextDay": 86,
-  "phase": "Cycle 4 Prune Week (Day 85/88)",
-  "pruneWeek4LocDelta": -48,
-  "pruneWeek4BytesDelta": -2874,
-  "pruneWeek4Anchor": 12437,
+  "nextDay": 87,
+  "phase": "Cycle 4 Prune Week (Day 86/88)",
+  "pruneWeek4LocDelta": -99,
+  "pruneWeek4BytesDelta": -5573,
+  "pruneWeek4Anchor": 12386,
   "hardenAnchorLOC": 12485,
   "hardenAnchorBytes": 448624,
   "hardenAnchorNote": "Anchor at Harden Week 4 close (Day 83): 12,485 LOC / 448,624 bytes. Net Harden Week 4 LOC Δ: +4 vs. 12,481 build-week close (BUG-019 guard +5, resetDeliveryStreak dead-fn -1). Prune Week 4 hard rule: ≤12,485 LOC.",
@@ -630,6 +631,12 @@
       "day": 84,
       "date": "2026-06-12",
       "feature": "Cycle 4 Prune Week Day 1: Fresh Eyes Audit — PRUNE_REPORT.md written for Cycle 4. Anchor entering Prune: 12,485 LOC / 448,624 bytes / 343 functions / 11 modals / 26 palette (20 locked on fresh) / 15 toolbar buttons + HONK / 8 settings tiles in 3 sections. UX held through 5 build features: ZERO new toolbar buttons, ZERO new settings tiles, ZERO new modals vs Cycle 3 exit — first cycle ever with zero chrome growth. Cycle 3 prune patterns EXHAUSTED (0 redundant closing fences, 0 ≥2-blank runs). Cycle 4 targets identified: A) 7 verbose Day-NN preamble comment blocks across Puddle/Trail/Module-State/Replay/Whistle/Sound-Pack/Train-Names (est. −30 LOC), B) 5 puzzle dev-scaffold comment blocks across Puzzles 6/7/8/9/10 (est. −50 LOC), C) audio prelude DRY via audioBegin() helper covering 15 SFX sites (est. −12-18 LOC, risk-flagged for live smoke-test), D) confetti spawn helper (OPTIONAL, skipped unless budget short). Week budget −60 to −90 LOC. Hard rule ≤12,485, stretch ≤12,449 (C2 parity), aspirational ≤12,409 (C3 parity). Live verified ?v=84&fresh=1&cb=prune4d1: tutorial auto-opens, 20/26 palette locked, 8 settings + 3 section headers, share modal 3 buttons incl. Replay Link, 0 console errors, only trainTracks_stickers in localStorage. 0 open bugs entering Prune. Non-prune UX flag carried forward: 'Ambient Critters subtle on first play' (out of scope, for hypothetical next Build week).",
+      "status": "complete"
+    },
+    {
+      "day": 86,
+      "date": "2026-06-14",
+      "feature": "Cycle 4 Prune Week Day 3: Code Cleanup (Target B) — collapsed 5 puzzle dev-scaffold comment blocks (Puzzles 6 Switchyard 19→1, 7 Speed Run 12→1, 8 Cow Pasture 6→1, 9 Night Express 11→1, 10 Twin Loops 8→1). All 5 puzzle definitions byte-identical: P6 5 locked + {straight:7, tjunction:2}, P7 4 locked + {straight:20}, P8 4 locked + {straight:14}, P9 5 locked + {straight:8, tunnel:1} + forceNight, P10 8 locked + {straight:8} + 2 pre-placed trains. Total −51 LOC, −2,699 bytes (12,437→12,386 LOC, 445,750→443,051 bytes). Cumulative Cycle 4 Prune through Day 86: −99 LOC, −5,573 bytes — hard rule ≤12,485 cleared by 99, stretch ≤12,449 (C2 parity) beaten by 63, aspirational ≤12,409 (C3 parity) beaten by 23. First Cycle-4 Prune day to beat the C3 −76 LOC record. Target C (audio prelude DRY across 15 SFX paths) evaluated and HELD — PRUNE_REPORT flagged it as risk-flagged, and with a 63-line stretch margin already banked it was clean to skip. Live verified ?v=86&fresh=1&cb=d86cleanup: tutorial auto-opens, 40/52 palette locked, all 10 puzzles render with original names (Switchyard/Speed Run/Cow Pasture/Night Express/Twin Loops intact), random track 42 cells + 1 train, BUG-019 guard holds, startPlay spawns 6 critters + 2 station-signals + 6 trail-dots, stopPlay drains all 4 ephemerals to 0, 0 console errors, JS parse clean. Zero functional change — prune mandate held.",
       "status": "complete"
     }
   ],
