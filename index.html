@@ -10622,25 +10622,7 @@ const PUZZLES = [
     hint: 'Build one big loop visiting all 3 stations!',
   },
   {
-    // Puzzle 6: Switchyard — T-junctions to route train
-    // Layout: Two stations at top-left and top-right, T-junctions in middle to route between them
-    // Locked: 2 stations, 2 curves for bottom corners
-    // Player places: T-junctions + straights to create a figure that visits both stations
-    // Solution: (2,3) station EW, (2,8) station EW
-    // Top path: (2,4) str EW, (2,5) tjunction, (2,6) str EW, (2,7) str EW
-    // Left side: (3,3) curve 0=N+E (connects top to right)
-    // Right side: (3,8) curve 270=W+N (connects left to top)
-    // Bottom: (3,4) str EW, (3,5) str EW, (3,6) str EW, (3,7) str EW
-    // But we want player to place tjunctions:
-    // Simpler: rectangle with T-junctions
-    // Corners locked: (1,3) curve 90=E+S, (1,7) curve 180=S+W, (4,7) curve 270=W+N, (4,3) curve 0=N+E
-    // Station locked: (1,5) station 90=EW (in middle of top row)
-    // Player places: straights + 2 tjunctions to complete the loop
-    // Top: (1,4) str EW, (1,6) str EW
-    // Right: (2,7) str NS, (3,7) str NS
-    // Bottom: (4,4) str EW, (4,5) tjunction 90, (4,6) str EW
-    // Left: (2,3) str NS, (3,3) str NS
-    // Total player: 7 straights + 1 tjunction = 8 pieces
+    // Puzzle 6: Switchyard — locked outer rectangle of curves + center station; player adds straights + 2 T-junctions to feed the station.
     id: 6, name: 'Switchyard', difficulty: 'Medium',
     description: 'Use T-junctions to route through the station!',
     locked: [
@@ -10655,18 +10637,7 @@ const PUZZLES = [
     hint: 'T-junctions connect the outer loop to the station!',
   },
   {
-    // Puzzle 7: Speed Run — long winding track
-    // A longer S-shaped path requiring more pieces
-    // Top-left to bottom-right via S-curve
-    // Locked corners define an S-shape
-    // Row 1: (1,2) curve 90=E+S → (1,3) str EW → (1,4) str EW → (1,5) curve 180=S+W
-    // Down: (2,5) str NS → (3,5) str NS
-    // Row 3: (3,5) already → (3,6) curve 90=E+S wait...
-    // Simpler: an oval that's wider than tall
-    // Locked: 4 corners spread out
-    // (1,2) curve 90=E+S, (1,9) curve 180=S+W, (5,9) curve 270=W+N, (5,2) curve 0=N+E
-    // Player fills: top 6 straights, right 3 straights, bottom 6 straights, left 3 straights = 18
-    // Give 20 straights for par, 18 optimal
+    // Puzzle 7: Speed Run — 4 locked corner curves form a wide oval; player fills the perimeter with straights (par 20 / optimal 18).
     id: 7, name: 'Speed Run', difficulty: 'Medium',
     description: 'Build the longest loop you can — straights only!',
     locked: [
@@ -10680,12 +10651,7 @@ const PUZZLES = [
     hint: 'Fill in all the gaps between the corners!',
   },
   {
-    // Puzzle 8: Cow Pasture — loop passing all cows
-    // 4 cows placed as scenery, loop must go adjacent to them
-    // Simple rectangle loop: (2,3) to (2,8) to (5,8) to (5,3) corners
-    // Cows at (3,5), (3,7), (4,4), (4,6) — inside the loop
-    // Locked: 4 corner curves
-    // Player fills: 4 top straights, 2 right straights, 4 bottom straights, 2 left straights = 12
+    // Puzzle 8: Cow Pasture — locked rectangle of corner curves around 4 cow scenery cells; player fills with straights to encircle them.
     id: 8, name: 'Cow Pasture', difficulty: 'Easy',
     description: 'Build a loop around the pasture — the cows want to see trains!',
     locked: [
@@ -10705,17 +10671,7 @@ const PUZZLES = [
     hint: 'Connect all the corners with straights around the cows!',
   },
   {
-    // Puzzle 9: Night Express — build in forced night mode with tunnels
-    // A loop requiring tunnels, played in night mode
-    // Locked: curves + 1 tunnel, player adds straights + tunnels
-    // (1,4) curve 90=E+S, (1,8) curve 180=S+W
-    // (4,8) curve 270=W+N, (4,4) curve 0=N+E
-    // Right: (2,8) str NS, (3,8) str NS
-    // Left: (2,4) tunnel NS, (3,4) tunnel NS (locked)
-    // Top: (1,5) str EW, (1,6) str EW, (1,7) str EW
-    // Bottom: (4,5) str EW, (4,6) str EW, (4,7) str EW
-    // Locked: 4 curves + 1 tunnel on left = 5 locked
-    // Player: 1 tunnel + 6 straights = 7 pieces
+    // Puzzle 9: Night Express — forced night mode; locked corners + 1 left-side tunnel, player adds straights + 1 matching tunnel to complete the loop.
     id: 9, name: 'Night Express', difficulty: 'Hard',
     description: 'Navigate the dark! Build through tunnels with only your headlight.',
     locked: [
@@ -10731,14 +10687,7 @@ const PUZZLES = [
     hint: 'Place the tunnel on the left, straights everywhere else!',
   },
   {
-    // Puzzle 10: Multi-Train — 2 separate loops
-    // Two small rectangles side by side, each with its own train
-    // Left loop: (2,2) curve 90, (2,4) curve 180, (4,4) curve 270, (4,2) curve 0
-    //   needs: (2,3) str EW, (3,4) str NS, (4,3) str EW, (3,2) str NS = 4 str
-    // Right loop: (2,7) curve 90, (2,9) curve 180, (4,9) curve 270, (4,7) curve 0
-    //   needs: (2,8) str EW, (3,9) str NS, (4,8) str EW, (3,7) str NS = 4 str
-    // 8 corners locked, player places 8 straights
-    // Pre-place red train at (2,2), blue at (2,7) — on the locked curves
+    // Puzzle 10: Twin Loops — two pre-placed trains (red + blue) on side-by-side locked corner rectangles; player adds straights to close both loops.
     id: 10, name: 'Twin Loops', difficulty: 'Hard',
     description: 'Build two separate loops for two trains — no collisions!',
     locked: [
