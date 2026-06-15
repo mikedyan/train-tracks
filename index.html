@@ -4202,8 +4202,12 @@ function spawnAmbientCritters() {
     const el = document.createElement('div');
     el.className = 'ambient-critter crit-' + variant;
     el.textContent = emoji;
-    el.style.left = (cx + jitterX - 8) + 'px';
-    el.style.top = (cy + jitterY - 8) + 'px';
+    // Day 87 delight: bump the first critter so kids actually notice them on first play.
+    const hero = i === 0;
+    const half = hero ? 12 : 8;
+    if (hero) el.style.fontSize = '24px';
+    el.style.left = (cx + jitterX - half) + 'px';
+    el.style.top = (cy + jitterY - half) + 'px';
     el.style.setProperty('--crit-dur', (4 + Math.random() * 3).toFixed(2) + 's');
     el.style.setProperty('--crit-delay', (-Math.random() * 4).toFixed(2) + 's');
     container.appendChild(el);
