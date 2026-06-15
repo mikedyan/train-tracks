@@ -1,13 +1,13 @@
 {
   "project": "Train Tracks",
-  "currentDay": 86,
+  "currentDay": 87,
   "status": "active",
   "weekType": "prune",
-  "weekDay": 3,
+  "weekDay": 4,
   "cycleNumber": 4,
-  "cycleDay": 12,
-  "lastRun": "2026-06-14T09:30:00-07:00",
-  "lastRunDate": "2026-06-14",
+  "cycleDay": 13,
+  "lastRun": "2026-06-15T09:30:00-07:00",
+  "lastRunDate": "2026-06-15",
   "cycleClosed": false,
   "cycle3Review": "reviews/prune-cycle-3-review.md",
   "completedDays": [
@@ -96,13 +96,14 @@
     83,
     84,
     85,
-    86
+    86,
+    87
   ],
-  "nextDay": 87,
-  "phase": "Cycle 4 Prune Week (Day 86/88)",
-  "pruneWeek4LocDelta": -99,
-  "pruneWeek4BytesDelta": -5573,
-  "pruneWeek4Anchor": 12386,
+  "nextDay": 88,
+  "phase": "Cycle 4 Prune Week (Day 87/88)",
+  "pruneWeek4LocDelta": -95,
+  "pruneWeek4BytesDelta": -5377,
+  "pruneWeek4Anchor": 12390,
   "hardenAnchorLOC": 12485,
   "hardenAnchorBytes": 448624,
   "hardenAnchorNote": "Anchor at Harden Week 4 close (Day 83): 12,485 LOC / 448,624 bytes. Net Harden Week 4 LOC Δ: +4 vs. 12,481 build-week close (BUG-019 guard +5, resetDeliveryStreak dead-fn -1). Prune Week 4 hard rule: ≤12,485 LOC.",
@@ -637,6 +638,12 @@
       "day": 86,
       "date": "2026-06-14",
       "feature": "Cycle 4 Prune Week Day 3: Code Cleanup (Target B) — collapsed 5 puzzle dev-scaffold comment blocks (Puzzles 6 Switchyard 19→1, 7 Speed Run 12→1, 8 Cow Pasture 6→1, 9 Night Express 11→1, 10 Twin Loops 8→1). All 5 puzzle definitions byte-identical: P6 5 locked + {straight:7, tjunction:2}, P7 4 locked + {straight:20}, P8 4 locked + {straight:14}, P9 5 locked + {straight:8, tunnel:1} + forceNight, P10 8 locked + {straight:8} + 2 pre-placed trains. Total −51 LOC, −2,699 bytes (12,437→12,386 LOC, 445,750→443,051 bytes). Cumulative Cycle 4 Prune through Day 86: −99 LOC, −5,573 bytes — hard rule ≤12,485 cleared by 99, stretch ≤12,449 (C2 parity) beaten by 63, aspirational ≤12,409 (C3 parity) beaten by 23. First Cycle-4 Prune day to beat the C3 −76 LOC record. Target C (audio prelude DRY across 15 SFX paths) evaluated and HELD — PRUNE_REPORT flagged it as risk-flagged, and with a 63-line stretch margin already banked it was clean to skip. Live verified ?v=86&fresh=1&cb=d86cleanup: tutorial auto-opens, 40/52 palette locked, all 10 puzzles render with original names (Switchyard/Speed Run/Cow Pasture/Night Express/Twin Loops intact), random track 42 cells + 1 train, BUG-019 guard holds, startPlay spawns 6 critters + 2 station-signals + 6 trail-dots, stopPlay drains all 4 ephemerals to 0, 0 console errors, JS parse clean. Zero functional change — prune mandate held.",
+      "status": "complete"
+    },
+    {
+      "day": 87,
+      "date": "2026-06-15",
+      "feature": "Cycle 4 Prune Week Day 4: Delight Polish — hero ambient critter. Addresses the explicit PRUNE_REPORT flag that 🦋 Ambient Critters are 'subtle enough that some kids may not notice them' without adding any new UX surface. Single insertion in spawnAmbientCritters loop: when i===0 (the first critter spawned), bump font-size from 16px → 24px (1.5×) and adjust the centering offset from 8 → 12 so the bigger emoji stays anchored to its scenery cell. All 6 critters still spawn over scenery anchors with the same crit-a/b/c CSS variant rotation; only the first one is visually larger. Net cost: +4 LOC (12,386→12,390), +196 bytes (443,051→443,247), inside the +8 LOC PRUNE_REPORT Day-87 budget. Live verified on ?v=87b&fresh=1: 34 scenery anchors on first random track, startPlay() spawns 6 critters with i=0 at fontSize=24px (computed: 24px) — a 🐝 over the first sampled tree/house — and i=1..5 at default 16px (5🦋 + 1🐝 mix); stopPlay() drains all 6 to 0. Cumulative Cycle 4 Prune through Day 87: −95 LOC, −5,377 bytes. Hard rule ≤12,485 cleared by 95, stretch ≤12,449 (C2 parity) beaten by 59, aspirational ≤12,409 (C3 parity) beaten by 19. Mandate held: addition lives inside an existing play-time behavior, no new toolbar surface, no new modal, no new settings tile. JS parse clean, 0 console errors live.",
       "status": "complete"
     }
   ],
