@@ -2824,6 +2824,30 @@ body.high-contrast .train-trail-dot {
 @media (prefers-reduced-motion: reduce) {
   .train-trail-dot { display: none !important; }
 }
+/* Day 89: Conductor Companion — color-matched pet rides the loco during play. */
+.train-conductor {
+  position: absolute;
+  pointer-events: none;
+  z-index: 51;
+  font-size: 20px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translate(-50%, -50%);
+  animation: conductor-bob 1.1s ease-in-out infinite;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.35));
+}
+@keyframes conductor-bob {
+  0%, 100% { transform: translate(-50%, -50%) translateY(0) rotate(-3deg); }
+  50%      { transform: translate(-50%, -50%) translateY(-2px) rotate(3deg); }
+}
+body.night-mode .train-conductor { filter: drop-shadow(0 1px 3px rgba(255,235,130,0.45)); }
+body.high-contrast .train-conductor { font-size: 22px; text-shadow: 0 0 2px #000, 0 0 2px #000; }
+@media (prefers-reduced-motion: reduce) {
+  .train-conductor { animation: none; }
+}
 </style>
 </head>
 <body>
@@ -4888,6 +4912,8 @@ const TRAIN_COLORS = {
   purple: { body: '#7E57C2', hood: '#5E35B1', cab: '#673AB7', cabDark: '#4527A0', detail: '#4527A0', cowcatcher: '#B39DDB', running: '#B39DDB' },
 };
 const TRAIN_COLOR_ORDER = ['red', 'blue', 'green', 'yellow', 'purple'];
+// Day 89: Conductor Companion — each train color rides with a friendly pet.
+const CONDUCTOR_COMPANIONS = { red: '🐱', blue: '🐶', green: '🐸', yellow: '🐤', purple: '🦄' };
 
 // Base connections at rotation 0
 const BASE_CONNECTIONS = {
@@ -7683,6 +7709,16 @@ function startPlay() {
       document.getElementById('grid-container').appendChild(nameLabelEl);
     }
 
+    // Day 89: Conductor Companion — color-matched pet emoji rides on the loco.
+    let conductorEl = null;
+    const companionEmoji = CONDUCTOR_COMPANIONS[train.color];
+    if (companionEmoji) {
+      conductorEl = document.createElement('div');
+      conductorEl.className = 'train-conductor';
+      conductorEl.textContent = companionEmoji;
+      document.getElementById('grid-container').appendChild(conductorEl);
+    }
+
     const exitDir = getExitDir(piece.type, piece.rotation, entryEdge, train.row, train.col);
 
     const anim = {
@@ -7696,6 +7732,7 @@ function startPlay() {
       trainEl: trainEl,
       headlightEl: hlEl,
       nameLabelEl: nameLabelEl,
+      conductorEl: conductorEl,
       lastTime: performance.now(),
       startRow: train.row,
       startCol: train.col,
@@ -8080,6 +8117,14 @@ function renderTrainAtProgress(anim) {
     anim.animalBadgeEl.style.left = (locoX + aOffsetX) + 'px';
     anim.animalBadgeEl.style.top = (locoY + aOffsetY) + 'px';
     anim.animalBadgeEl.style.opacity = locoOpacity;
+  }
+
+  // Day 89: Position conductor companion (centered on loco, slightly elevated)
+  if (anim.conductorEl) {
+    const cOffsetY = -(cellSize * 0.18);
+    anim.conductorEl.style.left = locoX + 'px';
+    anim.conductorEl.style.top = (locoY + cOffsetY) + 'px';
+    anim.conductorEl.style.opacity = locoOpacity;
   }
 
   // Rainbow glow timer check + sparkle trail
@@ -8666,6 +8711,7 @@ function stopPlay() {
     if (anim.nameLabelEl) anim.nameLabelEl.remove();
     if (anim.cargoBadgeEl) anim.cargoBadgeEl.remove();
     if (anim.animalBadgeEl) anim.animalBadgeEl.remove();
+    if (anim.conductorEl) anim.conductorEl.remove();
     if (anim.carEls) anim.carEls.forEach(el => el.remove());
   }
 
