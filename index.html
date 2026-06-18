@@ -2568,7 +2568,7 @@ body.night-mode #grid-viewport.sky-cycling #sky-sun {
 
 /* Reduced Motion Preference */
 @media (prefers-reduced-motion: reduce) {
-  .smoke-particle, .chimney-smoke, .confetti-particle, .confetti-streamer, .party-banner {
+  .smoke-particle, .chimney-smoke, .confetti-particle, .confetti-streamer, .party-banner, .floating-balloon, .balloon-pop {
     animation: none !important;
     display: none !important;
   }
@@ -2847,6 +2847,38 @@ body.night-mode .train-conductor { filter: drop-shadow(0 1px 3px rgba(255,235,13
 body.high-contrast .train-conductor { font-size: 22px; text-shadow: 0 0 2px #000, 0 0 2px #000; }
 @media (prefers-reduced-motion: reduce) {
   .train-conductor { animation: none; }
+}
+/* =========================================
+   BALLOON SYSTEM (Day 90)
+   ========================================= */
+.floating-balloon {
+  position: absolute;
+  pointer-events: none;
+  z-index: 100; /* above tracks, below modals */
+  font-size: var(--balloon-size, 20px);
+  /* Uses var(--balloon-x) for horizontal starting position, and animates upwards */
+  animation: balloon-float var(--balloon-dur, 12s) linear forwards, balloon-wobble var(--balloon-wobble-dur, 3s) ease-in-out infinite;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+}
+body.night-mode .floating-balloon {
+  filter: drop-shadow(0 0 6px rgba(255,255,255,0.3));
+}
+@keyframes balloon-float {
+  0% { top: 110%; transform: translateX(0); opacity: 0; }
+  5% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: -10%; transform: translateX(calc(var(--balloon-drift, 40px))); opacity: 0; }
+}
+@keyframes balloon-wobble {
+  0%, 100% { margin-left: 0; }
+  50% { margin-left: var(--balloon-sway, 15px); }
+}
+.balloon-pop {
+  position: absolute;
+  pointer-events: none;
+  z-index: 101;
+  font-size: calc(var(--balloon-size, 20px) * 1.5);
+  animation: stickerPop 0.4s ease-out forwards;
 }
 </style>
 </head>
@@ -4895,6 +4927,10 @@ const PUDDLE_FADEOUT_DELAY_MS = 5000;
 let puddleEls = new Map();
 let puddleSpawnInterval = null;
 let puddleFadeoutTimeout = null;
+
+// Day 90: Floating Balloons
+let floatingBalloons = new Set(); // Set of active balloon elements
+let balloonInterval = null;
 
 function getSceneryEmoji(type) {
   const overrides = BIOME_EMOJI_OVERRIDES[currentBiome];
@@ -7658,6 +7694,9 @@ function startPlay() {
   // Day 77: Puddle Splashes — only meaningful if it's raining when we start.
   // applyWeather() also wakes the system if rain is toggled mid-play.
   if (currentWeather === 'rain') startPuddleSystem();
+  
+  // Day 90: Start balloons
+  startBalloonSystem();
 
   // Update music tempo for play state
   updateMusicTempo();
@@ -7929,6 +7968,82 @@ function crashTrainHere(anim) {
   triggerCrashSequence(anim);
 }
 
+// ==========================================
+// BALLOON SYSTEM (Day 90)
+// ==========================================
+const BALLOON_COLORS = ['🎈', '🎈', '🎈', '🎉', '🎏']; // mostly red balloons, some variety
+
+function spawnBalloon() {
+  if (!state.playing || prefersReducedMotion()) return;
+  
+  const balloon = document.createElement('div');
+  balloon.className = 'floating-balloon';
+  balloon.textContent = BALLOON_COLORS[Math.floor(Math.random() * BALLOON_COLORS.length)];
+  
+  // Randomize properties
+  const size = 18 + Math.random() * 12; // 18px to 30px
+  const startX = 5 + Math.random() * 90; // 5% to 95% width
+  const dur = 10 + Math.random() * 6; // 10s to 16s float time
+  const wobbleDur = 2 + Math.random() * 2; // 2s to 4s wobble cycle
+  const sway = (Math.random() > 0.5 ? 1 : -1) * (10 + Math.random() * 15); // -25px to +25px
+  const drift = (Math.random() > 0.5 ? 1 : -1) * (20 + Math.random() * 40); // overall horizontal drift
+  
+  balloon.style.setProperty('--balloon-size', `${size}px`);
+  balloon.style.left = `${startX}%`;
+  balloon.style.setProperty('--balloon-dur', `${dur}s`);
+  balloon.style.setProperty('--balloon-wobble-dur', `${wobbleDur}s`);
+  balloon.style.setProperty('--balloon-sway', `${sway}px`);
+  balloon.style.setProperty('--balloon-drift', `${drift}px`);
+  
+  document.getElementById('grid-viewport').appendChild(balloon);
+  floatingBalloons.add(balloon);
+  
+  // Self-cleanup after animation completes
+  setTimeout(() => {
+    if (floatingBalloons.has(balloon)) {
+      balloon.remove();
+      floatingBalloons.delete(balloon);
+    }
+  }, dur * 1000);
+}
+
+function startBalloonSystem() {
+  stopBalloonSystem();
+  // Spawn immediately, then interval
+  setTimeout(spawnBalloon, 800);
+  balloonInterval = setInterval(spawnBalloon, 4500); // New balloon roughly every 4.5s
+}
+
+function stopBalloonSystem() {
+  if (balloonInterval) clearInterval(balloonInterval);
+  balloonInterval = null;
+}
+
+// Check for balloon collision
+function checkBalloonCollisions(trainEl) {
+  if (!trainEl || floatingBalloons.size === 0) return;
+  
+  const locoRect = trainEl.getBoundingClientRect();
+  const popRadius = cellSize * 0.8; // generous hit area
+  
+  for (const balloon of floatingBalloons) {
+    const bRect = balloon.getBoundingClientRect();
+    // Simple center-distance check
+    const dx = (locoRect.left + locoRect.width/2) - (bRect.left + bRect.width/2);
+    const dy = (locoRect.top + locoRect.height/2) - (bRect.top + bRect.height/2);
+    
+    if (dx*dx + dy*dy < popRadius*popRadius) {
+      // Pop!
+      balloon.className = 'balloon-pop';
+      balloon.textContent = '💥';
+      SFX.celebrate(); // Tiny pop sound
+      floatingBalloons.delete(balloon);
+      
+      setTimeout(() => balloon.remove(), 400); // Let pop animation finish
+    }
+  }
+}
+
 function advanceTrainAnim(anim, timestamp) {
   const dt = (timestamp - anim.lastTime) / 1000;
   anim.lastTime = timestamp;
@@ -8091,6 +8206,7 @@ function renderTrainAtProgress(anim) {
 
   anim.trainEl.style.opacity = locoOpacity;
   anim.trainEl.style.transform = `translate(-50%, -50%) rotate(${angleDeg + 90}deg) scale(${locoScale})`;
+  checkBalloonCollisions(anim.trainEl);
 
   // Day 44: Position floating name label (always upright, follows loco)
   if (anim.nameLabelEl) {
@@ -8685,6 +8801,12 @@ function stopPlay() {
   // Day 60: Stop animal passenger system (re-shows boarded animals)
   resetAnimalState();
   state.playing = false;
+  
+  // Day 90: Cleanup balloons
+  stopBalloonSystem();
+  floatingBalloons.forEach(b => b.remove());
+  floatingBalloons.clear();
+  document.querySelectorAll('.balloon-pop').forEach(p => p.remove());
 
   // Day 59: stop the Time-of-Day sky cycle.
   stopSkyCycle();
