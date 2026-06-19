@@ -2880,6 +2880,26 @@ body.night-mode .floating-balloon {
   font-size: calc(var(--balloon-size, 20px) * 1.5);
   animation: stickerPop 0.4s ease-out forwards;
 }
+/* =========================================
+   STATIONMASTER (Day 91)
+   ========================================= */
+.stationmaster {
+  position: absolute;
+  font-size: 16px;
+  z-index: 25; /* above tracks, below train (50) */
+  pointer-events: none;
+  right: 6%;
+  bottom: 6%;
+}
+.stationmaster.waving {
+  /* Fast wave: pivot around bottom center */
+  transform-origin: center bottom;
+  animation: stationmaster-wave 0.3s ease-in-out infinite alternate;
+}
+@keyframes stationmaster-wave {
+  0% { transform: rotate(-15deg); }
+  100% { transform: rotate(20deg); }
+}
 </style>
 </head>
 <body>
@@ -5719,6 +5739,14 @@ function renderCell(row, col) {
       svg.style.transform = `rotate(${piece.rotation}deg)`;
       cell.appendChild(svg);
       cell.classList.add('occupied');
+      
+      // Day 91: Stationmaster on stations
+      if (piece.type === 'station') {
+        const sm = document.createElement('div');
+        sm.className = 'stationmaster';
+        sm.textContent = '🧍';
+        cell.appendChild(sm);
+      }
 
       // Tunnel class for night mode glow
       if (piece.type === 'tunnel') cell.classList.add('has-tunnel');
@@ -8108,6 +8136,9 @@ function advanceTrainAnim(anim, timestamp) {
       if (!passengerState.enabled && !didCargoEvent && !didAnimalEvent) {
         showToast('🚉 Toot toot!');
       }
+      
+      // Day 91: Waving stationmaster
+      waveStationmaster(nextPos.row, nextPos.col);
     }
 
     // Rainbow track: activate rainbow glow on train for 3 seconds
@@ -11552,6 +11583,23 @@ function renderStationPassengers(stationKey) {
     emoji.style.animationDelay = (i * 0.3) + 's';
     cell.appendChild(emoji);
   }
+}
+
+// Day 91: Wave the stationmaster for a few seconds
+function waveStationmaster(row, col) {
+  const cell = getCellEl(row, col);
+  if (!cell) return;
+  const sm = cell.querySelector('.stationmaster');
+  if (!sm) return;
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  
+  sm.textContent = '🙋'; // switch to waving emoji
+  sm.classList.add('waving');
+  
+  setTimeout(() => {
+    sm.textContent = '🧍';
+    sm.classList.remove('waving');
+  }, 2500); // wave for 2.5 seconds
 }
 
 function handleTrainAtStation(anim, row, col) {
