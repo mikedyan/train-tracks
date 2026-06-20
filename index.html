@@ -2568,7 +2568,7 @@ body.night-mode #grid-viewport.sky-cycling #sky-sun {
 
 /* Reduced Motion Preference */
 @media (prefers-reduced-motion: reduce) {
-  .smoke-particle, .chimney-smoke, .confetti-particle, .confetti-streamer, .party-banner, .floating-balloon, .balloon-pop {
+  .smoke-particle, .chimney-smoke, .confetti-particle, .confetti-streamer, .party-banner, .floating-balloon, .balloon-pop, .shooting-star {
     animation: none !important;
     display: none !important;
   }
@@ -2899,6 +2899,41 @@ body.night-mode .floating-balloon {
 @keyframes stationmaster-wave {
   0% { transform: rotate(-15deg); }
   100% { transform: rotate(20deg); }
+}
+
+/* Day 92: Shooting Stars */
+.shooting-star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 0 4px 2px rgba(255, 255, 255, 0.8), 0 0 10px 4px rgba(255, 255, 255, 0.4);
+  z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+  /* Start offscreen or at edge, fly diagonally */
+  animation: shooting-star-fly var(--star-dur, 1.2s) ease-in forwards;
+}
+.shooting-star::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  width: var(--star-tail, 60px);
+  height: 1px;
+  background: linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,0.8));
+}
+/* Only visible in night mode */
+body:not(.night-mode) .shooting-star {
+  display: none !important;
+}
+@keyframes shooting-star-fly {
+  0% { transform: translate(0, 0) rotate(var(--star-angle, -35deg)); opacity: 0; }
+  10% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translate(var(--star-dx, -300px), var(--star-dy, 200px)) rotate(var(--star-angle, -35deg)); opacity: 0; }
 }
 </style>
 </head>
@@ -4229,6 +4264,66 @@ function toggleNightMode() {
 // Day 59 (Cycle 3 Build Day 1) — Time-of-Day sky cycle helpers.
 // Pure CSS animation does the heavy lifting; JS just toggles a class and the
 // sun/moon emoji. Active only during play, auto-respects night mode.
+
+// Day 92: Shooting Stars
+function startShootingStars() {
+  if (shootingStarInterval) clearInterval(shootingStarInterval);
+  shootingStarInterval = setInterval(maybeSpawnShootingStar, 3500); // Check every 3.5s
+  // Eager first spawn
+  if (isNightMode()) setTimeout(maybeSpawnShootingStar, 800);
+}
+
+function stopShootingStars() {
+  if (shootingStarInterval) {
+    clearInterval(shootingStarInterval);
+    shootingStarInterval = null;
+  }
+  document.querySelectorAll('.shooting-star').forEach(el => el.remove());
+}
+
+function maybeSpawnShootingStar() {
+  if (!state.playing || !isNightMode()) return;
+  if (Math.random() > STAR_SPAWN_CHANCE) return;
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  
+  const vp = document.getElementById('grid-viewport');
+  if (!vp) return;
+  
+  const star = document.createElement('div');
+  star.className = 'shooting-star';
+  
+  // Start position: top or right edge
+  const startTopEdge = Math.random() > 0.5;
+  const startX = startTopEdge ? Math.random() * 100 : 100 + (Math.random() * 20); // % of width
+  const startY = startTopEdge ? -(Math.random() * 20) : Math.random() * 60; // % of height
+  
+  star.style.left = startX + '%';
+  star.style.top = startY + '%';
+  
+  // Angle and trajectory (down and left)
+  const angleDeg = -35 + (Math.random() * 10 - 5); // -40 to -30
+  const dist = 300 + Math.random() * 300; // 300-600px travel
+  const dx = -Math.cos(angleDeg * Math.PI / 180) * dist;
+  const dy = Math.sin(angleDeg * Math.PI / 180) * dist;
+  const dur = 0.8 + Math.random() * 0.7; // 0.8 to 1.5s
+  const tail = 40 + Math.random() * 60; // 40-100px tail
+  
+  star.style.setProperty('--star-angle', `${angleDeg}deg`);
+  star.style.setProperty('--star-dx', `${dx}px`);
+  star.style.setProperty('--star-dy', `${dy}px`);
+  star.style.setProperty('--star-dur', `${dur}s`);
+  star.style.setProperty('--star-tail', `${tail}px`);
+  
+  vp.appendChild(star);
+  
+  // SFX: soft twinkle
+  if (soundEnabled) {
+    playNote(1200 + Math.random()*800, dur/2, 'sine', 0.02, 0);
+    playNote(2000 + Math.random()*1000, dur/2, 'triangle', 0.01, dur/4);
+  }
+  
+  setTimeout(() => star.remove(), dur * 1000 + 100);
+}
 function startSkyCycle() {
   const vp = document.getElementById('grid-viewport');
   if (!vp) return;
@@ -4957,6 +5052,10 @@ function getSceneryEmoji(type) {
   if (overrides && overrides[type]) return overrides[type];
   return SCENERY_EMOJI[type] || type;
 }
+
+// Day 92: Shooting Stars
+let shootingStarInterval = null;
+const STAR_SPAWN_CHANCE = 0.4;
 const CAR_TYPES = ['freight', 'passenger', 'caboose'];
 const MAX_CARS = 5;
 const MAX_TRAINS = 5;
@@ -7725,6 +7824,10 @@ function startPlay() {
   
   // Day 90: Start balloons
   startBalloonSystem();
+
+  // Day 92: Shooting stars (night mode)
+  startShootingStars();
+
 
   // Update music tempo for play state
   updateMusicTempo();
