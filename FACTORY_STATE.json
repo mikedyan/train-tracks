@@ -1,13 +1,13 @@
 {
   "project": "Train Tracks",
-  "currentDay": 90,
+  "currentDay": 92,
   "status": "active",
   "weekType": "build",
-  "weekDay": 2,
+  "weekDay": 4,
   "cycleNumber": 5,
   "cycleDay": 2,
-  "lastRun": "2026-06-18T09:30:00-07:00",
-  "lastRunDate": "2026-06-18",
+  "lastRun": "2026-06-20T09:30:00-07:00",
+  "lastRunDate": "2026-06-20",
   "cycleClosed": false,
   "cycle3Review": "reviews/prune-cycle-3-review.md",
   "cycle4Review": "reviews/prune-cycle-4-review.md",
@@ -106,15 +106,16 @@
     87,
     88,
     89,
-    90
+    90,
+    92
   ],
-  "nextDay": 92,
-  "phase": "Cycle 5 Build Week \u2014 Day 3/5 shipped (\ud83d\udc4b Waving Stationmasters)",
+  "nextDay": 93,
+  "phase": "Cycle 5 Build Week \u2014 Day 4/5 shipped (\u2b50 Shooting Stars)",
   "cycle5BuildPlan": [
     "Day 89 Wed: \ud83d\udc3e Conductor Companion (color-matched riding pet per train) \u2014 shipped",
     "Day 90 Thu: \ud83c\udf88 Floating Balloons (drift across viewport during play, trains pop them) \u2014 shipped",
     "Day 91 Fri: \ud83d\udc4b Waving Stationmasters (tiny figure waves when train arrives at a station) \u2014 shipped",
-    "Day 92 Sat: \u2b50 Shooting Stars (occasional arcing star during night-mode play)",
+    "Day 92 Sat: \u2b50 Shooting Stars (occasional arcing star during night-mode play) \u2014 shipped",
     "Day 93 Sun: \ud83c\udfb5 Cargo Jingles (each cargo type plays a tiny 3-note pickup melody)"
   ],
   "cycle5Day89": {
@@ -756,6 +757,21 @@
     "locStart": 12559,
     "locEnd": 12606,
     "locDelta": 47,
+    "jsParse": "clean",
+    "consoleErrors": 0,
+    "liveVerified": true,
+    "chromeGrowth": {
+      "toolbar": 0,
+      "settings": 0,
+      "modals": 0
+    }
+  },
+  "cycle5Day92": {
+    "date": "2026-06-20",
+    "feature": "\u2b50 Shooting Stars",
+    "locStart": 12436,
+    "locEnd": 12540,
+    "locDelta": 104,
     "jsParse": "clean",
     "consoleErrors": 0,
     "liveVerified": true,
