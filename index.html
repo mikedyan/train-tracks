@@ -11884,6 +11884,28 @@ const CARGO_TYPES = {
 };
 const CARGO_TYPE_KEYS = ['logs', 'milk', 'mail', 'coal'];
 
+// CARGO JINGLES (Day 93) — each cargo type plays a tiny 3-note pickup melody when
+// loaded. Pentatonic (C D E G A across octaves) so they layer cleanly over the
+// ambient music engine, like the Whistle Songs (Day 61). Auto-on, no chrome.
+const CARGO_JINGLES = {
+  logs: { notes: [392.00, 523.25, 659.25],  type: 'triangle' }, // G4 C5 E5 — woody rise
+  milk: { notes: [659.25, 783.99, 1046.50], type: 'sine' },     // E5 G5 C6 — creamy lift
+  mail: { notes: [880.00, 659.25, 1046.50], type: 'sine' },     // A5 E5 C6 — chirpy skip
+  coal: { notes: [392.00, 329.63, 261.63],  type: 'sawtooth' }, // G4 E4 C4 — heavy settle
+};
+const CARGO_JINGLE_DUR = 0.16;
+const CARGO_JINGLE_STEP = 0.13;
+const CARGO_JINGLE_OFFSET = 0.10; // beat after the passengerBoard load ding
+const CARGO_JINGLE_VOL = 0.09;
+function playCargoJingle(cargoType) {
+  if (!soundEnabled) return;
+  const j = CARGO_JINGLES[cargoType];
+  if (!j) return;
+  for (let i = 0; i < j.notes.length; i++) {
+    playNote(j.notes[i], CARGO_JINGLE_DUR, j.type, CARGO_JINGLE_VOL, CARGO_JINGLE_OFFSET + i * CARGO_JINGLE_STEP);
+  }
+}
+
 let cargoState = {
   onboard: {},     // trainColor -> cargoType (string or null)
   delivered: 0,
@@ -11977,6 +11999,7 @@ function handleTrainAtCargoStation(anim, row, col) {
   if (piece.cargoRole === 'pickup' && !onboard) {
     cargoState.onboard[trainColor] = piece.cargoType;
     SFX.passengerBoard();
+    playCargoJingle(piece.cargoType);
     showToast(cfg.emoji + ' ' + cfg.label + ' loaded!');
     refreshTrainCargoBadge(anim);
     return true;
