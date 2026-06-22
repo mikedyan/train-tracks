@@ -1461,3 +1461,45 @@ Tomorrow (Day 83, weekDay 5) = **Harden Week 4 Day 5: Regression Pass** — fina
 Day 3 of Harden Week 4 surfaced one real bug (BUG-019) via the rapid-placement stress test the prompt explicitly recommends. The bug was reachable by a normal user double-clicking the 🎲 Random button — not a pathological-only edge case — making the fix worth shipping same-day rather than queueing for Day 4. Fix is a single boolean re-entry guard with release on success and on the one early-failure path, consistent with the project's preference for surgical, low-LOC interventions. All other platform/keyboard/accessibility/biome/weather/Big-Grid/cold-boot dimensions tested clean. 0 console errors across the full session.
 
 Tomorrow (Day 82, weekDay 4) = **Harden Week 4 Day 4: Fix Everything** — bug queue is now empty (BUG-019 closed same-day), so Day 4 becomes a proactive code-health pass: scan for any post-BUG-019-style re-entry races on other timer-cascade functions (likely candidates: `addRandomScenery`, `placeTrainOnLoop`, `spawnAmbientCritters`, puddle-system), look for duplicate code, validate the file-size delta and consider whether the +5 LOC can be reabsorbed elsewhere via dead-code cleanup.
+
+---
+
+## Day 94 — 2026-06-22 — Harden Week 5 Day 1: Full Feature Audit
+
+**Cycle 5 Harden Week opens.** Entering at 12,732 LOC / 455,532 bytes — the zero-growth anchor for the week. JS parse clean (`new Function()` on the 339,177-char inline script). Audited live on `https://mikedyan.github.io/train-tracks/?v=94&fresh=1&cb=harden5d1`.
+
+### Piece Types — 7/7 place clean
+- ✅ straight, curve, tjunction, cross, bridge, tunnel, station — all `placePiece(r,c,type)` writes settle to `cell.type===type`, grid count = 7/7.
+
+### Core Features
+- ✅ `generateRandomTrack()` → 44 occupied cells + 1 train (BUG-019 re-entry guard still present in source).
+- ✅ Play/Stop lifecycle: `startPlay()` then `stopPlay()` drains ALL ephemeral DOM types to 0 (trail dots, critters, station signals, puddles, conductors, balloons, stationmasters).
+- ✅ Save/Load: `saveToSlot(1)` → `clearAll()` (0 cells) → `loadFromSlot(1)` restores 6/6 cells byte-for-byte.
+- ✅ Share: `encodeGridState()` → 135-char hash, first byte 0x02 (v2 protocol intact); `decodeGridState()` is decode-and-apply (returns boolean success, not a grid object — by design).
+- ✅ Big Grid: `toggleBigGrid()` flips 12↔16 columns, round-trips back to 12 cleanly.
+- ✅ Puzzles: all 10 activate via `loadPuzzle(p.id)` (ids 1–10). NOTE: `loadPuzzle` matches by `p.id`, NOT array index — calling `loadPuzzle(0)` is a no-op (no puzzle has id 0). Off-by-one test artifact, not a game bug.
+- ✅ Accessibility: `toggleHighContrast()` and `toggleNightMode()` both toggle on/off idempotently.
+
+### Trains — 5/5 colors
+- ✅ red, blue, green, yellow, purple all place via `placeTrain(r,c,color)` and appear in `state.trains`.
+- ✅ Multi-train play: 5 trains on a loop → 5 conductors + 15 trail dots; all drain to 0 on stop.
+
+### Scenery — 8 kinds
+- ✅ `addRandomScenery()` placed 31 scenery cells across tree(11)/flower(6)/horse(3)/sheep(3)/water(3)/house(2)/people(2)/cow(1). (Scenery is stored as `cell.type`, in `SCENERY_TYPES`.)
+
+### Cycle 5 Build Features — 5/5 verified live
+- ✅ **🐾 Conductor Companion** — 1 per train (single-train random), scales to 5/5 on a 5-train loop.
+- ✅ **🎈 Floating Balloons** — spawns during play (`startBalloonSystem`/`spawnBalloon`/`checkBalloonCollisions` present).
+- ✅ **👋 Waving Stationmasters** — 2 spawned (one per station) when random track has 2 stations.
+- ✅ **⭐ Shooting Stars** — stochastic, correctly guarded `if (!state.playing || !isNightMode()) return;` then a random gate. Spawned 77/200 forced calls under night+play (~0.4 chance). 0 in a casual 4.5s window is expected (probabilistic).
+- ✅ **🎵 Cargo Jingles** — `playCargoJingle('logs')` fires the correct 3-note triangle schedule G4(392)→C5(523.25)→E5(659.25) at staggered offsets 0.10/0.23/0.36s, layered after the square-wave pickup ding.
+
+### Earlier-cycle features (spot-checked live)
+- ✅ Ambient Critters: 6 over scenery. Station Arrival Signals: 2 on stations. Train Trail: 5 (single train) → 15 (5 trains). Puddle Splashes: 2 during rain weather.
+
+### Console errors during entire audit: 0
+
+### Bugs Found Today: 0
+
+### Summary
+Cycle 5 Harden Week opens clean. All 7 piece types, 5 train colors, 8 scenery kinds, 10 puzzles, save/load, share v2, big grid, night/high-contrast, and all 5 Cycle-5 build features verified live with zero console errors and zero bugs. Two non-bugs documented for future agents: (1) `decodeGridState` returns a boolean (decode-and-apply), not a grid; (2) `loadPuzzle` matches by `p.id` (1–10), not array index. Zero-growth anchor set at 12,732 LOC / 455,532 bytes. Tomorrow (Day 95, weekDay 2) = Puzzle & Mode Testing: play all 10 puzzles to 3⭐, passenger delivery e2e, progression/unlocks, share-link round-trip on fresh session, screenshot/download.
