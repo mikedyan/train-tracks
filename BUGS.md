@@ -1503,3 +1503,37 @@ Tomorrow (Day 82, weekDay 4) = **Harden Week 4 Day 4: Fix Everything** — bug q
 
 ### Summary
 Cycle 5 Harden Week opens clean. All 7 piece types, 5 train colors, 8 scenery kinds, 10 puzzles, save/load, share v2, big grid, night/high-contrast, and all 5 Cycle-5 build features verified live with zero console errors and zero bugs. Two non-bugs documented for future agents: (1) `decodeGridState` returns a boolean (decode-and-apply), not a grid; (2) `loadPuzzle` matches by `p.id` (1–10), not array index. Zero-growth anchor set at 12,732 LOC / 455,532 bytes. Tomorrow (Day 95, weekDay 2) = Puzzle & Mode Testing: play all 10 puzzles to 3⭐, passenger delivery e2e, progression/unlocks, share-link round-trip on fresh session, screenshot/download.
+
+## Day 95 — 2026-06-23 — Harden Week 5 Day 2: Puzzle & Mode Testing
+
+**Cycle 5 Harden Week, Day 2 of 5.** Zero-growth held — `index.html` unchanged at 12,732 LOC / 455,532 bytes. JS parse clean. Tested live on `https://mikedyan.github.io/train-tracks/?v=95&fresh=1`. **0 bugs found, 0 console errors across the entire session.**
+
+### Puzzles — 10/10 solvable at 3⭐, star tiers correct
+Built a generic backtracking auto-solver (MRV + inventory-aware pruning) and drove every puzzle through `loadPuzzle` → solve → `checkPuzzleSolution`:
+- ✅ P1 First Loop (4 pcs/opt 4) — 3⭐
+- ✅ P2 Around the Lake (10/10) — 3⭐
+- ✅ P3 Figure Eight (6/6) — 3⭐
+- ✅ P4 Tunnel Run (8/8) — 3⭐
+- ✅ **P5 Grand Station (17/17) — 3⭐.** The generic solver couldn't crack it within 5M nodes (51s) — its 20-cell single loop through 3 E-W stations forces a non-rectangular 8-corner topology that the inventory (9 straight + 8 curve) constrains tightly. Solved it by hand-constructing the exact loop and confirmed `checkPuzzleSolution` awarded 3⭐ with all 17 pieces drained (9 straight + 8 curve). **This is a SOLVER limitation, not a game bug** — same finding as Day 65/80. The hand route: top run row2 cols 2–9 (A@2,3 / B@2,8), right wall col9 down to row4, jog (4,9)→(4,8)→(5,8), bottom run row5 cols 8→3 (C@5,5), left wall col2 up to (2,2). Corners at (2,2)(2,9)(4,9)(4,8)(5,8)(5,3)(4,3)(4,2).
+- ✅ P6 Switchyard (9/9) — 3⭐
+- ✅ P7 Speed Run (18/opt 18, par 20) — 3⭐
+- ✅ P8 Cow Pasture (12/opt 12, par 14) — 3⭐
+- ✅ P9 Night Express (9/9) — 3⭐
+- ✅ P10 Twin Loops (8/8) — 3⭐
+
+Star math verified: `stars=1` on solve, `2` at ≤par, `3` at ≤optimal. `getPuzzleStars` reads `completed[id].stars`; only upgrades on improvement.
+
+### Passenger Delivery — e2e ✅
+Built a 2-station rectangle loop + red train. With `passengerState.enabled=true`, over ~14s of play: `passengersDelivered` 0→1, `passengerState.highScore` 0→1, HUD activated showing "🧑 Delivered: 1 / 🏆 Best: 1", station counts ticking. **Non-bug documented:** passengers are OPT-IN (`passengerState.enabled`, off on a fresh session, toggled by the 🧑 Passengers button). A fresh-session play with passengers off spawns zero riders by design — not a regression.
+
+### Progression / Unlocks ✅
+10 milestones present. Setting `gameStats.tracksPlaced=50` → `checkAndUnlockMilestones()` correctly unlocked `bridge` (and only bridge). Pumping all stat keys high → full unlock (26 pieces); calling `checkAndUnlockMilestones()` twice is idempotent (26→26, no throw). `isPieceUnlocked` returns true inside puzzles regardless.
+
+### Share Links — round-trip on fresh decode ✅
+Encoded an 8-cell + 1-train track → 140-char base64 hash. Cleared grid to 0 cells (fresh state) → `decodeGridState(hash)` returned true → grid + train **byte-identical** to original (cells and `2,5:blue` train both preserved). `encodeReplayShareState`/`copyReplayShareLink`/`loadFromShareHash` present for v3 replay path.
+
+### Screenshot / Download ✅
+`openScreenshotModal()` rendered `#screenshot-preview` canvas at 2924×1948, valid PNG (`toDataURL` → 229,178-char `data:image/png` URL). `downloadScreenshot` + `copyScreenshot` both present. Modal opens/closes clean.
+
+### Summary
+All 10 puzzles solvable at 3⭐ with correct star tiers, passenger delivery e2e works, progression unlocks fire at thresholds and are idempotent, share encode/decode is byte-identical on a fresh session, screenshot exports a valid full-res PNG. 0 bugs, 0 console errors. Zero-growth anchor holds (12,732 LOC). Tomorrow (Day 96, weekDay 3) = Platform & Edge Cases: mobile 375px viewport, pinch-zoom, keyboard-only nav, high-contrast/reduced-motion, all biomes × night, cold-boot from cleared localStorage, stress (rapid placement / many trains).
