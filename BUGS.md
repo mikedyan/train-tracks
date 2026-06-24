@@ -1537,3 +1537,39 @@ Encoded an 8-cell + 1-train track → 140-char base64 hash. Cleared grid to 0 ce
 
 ### Summary
 All 10 puzzles solvable at 3⭐ with correct star tiers, passenger delivery e2e works, progression unlocks fire at thresholds and are idempotent, share encode/decode is byte-identical on a fresh session, screenshot exports a valid full-res PNG. 0 bugs, 0 console errors. Zero-growth anchor holds (12,732 LOC). Tomorrow (Day 96, weekDay 3) = Platform & Edge Cases: mobile 375px viewport, pinch-zoom, keyboard-only nav, high-contrast/reduced-motion, all biomes × night, cold-boot from cleared localStorage, stress (rapid placement / many trains).
+
+---
+
+## Day 96 — 2026-06-24 — Harden Week 5 Day 3: Platform & Edge Cases
+
+**Cycle 5 Harden Week, Day 3 of 5.** Zero-growth held — `index.html` unchanged at 12,732 LOC / 455,532 bytes. JS parse clean (`new Function` on 339,177-byte inline script). HTML balanced (div 188/188, button 55/55, script 1/1, style 1/1). Tested live on `https://mikedyan.github.io/train-tracks/?v=96&fresh=1`. **0 bugs found, 0 console errors across the entire session.**
+
+### Mobile viewport (375×812)
+- No horizontal scroll (`docScrollWidth=375`, `innerW=375`).
+- `#sidebar` hidden, `#mobile-drawer` mounted with all 26 palette pieces.
+- Drawer toggle (`toggleMobileDrawer()` via `#drawer-toggle ▲ Pieces`) flips `.collapsed` class cleanly and back.
+- Cold boot from cleared localStorage: tutorial overlay auto-opens (`display:flex`), 96 `.cell` render, `state.grid` 8×12, only `trainTracks_stickers` seeded in LS.
+
+### Keyboard-only navigation
+- `selectTool('straight')` → `setGridFocus(2,3)` → Enter places a straight at (2,3); no throw (BUG-015/016 keyboard-path fixes still hold).
+- 19 keyboard shortcuts dispatched (`p n h r c s z y ? b t m d l a w + - 0`) — all no-throw, 0 console errors.
+
+### Display modes & combos
+- `toggleNightMode()` / `toggleHighContrast()` idempotent (double-toggle no throw).
+- Biome cycle ×5 under night-mode produced `night-mode+biome-winter → +desert → +autumn → night-mode(spring) → +winter` — all combos coexist, zero class collisions.
+- `prefersReducedMotion()` reads the media query correctly (false in test env), reduced-motion CSS rules present.
+- Pinch-zoom `setZoomAtPoint(z,187,400)`: 1.0→1.3→1.8→clamps at 2.0 (from 2.5 request)→1.0, no throw.
+
+### Stress / edge cases
+- **BUG-019 guard holds:** 10× rapid `generateRandomTrack()` settles to exactly **1** `.train-svg` / `state.trains.length===1` (42 occupied cells).
+- **Big-grid round-trip:** 8×12 (96 cells) → `setBigGrid(true)` 10×16 (160 cells) → `setBigGrid(false)` 8×12 (96 cells), no stale-coordinate crash (BUG-017/018 guards hold).
+- **Many trains:** 5 colors (red/blue/green/yellow/purple) placed on a hand-built loop, `state.trains.length===5`, no throw.
+- **Play/stop ephemeral cleanup:** on a 37-cell random track, `startPlay()` spawned 6 ambient critters + 4 train-trail dots + 1 animated train; `stopPlay()` drained critters/trails/signals/puddles all to **0**.
+- **Desktop↔mobile↔desktop resize:** at 1280px `#sidebar` is `display:flex` + `#mobile-drawer` hidden; at 375px the inverse; `matchMedia('(max-width:768px)')` flips correctly — responsive layout intact.
+
+### Bugs Found Today: 0
+### Bugs Fixed Today: 0
+### Open Bugs: 0
+
+### Summary
+Platform & edge-case sweep clean. Mobile drawer, cold-boot tutorial, keyboard-only build flow, 19 shortcuts, night/high-contrast/biome combos, reduced-motion, pinch-zoom clamp, rapid-gen + big-grid + many-trains stress, and play/stop ephemeral teardown all pass with 0 console errors. The three historical edge-case guards (BUG-017 stale gridFocus, BUG-018 stale hoveredCell, BUG-019 rapid-gen re-entry) all held under direct stress. Zero-growth anchor holds at 12,732 LOC. Tomorrow (Day 97, weekDay 4) = Fix Everything — bug queue empty, so a proactive code-health pass (duplicate-code grep, dead-fn/dead-CSS audit).
