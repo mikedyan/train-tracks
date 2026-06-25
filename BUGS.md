@@ -1573,3 +1573,44 @@ All 10 puzzles solvable at 3⭐ with correct star tiers, passenger delivery e2e 
 
 ### Summary
 Platform & edge-case sweep clean. Mobile drawer, cold-boot tutorial, keyboard-only build flow, 19 shortcuts, night/high-contrast/biome combos, reduced-motion, pinch-zoom clamp, rapid-gen + big-grid + many-trains stress, and play/stop ephemeral teardown all pass with 0 console errors. The three historical edge-case guards (BUG-017 stale gridFocus, BUG-018 stale hoveredCell, BUG-019 rapid-gen re-entry) all held under direct stress. Zero-growth anchor holds at 12,732 LOC. Tomorrow (Day 97, weekDay 4) = Fix Everything — bug queue empty, so a proactive code-health pass (duplicate-code grep, dead-fn/dead-CSS audit).
+
+---
+
+## Day 97 — Harden Week 5 Day 4: Fix Everything
+
+**Date:** Thu Jun 25, 2026
+**Tester:** Mochi (QA Agent)
+**Mission:** Bug queue empty entering the day → proactive code-health pass (JS parse, HTML balance, duplicate-function grep, dead-function audit, dead-CSS / blank-run audit). Harden mandate: no new features.
+
+### Static Health
+- **JS parse:** ✅ CLEAN (`new Function` on 339,177-byte inline script pre-fix)
+- **HTML balance:** ✅ div 188/188, button 55/55, script 1/1, style 1/1
+- **Duplicate top-level functions:** ✅ none
+- **Redundant `// =====` closing fences:** 54 (all legitimate multi-line block delimiters — Day 71 already harvested the sandwich-style ones; left intact)
+- **Consecutive blank-line runs (≥2):** 1 (negligible — not worth a churn commit in Harden)
+- **Dead-function audit:** found **1** → `stopShootingStars` (defined Day 92, referenced only at its own definition)
+
+### BUG-020 | 🟢 FIXED | `stopShootingStars()` never wired into `stopPlay()` — leaked night-mode spawn interval + lingering stars
+- **Found:** Thu Jun 25 — Mochi (Day 97 dead-function audit)
+- **Fixed:** Thu Jun 25 (commit a878bd8)
+- **Severity:** P2 (resource leak + cosmetic — bounded, self-heals on next play)
+- **Root cause:** Day 92 (Shooting Stars) added `startShootingStars()` (called in `startPlay()`) and a matching `stopShootingStars()` teardown, but the teardown was **never called**. Every other Cycle-3/4/5 play-time ambient system (balloons D90, sky D59, critters D74, station signals D75, puddles D77) is explicitly torn down in `stopPlay()`; shooting stars were the one omission. Consequence: after Stop, the `setInterval(maybeSpawnShootingStar, 3500)` timer kept running forever (firing every 3.5s, immediately returning via the `!state.playing` guard), and any in-flight `.shooting-star` DOM elements at the moment of Stop lingered until their own ~1.6s self-remove timeout. The leaked interval self-heals on the *next* `startPlay()` (which does `if (shootingStarInterval) clearInterval(...)` before re-arming), so it never accumulates across plays — but a single stop-and-walk-away left a zombie timer.
+- **Reproduction (pre-fix, verified live on the prior deploy):** night mode ON → `startPlay()` (`shootingStarInterval !== null`) → `maybeSpawnShootingStar()` ×2 spawns 2 stars → `stopPlay()` → **`shootingStarInterval` still set, 2 `.shooting-star` elements still in DOM.**
+- **Fix:** one line in `stopPlay()` beside `stopSkyCycle()`: `stopShootingStars(); // Day 92: clear shooting-star spawn interval + remove in-flight stars (BUG-020)`. Turns the dead function live.
+- **Verification (live, ?v=97fixed&fresh=1, post GH-Pages deploy of a878bd8):**
+  - `stopPlay.toString()` now contains `stopShootingStars` ✅
+  - night ON → play → `intervalSetOnPlay=true` → stop → `intervalClearedOnStop=true`, `starsAfterStop=0` ✅ (pre-fix: false / 2)
+  - deterministic teardown: injected 3 `.shooting-star` while playing → `stopPlay()` → **0 remain** ✅
+  - no interval accumulation across 3 play/stop cycles ✅
+  - **0 console errors** throughout ✅
+
+### Code Health
+- **File size:** 12,732 → **12,733 LOC** (+1), 455,532 → 455,636 bytes (+104). The +1 is the bug-fix call line — a deliberate Harden-week correctness fix (cf. BUG-019 +5 on Day 81), not feature growth. Net Harden Week 5 LOC Δ now +1 vs. the 12,732 build-week-close anchor.
+- **JS parse after fix:** ✅ CLEAN. Dead-function audit after fix: ✅ **empty.**
+
+### Bugs Found Today: 1 (BUG-020)
+### Bugs Fixed Today: 1 (same-day)
+### Open Bugs: 0
+
+### Summary
+The Day-4 proactive audit earned its keep: the dead-function grep surfaced `stopShootingStars`, which on inspection wasn't dead code to delete but a **missing teardown wiring** — a genuine (if bounded) timer leak that the Day 96 play/stop sweep missed because shooting stars only spawn in night mode. One-line fix wires the existing teardown into `stopPlay()`, verified live with both the natural scenario and a deterministic injected-stars teardown. Tomorrow (Day 98, weekDay 5) = Harden Week 5 Day 5: Regression Pass — final ship-readiness check before Cycle 5 Prune Week.
