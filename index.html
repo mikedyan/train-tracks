@@ -8944,6 +8944,7 @@ function stopPlay() {
 
   // Day 59: stop the Time-of-Day sky cycle.
   stopSkyCycle();
+  stopShootingStars(); // Day 92: clear shooting-star spawn interval + remove in-flight stars (BUG-020)
 
   // Day 74: remove ambient critters.
   cleanupAmbientCritters();
