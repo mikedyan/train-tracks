@@ -4268,8 +4268,7 @@ function toggleNightMode() {
 // Day 92: Shooting Stars
 function startShootingStars() {
   if (shootingStarInterval) clearInterval(shootingStarInterval);
-  shootingStarInterval = setInterval(maybeSpawnShootingStar, 3500); // Check every 3.5s
-  // Eager first spawn
+  shootingStarInterval = setInterval(maybeSpawnShootingStar, 3500); // check every 3.5s
   if (isNightMode()) setTimeout(maybeSpawnShootingStar, 800);
 }
 
@@ -4316,7 +4315,6 @@ function maybeSpawnShootingStar() {
   
   vp.appendChild(star);
   
-  // SFX: soft twinkle
   if (soundEnabled) {
     playNote(1200 + Math.random()*800, dur/2, 'sine', 0.02, 0);
     playNote(2000 + Math.random()*1000, dur/2, 'triangle', 0.01, dur/4);
@@ -8111,7 +8109,6 @@ function spawnBalloon() {
   balloon.className = 'floating-balloon';
   balloon.textContent = BALLOON_COLORS[Math.floor(Math.random() * BALLOON_COLORS.length)];
   
-  // Randomize properties
   const size = 18 + Math.random() * 12; // 18px to 30px
   const startX = 5 + Math.random() * 90; // 5% to 95% width
   const dur = 10 + Math.random() * 6; // 10s to 16s float time
@@ -8129,7 +8126,6 @@ function spawnBalloon() {
   document.getElementById('grid-viewport').appendChild(balloon);
   floatingBalloons.add(balloon);
   
-  // Self-cleanup after animation completes
   setTimeout(() => {
     if (floatingBalloons.has(balloon)) {
       balloon.remove();
@@ -8140,9 +8136,8 @@ function spawnBalloon() {
 
 function startBalloonSystem() {
   stopBalloonSystem();
-  // Spawn immediately, then interval
   setTimeout(spawnBalloon, 800);
-  balloonInterval = setInterval(spawnBalloon, 4500); // New balloon roughly every 4.5s
+  balloonInterval = setInterval(spawnBalloon, 4500);
 }
 
 function stopBalloonSystem() {
@@ -8150,7 +8145,6 @@ function stopBalloonSystem() {
   balloonInterval = null;
 }
 
-// Check for balloon collision
 function checkBalloonCollisions(trainEl) {
   if (!trainEl || floatingBalloons.size === 0) return;
   
@@ -8159,12 +8153,10 @@ function checkBalloonCollisions(trainEl) {
   
   for (const balloon of floatingBalloons) {
     const bRect = balloon.getBoundingClientRect();
-    // Simple center-distance check
     const dx = (locoRect.left + locoRect.width/2) - (bRect.left + bRect.width/2);
     const dy = (locoRect.top + locoRect.height/2) - (bRect.top + bRect.height/2);
     
     if (dx*dx + dy*dy < popRadius*popRadius) {
-      // Pop!
       balloon.className = 'balloon-pop';
       balloon.textContent = '💥';
       SFX.celebrate(); // Tiny pop sound
