@@ -3323,18 +3323,14 @@ const WHISTLE_SONGS = {
   yellow: { notes: [880.00, 1046.50, 1318.51, 1046.50], type: 'sine',  label: 'Chirpy' },   // A5 C6 E6 C6 — bright skip
   purple: { notes: [440.00, 587.33, 698.46, 880.00],   type: 'triangle', label: 'Mystery' } // A4 D5 F5 A5 — minor-tinged climb
 };
+// Shared melody player — note i at offset+i*step (Whistle + Cargo)
+function playNoteSequence(notes, type, dur, vol, offset, step) {
+  for (let i = 0; i < notes.length; i++) playNote(notes[i], dur, type, vol, offset + i * step);
+}
 function playWhistleSong(color) {
   if (!soundEnabled) return;
   const song = WHISTLE_SONGS[color] || WHISTLE_SONGS.red;
-  for (let i = 0; i < song.notes.length; i++) {
-    playNote(
-      song.notes[i],
-      WHISTLE_SONG_NOTE_DUR,
-      song.type,
-      WHISTLE_SONG_VOL,
-      WHISTLE_SONG_OFFSET + i * WHISTLE_SONG_STEP
-    );
-  }
+  playNoteSequence(song.notes, song.type, WHISTLE_SONG_NOTE_DUR, WHISTLE_SONG_VOL, WHISTLE_SONG_OFFSET, WHISTLE_SONG_STEP);
 }
 
 // MUSIC ENGINE — Ambient Background Music (Web Audio API)
@@ -11891,9 +11887,7 @@ function playCargoJingle(cargoType) {
   if (!soundEnabled) return;
   const j = CARGO_JINGLES[cargoType];
   if (!j) return;
-  for (let i = 0; i < j.notes.length; i++) {
-    playNote(j.notes[i], CARGO_JINGLE_DUR, j.type, CARGO_JINGLE_VOL, CARGO_JINGLE_OFFSET + i * CARGO_JINGLE_STEP);
-  }
+  playNoteSequence(j.notes, j.type, CARGO_JINGLE_DUR, CARGO_JINGLE_VOL, CARGO_JINGLE_OFFSET, CARGO_JINGLE_STEP);
 }
 
 let cargoState = {
