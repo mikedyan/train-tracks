@@ -5040,6 +5040,7 @@ let puddleFadeoutTimeout = null;
 // Day 90: Floating Balloons
 let floatingBalloons = new Set(); // Set of active balloon elements
 let balloonInterval = null;
+let balloonHeroPending = true; // Day 103: first play-session balloon spawns extra big
 
 function getSceneryEmoji(type) {
   const overrides = BIOME_EMOJI_OVERRIDES[currentBiome];
@@ -8101,9 +8102,10 @@ function spawnBalloon() {
   
   const balloon = document.createElement('div');
   balloon.className = 'floating-balloon';
-  balloon.textContent = BALLOON_COLORS[Math.floor(Math.random() * BALLOON_COLORS.length)];
-  
-  const size = 18 + Math.random() * 12; // 18px to 30px
+  let heroEmoji = BALLOON_COLORS[Math.floor(Math.random() * BALLOON_COLORS.length)];
+  let size = 18 + Math.random() * 12; // 18px to 30px
+  if (balloonHeroPending) { balloonHeroPending = false; size *= 1.6; heroEmoji = '🎈'; } // Day 103 hero balloon
+  balloon.textContent = heroEmoji;
   const startX = 5 + Math.random() * 90; // 5% to 95% width
   const dur = 10 + Math.random() * 6; // 10s to 16s float time
   const wobbleDur = 2 + Math.random() * 2; // 2s to 4s wobble cycle
@@ -8130,6 +8132,7 @@ function spawnBalloon() {
 
 function startBalloonSystem() {
   stopBalloonSystem();
+  balloonHeroPending = true; // reset hero for this play
   setTimeout(spawnBalloon, 800);
   balloonInterval = setInterval(spawnBalloon, 4500);
 }
