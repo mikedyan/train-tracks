@@ -1702,6 +1702,26 @@ body.night-mode .puzzle-card-title { color: #ECEFF1; }
 body.night-mode .puzzle-card-desc { color: #90A4AE; }
 .puzzle-card-stars { font-size: 14px; margin-top: 4px; letter-spacing: 2px; }
 .puzzle-card-stars .star-empty { opacity: 0.3; }
+/* Day 105 (Cycle 6 Build 1): Adventure Journey Map — the puzzle list reshaped into a star-gated town-to-town journey */
+.adventure-map { position: relative; width: 100%; padding: 2px 0 6px; }
+.adv-intro { font-size: 12.5px; color: #6D4C41; text-align: center; margin: 0 0 10px; line-height: 1.4; }
+body.night-mode .adv-intro { color: #B0BEC5; }
+.adv-track { position: relative; width: 100%; }
+.adv-path { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+.adv-node { position: absolute; transform: translate(-50%, -50%); z-index: 1; width: 78px; text-align: center; cursor: pointer; user-select: none; }
+.adv-node-dot { width: 46px; height: 46px; margin: 0 auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 23px; border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.25); transition: transform 0.15s ease; }
+.adv-node-name { font-size: 10.5px; font-weight: 700; color: #3E2723; margin-top: 3px; line-height: 1.15; }
+body.night-mode .adv-node-name { color: #ECEFF1; }
+.adv-node .puzzle-card-stars { font-size: 9px; margin-top: 1px; letter-spacing: 1px; }
+.adv-node.locked { cursor: not-allowed; }
+.adv-node.locked .adv-node-dot { background: #CFD8DC; filter: grayscale(1); opacity: 0.72; }
+.adv-node.locked .adv-node-name { opacity: 0.5; }
+.adv-node.available .adv-node-dot { background: linear-gradient(135deg,#66BB6A,#43A047); animation: adv-pulse 1.3s ease-in-out infinite; }
+.adv-node.done .adv-node-dot { background: linear-gradient(135deg,#FFD54F,#FFB300); }
+.adv-node:not(.locked):hover .adv-node-dot { transform: scale(1.12); }
+@keyframes adv-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(102,187,106,0.55); } 50% { box-shadow: 0 0 0 9px rgba(102,187,106,0); } }
+@media (prefers-reduced-motion: reduce) { .adv-node.available .adv-node-dot { animation: none; } }
+body.high-contrast .adv-node-dot { border-color: #000; }
 #puzzle-hud { display: none; position: fixed; top: 8px; left: 50%; transform: translateX(-50%); z-index: 200; background: rgba(255,255,255,0.95); border-radius: 12px; padding: 8px 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); font-size: 13px; gap: 12px; align-items: center; backdrop-filter: blur(5px); }
 #puzzle-hud.active { display: flex; }
 body.night-mode #puzzle-hud { background: rgba(38,50,56,0.95); color: #ECEFF1; }
@@ -3166,7 +3186,7 @@ body:not(.night-mode) .shooting-star {
 <div id="puzzle-overlay" onclick="if(event.target===this)closePuzzleModal()">
   <div id="puzzle-modal">
     <button class="close-btn" onclick="closePuzzleModal()">✕</button>
-    <h2>🧩 Challenge Puzzles</h2>
+    <h2>🗺️ Adventure Journey</h2>
     <div id="puzzle-list"></div>
   </div>
 </div>
@@ -11036,24 +11056,63 @@ function renderStarDisplay(stars) {
   return html;
 }
 
+// Day 105 (Cycle 6 Build 1): Adventure Journey — ordered town-to-town route over the existing puzzles.
+// Each stop maps to a puzzle id; x is a percent (0-100), y is px down the winding map. region is reserved for Day 2 theming.
+const ADVENTURE_STOPS = [
+  { puzzleId: 1,  x: 20, y: 46,  region: 'meadow' },
+  { puzzleId: 2,  x: 50, y: 100, region: 'meadow' },
+  { puzzleId: 8,  x: 80, y: 158, region: 'meadow' },
+  { puzzleId: 3,  x: 80, y: 246, region: 'hills' },
+  { puzzleId: 6,  x: 50, y: 300, region: 'hills' },
+  { puzzleId: 4,  x: 20, y: 358, region: 'hills' },
+  { puzzleId: 7,  x: 22, y: 446, region: 'desert' },
+  { puzzleId: 5,  x: 52, y: 500, region: 'desert' },
+  { puzzleId: 9,  x: 80, y: 560, region: 'night' },
+  { puzzleId: 10, x: 78, y: 648, region: 'night' },
+];
+
+function isAdventureStopUnlocked(index) {
+  if (index <= 0) return true; // first stop always open
+  return getPuzzleStars(ADVENTURE_STOPS[index - 1].puzzleId) > 0; // earn a star at the previous stop
+}
+
+function startAdventureStop(puzzleId) { closePuzzleModal(); loadPuzzle(puzzleId); }
+
+function renderAdventureMap() {
+  loadPuzzleProgress();
+  const host = document.getElementById('puzzle-list');
+  const stops = ADVENTURE_STOPS;
+  let maxY = 0; stops.forEach(s => { if (s.y > maxY) maxY = s.y; });
+  const trackH = maxY + 46;
+  const doneCount = stops.filter(s => getPuzzleStars(s.puzzleId) > 0).length;
+  const pts = stops.map(s => s.x + ',' + s.y).join(' ');
+  let html = '<div class="adventure-map">';
+  html += '<p class="adv-intro">🚂 Ride the rails from town to town! Earn a ⭐ at each stop to open the next one. (' + doneCount + '/' + stops.length + ' stops)</p>';
+  html += '<div class="adv-track" style="height:' + trackH + 'px">';
+  html += '<svg class="adv-path" viewBox="0 0 100 ' + trackH + '" preserveAspectRatio="none" aria-hidden="true">';
+  html += '<polyline points="' + pts + '" fill="none" stroke="#BCAAA4" stroke-width="4" stroke-dasharray="7 6" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>';
+  stops.forEach((s, i) => {
+    const puzz = PUZZLES.find(p => p.id === s.puzzleId);
+    const nm = puzz ? puzz.name : 'Stop ' + (i + 1);
+    const stars = getPuzzleStars(s.puzzleId);
+    const unlocked = isAdventureStopUnlocked(i);
+    const done = stars > 0;
+    const cls = 'adv-node ' + (done ? 'done' : (unlocked ? 'available' : 'locked'));
+    const icon = done ? '🚉' : (unlocked ? '🚩' : '🔒');
+    const starsHtml = done ? renderStarDisplay(stars) : '';
+    html += '<div class="' + cls + '" style="left:' + s.x + '%;top:' + s.y + 'px" ' +
+      (unlocked ? 'onclick="startAdventureStop(' + s.puzzleId + ')"' : '') +
+      ' title="' + (unlocked ? nm : 'Locked — earn a ⭐ at the stop before this') + '">' +
+      '<div class="adv-node-dot">' + icon + '</div>' +
+      '<div class="adv-node-name">' + nm + '</div>' + starsHtml + '</div>';
+  });
+  html += '</div></div>';
+  host.innerHTML = html;
+}
+
 function openPuzzleModal() {
   if (state.playing) return;
-  loadPuzzleProgress();
-  const list = document.getElementById('puzzle-list');
-  list.innerHTML = '';
-  PUZZLES.forEach(p => {
-    const stars = getPuzzleStars(p.id);
-    const diffClass = 'difficulty-' + p.difficulty.toLowerCase();
-    const card = document.createElement('div');
-    card.className = 'puzzle-card';
-    card.onclick = () => { closePuzzleModal(); loadPuzzle(p.id); };
-    card.innerHTML = '<div class="puzzle-card-header"><span class="puzzle-card-title">' +
-      (stars > 0 ? '✅ ' : '') + p.name +
-      '</span><span class="puzzle-difficulty ' + diffClass + '">' + p.difficulty +
-      '</span></div><div class="puzzle-card-desc">' + p.description + '</div>' +
-      (stars > 0 ? renderStarDisplay(stars) : '');
-    list.appendChild(card);
-  });
+  renderAdventureMap();
   document.getElementById('puzzle-overlay').classList.add('open');
 }
 function closePuzzleModal() { document.getElementById('puzzle-overlay').classList.remove('open'); }
