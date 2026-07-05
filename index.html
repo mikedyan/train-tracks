@@ -1733,6 +1733,14 @@ body.high-contrast .adv-node .adv-node-dot { border-color: #000; }
 .adv-train { position: absolute; z-index: 3; transform: translate(-50%, -50%); font-size: 26px; pointer-events: none; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.35)); animation: adv-train-bob 1.2s ease-in-out infinite; }
 @keyframes adv-train-bob { 0%,100% { margin-top: 0; } 50% { margin-top: -4px; } }
 @media (prefers-reduced-motion: reduce) { .adv-train { animation: none; } }
+/* Day 107 (Cycle 6 Build 3): next-stop beckon + journey-complete banner */
+.adv-node.beckon .adv-node-dot { box-shadow: 0 0 0 4px rgba(255,193,7,0.6), 0 2px 8px rgba(0,0,0,0.3); }
+.adv-beckon { position: absolute; left: 50%; top: -19px; transform: translateX(-50%); white-space: nowrap; background: linear-gradient(135deg,#FFB300,#FF6F00); color: #fff; font-size: 9.5px; font-weight: 800; padding: 2px 7px; border-radius: 9px; box-shadow: 0 2px 6px rgba(0,0,0,0.28); z-index: 4; pointer-events: none; animation: adv-beckon-bob 1s ease-in-out infinite; }
+@keyframes adv-beckon-bob { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) { .adv-beckon { animation: none; } }
+body.high-contrast .adv-beckon { background: #000; }
+.adv-complete-banner { text-align: center; font-size: 13px; font-weight: 800; color: #FF6F00; margin: 0 0 8px; }
+body.night-mode .adv-complete-banner { color: #FFB300; }
 #puzzle-hud { display: none; position: fixed; top: 8px; left: 50%; transform: translateX(-50%); z-index: 200; background: rgba(255,255,255,0.95); border-radius: 12px; padding: 8px 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); font-size: 13px; gap: 12px; align-items: center; backdrop-filter: blur(5px); }
 #puzzle-hud.active { display: flex; }
 body.night-mode #puzzle-hud { background: rgba(38,50,56,0.95); color: #ECEFF1; }
@@ -11116,7 +11124,12 @@ function renderAdventureMap() {
   let reachedIdx = -1;
   stops.forEach((s, i) => { if (getPuzzleStars(s.puzzleId) > 0) reachedIdx = i; });
   const trainStop = stops[reachedIdx >= 0 ? reachedIdx : 0];
+  // Day 107: next-stop beckon — the first unlocked stop that hasn't earned a star yet is where a kid should head next.
+  let beckonIdx = -1;
+  stops.forEach((s, i) => { if (beckonIdx === -1 && isAdventureStopUnlocked(i) && getPuzzleStars(s.puzzleId) === 0) beckonIdx = i; });
+  const journeyDone = doneCount === stops.length;
   let html = '<div class="adventure-map">';
+  if (journeyDone) html += '<p class="adv-complete-banner">🏁 Journey complete — you rode the whole line! 🎉</p>';
   html += '<p class="adv-intro">🚂 Ride the rails from town to town! Earn a ⭐ at each stop to open the next one. (' + doneCount + '/' + stops.length + ' stops)</p>';
   html += '<div class="adv-track" style="height:' + trackH + 'px">';
   // Region bands (behind the rail): each spans from the midpoint above to the midpoint below its stops.
@@ -11135,12 +11148,15 @@ function renderAdventureMap() {
     const stars = getPuzzleStars(s.puzzleId);
     const unlocked = isAdventureStopUnlocked(i);
     const done = stars > 0;
-    const cls = 'adv-node region-' + s.region + ' ' + (done ? 'done' : (unlocked ? 'available' : 'locked'));
+    const beckon = (i === beckonIdx);
+    const cls = 'adv-node region-' + s.region + ' ' + (done ? 'done' : (unlocked ? 'available' : 'locked')) + (beckon ? ' beckon' : '');
     const icon = done ? '🚉' : (unlocked ? '🚩' : '🔒');
     const starsHtml = done ? renderStarDisplay(stars) : '';
+    const beckonHtml = beckon ? '<div class="adv-beckon">🎫 All aboard!</div>' : '';
     html += '<div class="' + cls + '" style="left:' + s.x + '%;top:' + s.y + 'px" ' +
       (unlocked ? 'onclick="startAdventureStop(' + s.puzzleId + ')"' : '') +
       ' title="' + (unlocked ? nm : 'Locked — earn a ⭐ at the stop before this') + '">' +
+      beckonHtml +
       '<div class="adv-node-dot">' + icon + '</div>' +
       '<div class="adv-node-name">' + nm + '</div>' + starsHtml + '</div>';
   });
@@ -12490,6 +12506,7 @@ const STICKERS = [
   { id: 'decorator',      emoji: '🎨', name: 'Decorator',      desc: 'Place 25 scenery items',   check: function () { return gameStats.sceneryPlaced >= 25; } },
   { id: 'night-owl',      emoji: '🌙', name: 'Night Owl',      desc: 'Drive at night',           check: function () { return stickerState.nightToggled; } },
   { id: 'dj',             emoji: '🎵', name: 'DJ',             desc: 'Try every sound pack',     check: function () { return stickerState.soundPacksTried.length >= 3; } },
+  { id: 'journey',        emoji: '🏁', name: 'Trailblazer',    desc: 'Finish the whole journey', check: function () { return typeof ADVENTURE_STOPS !== 'undefined' && ADVENTURE_STOPS.every(function (s) { return getPuzzleStars(s.puzzleId) > 0; }); } },
   { id: 'train-master',   emoji: '⭐', name: 'Train Master',   desc: 'Earn every other sticker', check: function () { return STICKERS.every(function (s) { return s.id === 'train-master' || stickerState.earned[s.id]; }); } },
 ];
 
