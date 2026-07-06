@@ -1725,6 +1725,7 @@ body.night-mode .adv-node-name { color: #ECEFF1; }
 .adv-region-band { position: absolute; left: 0; right: 0; z-index: 0; border-radius: 10px; }
 .adv-region-label { position: absolute; right: 8px; top: 4px; font-size: 10px; font-weight: 800; letter-spacing: 0.5px; opacity: 0.6; text-transform: uppercase; }
 body.night-mode .adv-region-label { opacity: 0.8; }
+.adv-node.region-start .adv-node-dot { border-color: #9CCC65; }
 .adv-node.region-meadow .adv-node-dot { border-color: #7CB342; }
 .adv-node.region-hills .adv-node-dot { border-color: #A1887F; }
 .adv-node.region-desert .adv-node-dot { border-color: #EF9A3D; }
@@ -11043,6 +11044,34 @@ const PUZZLES = [
     par: 8, optimal: 8,
     hint: 'Complete both rectangles — each train needs its own loop!',
   },
+  {
+    // Puzzle 11 (Cycle 6 warm-up): the gentlest first stop — a tiny 3-wide loop, straights only.
+    id: 11, name: 'First Track', difficulty: 'Easy',
+    description: 'Add 2 straight tracks to finish the little loop!',
+    locked: [
+      { row: 3, col: 4, type: 'curve', rotation: 90 },
+      { row: 3, col: 6, type: 'curve', rotation: 180 },
+      { row: 4, col: 6, type: 'curve', rotation: 270 },
+      { row: 4, col: 4, type: 'curve', rotation: 0 },
+    ],
+    available: { straight: 2 },
+    par: 2, optimal: 2,
+    hint: 'Drop a straight track in each gap between the curves!',
+  },
+  {
+    // Puzzle 12 (Cycle 6 warm-up): same little loop, but two corners are missing — place 2 curves. Auto-connect orients them.
+    id: 12, name: 'Round the Bend', difficulty: 'Easy',
+    description: 'Place 2 curve tracks to round out the loop!',
+    locked: [
+      { row: 3, col: 4, type: 'curve', rotation: 90 },
+      { row: 4, col: 6, type: 'curve', rotation: 270 },
+      { row: 3, col: 5, type: 'straight', rotation: 90 },
+      { row: 4, col: 5, type: 'straight', rotation: 90 },
+    ],
+    available: { curve: 2 },
+    par: 2, optimal: 2,
+    hint: 'Curves go in the two empty corners!',
+  },
 ];
 
 let puzzleState = {
@@ -11078,16 +11107,18 @@ function renderStarDisplay(stars) {
 // Day 105 (Cycle 6 Build 1): Adventure Journey — ordered town-to-town route over the existing puzzles.
 // Each stop maps to a puzzle id; x is a percent (0-100), y is px down the winding map. region is reserved for Day 2 theming.
 const ADVENTURE_STOPS = [
-  { puzzleId: 1,  x: 20, y: 46,  region: 'meadow' },
-  { puzzleId: 2,  x: 50, y: 100, region: 'meadow' },
-  { puzzleId: 8,  x: 80, y: 158, region: 'meadow' },
-  { puzzleId: 3,  x: 80, y: 246, region: 'hills' },
-  { puzzleId: 6,  x: 50, y: 300, region: 'hills' },
-  { puzzleId: 4,  x: 20, y: 358, region: 'hills' },
-  { puzzleId: 7,  x: 22, y: 446, region: 'desert' },
-  { puzzleId: 5,  x: 52, y: 500, region: 'desert' },
-  { puzzleId: 9,  x: 80, y: 560, region: 'night' },
-  { puzzleId: 10, x: 78, y: 648, region: 'night' },
+  { puzzleId: 11, x: 20, y: 46,  region: 'start' },   // Day 108: warm-up on-ramp before First Loop
+  { puzzleId: 12, x: 50, y: 100, region: 'start' },
+  { puzzleId: 1,  x: 80, y: 188, region: 'meadow' },
+  { puzzleId: 2,  x: 80, y: 242, region: 'meadow' },
+  { puzzleId: 8,  x: 50, y: 296, region: 'meadow' },
+  { puzzleId: 3,  x: 20, y: 384, region: 'hills' },
+  { puzzleId: 6,  x: 20, y: 438, region: 'hills' },
+  { puzzleId: 4,  x: 50, y: 492, region: 'hills' },
+  { puzzleId: 7,  x: 80, y: 580, region: 'desert' },
+  { puzzleId: 5,  x: 80, y: 634, region: 'desert' },
+  { puzzleId: 9,  x: 50, y: 722, region: 'night' },
+  { puzzleId: 10, x: 20, y: 776, region: 'night' },
 ];
 
 function isAdventureStopUnlocked(index) {
@@ -11099,6 +11130,7 @@ function startAdventureStop(puzzleId) { closePuzzleModal(); loadPuzzle(puzzleId)
 
 // Day 106 (Cycle 6 Build 2): region palette for the journey — meadow → hills → desert → night.
 const ADVENTURE_REGIONS = {
+  start:  { name: 'Warm-Up', color: '#9CCC65', band: 'rgba(197,225,165,0.30)', emoji: '🌱' },
   meadow: { name: 'Meadow', color: '#7CB342', band: 'rgba(139,195,74,0.16)', emoji: '🌳' },
   hills:  { name: 'Hills',  color: '#A1887F', band: 'rgba(141,110,99,0.15)', emoji: '⛰️' },
   desert: { name: 'Desert', color: '#EF9A3D', band: 'rgba(255,183,77,0.18)', emoji: '🏜️' },
@@ -12500,7 +12532,7 @@ const STICKERS = [
   { id: 'master-builder', emoji: '🏗️', name: 'Master Builder', desc: 'Place 100 tracks',         check: function () { return gameStats.tracksPlaced >= 100; } },
   { id: 'loop-maker',     emoji: '🔁', name: 'Loop Maker',     desc: 'Complete 10 loops',        check: function () { return gameStats.loopsCompleted >= 10; } },
   { id: 'puzzler',        emoji: '🧩', name: 'Puzzler',        desc: 'Solve 3 puzzles',          check: function () { return gameStats.puzzlesSolved >= 3; } },
-  { id: 'puzzle-star',    emoji: '🌟', name: 'Puzzle Star',    desc: 'Solve every puzzle (10)',  check: function () { return gameStats.puzzlesSolved >= 10; } },
+  { id: 'puzzle-star',    emoji: '🌟', name: 'Puzzle Star',    desc: 'Solve every puzzle (12)',  check: function () { return gameStats.puzzlesSolved >= 12; } },
   { id: 'delivery',       emoji: '📦', name: 'Delivery Pro',   desc: 'Deliver 10 cargo',         check: function () { return gameStats.cargoDelivered >= 10; } },
   { id: 'animal-friend',  emoji: '🐄', name: 'Animal Friend',  desc: 'Haul 5 animal passengers', check: function () { return gameStats.animalsDelivered >= 5; } },
   { id: 'decorator',      emoji: '🎨', name: 'Decorator',      desc: 'Place 25 scenery items',   check: function () { return gameStats.sceneryPlaced >= 25; } },
