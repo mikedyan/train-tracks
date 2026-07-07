@@ -1740,8 +1740,15 @@ body.high-contrast .adv-node .adv-node-dot { border-color: #000; }
 @keyframes adv-beckon-bob { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-3px); } }
 @media (prefers-reduced-motion: reduce) { .adv-beckon { animation: none; } }
 body.high-contrast .adv-beckon { background: #000; }
-.adv-complete-banner { text-align: center; font-size: 13px; font-weight: 800; color: #FF6F00; margin: 0 0 8px; }
-body.night-mode .adv-complete-banner { color: #FFB300; }
+/* Day 109 (Cycle 6 Build 5): completed-route "path draws in" + finish-the-line certificate */
+.adv-path-done { stroke-dasharray: 100; stroke-dashoffset: 100; animation: adv-draw 0.9s ease forwards; }
+@keyframes adv-draw { to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .adv-path-done { animation: none; stroke-dashoffset: 0; } }
+.adv-certificate { text-align: center; background: linear-gradient(135deg,#FFF8E1,#FFE082); border: 2px solid #FFB300; border-radius: 12px; padding: 9px 12px; margin: 0 0 10px; font-size: 26px; box-shadow: 0 3px 10px rgba(255,179,0,0.3); }
+.adv-cert-title { font-size: 15px; font-weight: 800; color: #E65100; margin-top: 1px; }
+.adv-cert-sub { font-size: 11.5px; font-weight: 700; color: #6D4C41; }
+body.night-mode .adv-certificate { background: linear-gradient(135deg,#3E2723,#4E342E); border-color: #FFB300; }
+body.night-mode .adv-cert-sub { color: #FFE082; }
 #puzzle-hud { display: none; position: fixed; top: 8px; left: 50%; transform: translateX(-50%); z-index: 200; background: rgba(255,255,255,0.95); border-radius: 12px; padding: 8px 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); font-size: 13px; gap: 12px; align-items: center; backdrop-filter: blur(5px); }
 #puzzle-hud.active { display: flex; }
 body.night-mode #puzzle-hud { background: rgba(38,50,56,0.95); color: #ECEFF1; }
@@ -11161,7 +11168,11 @@ function renderAdventureMap() {
   stops.forEach((s, i) => { if (beckonIdx === -1 && isAdventureStopUnlocked(i) && getPuzzleStars(s.puzzleId) === 0) beckonIdx = i; });
   const journeyDone = doneCount === stops.length;
   let html = '<div class="adventure-map">';
-  if (journeyDone) html += '<p class="adv-complete-banner">🏁 Journey complete — you rode the whole line! 🎉</p>';
+  if (journeyDone) {
+    const totalStars = stops.reduce((a, s) => a + getPuzzleStars(s.puzzleId), 0);
+    html += '<div class="adv-certificate">🏅<div class="adv-cert-title">Journey Complete!</div>' +
+      '<div class="adv-cert-sub">You rode the whole line — ⭐ ' + totalStars + '/' + (stops.length * 3) + '</div></div>';
+  }
   html += '<p class="adv-intro">🚂 Ride the rails from town to town! Earn a ⭐ at each stop to open the next one. (' + doneCount + '/' + stops.length + ' stops)</p>';
   html += '<div class="adv-track" style="height:' + trackH + 'px">';
   // Region bands (behind the rail): each spans from the midpoint above to the midpoint below its stops.
@@ -11173,7 +11184,13 @@ function renderAdventureMap() {
       '<span class="adv-region-label" style="color:' + r.color + '">' + r.emoji + ' ' + r.name + '</span></div>';
   });
   html += '<svg class="adv-path" viewBox="0 0 100 ' + trackH + '" preserveAspectRatio="none" aria-hidden="true">';
-  html += '<polyline points="' + pts + '" fill="none" stroke="#BCAAA4" stroke-width="4" stroke-dasharray="7 6" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>';
+  html += '<polyline points="' + pts + '" fill="none" stroke="#BCAAA4" stroke-width="4" stroke-dasharray="7 6" stroke-linecap="round" vector-effect="non-scaling-stroke"/>';
+  // Day 109: the completed route draws in as a solid gold rail over the dashed base, up to the furthest-reached stop.
+  if (reachedIdx >= 1) {
+    const donePts = stops.slice(0, reachedIdx + 1).map(s => s.x + ',' + s.y).join(' ');
+    html += '<polyline class="adv-path-done" points="' + donePts + '" pathLength="100" fill="none" stroke="#FFB300" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>';
+  }
+  html += '</svg>';
   stops.forEach((s, i) => {
     const puzz = PUZZLES.find(p => p.id === s.puzzleId);
     const nm = puzz ? puzz.name : 'Stop ' + (i + 1);
@@ -11552,6 +11569,15 @@ const TUTORIAL_STEPS = [
     arrowDir: 'down',
     spotlightPadding: 10,
     pulse: true,
+  },
+  {
+    emoji: '🗺️',
+    title: 'Go on an Adventure!',
+    desc: 'Tap 🧩 Puzzles to ride the Adventure Journey — beat each stop to open the next town!',
+    targetSelector: '.btn-puzzle-modal',
+    mobileTargetSelector: '.btn-puzzle-modal',
+    arrowDir: 'down',
+    spotlightPadding: 8,
   },
 ];
 
