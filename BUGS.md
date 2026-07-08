@@ -1614,3 +1614,40 @@ Platform & edge-case sweep clean. Mobile drawer, cold-boot tutorial, keyboard-on
 
 ### Summary
 The Day-4 proactive audit earned its keep: the dead-function grep surfaced `stopShootingStars`, which on inspection wasn't dead code to delete but a **missing teardown wiring** — a genuine (if bounded) timer leak that the Day 96 play/stop sweep missed because shooting stars only spawn in night mode. One-line fix wires the existing teardown into `stopPlay()`, verified live with both the natural scenario and a deterministic injected-stars teardown. Tomorrow (Day 98, weekDay 5) = Harden Week 5 Day 5: Regression Pass — final ship-readiness check before Cycle 5 Prune Week.
+
+---
+
+## Day 110 — Cycle 6 Harden Week Day 1: Full Feature Audit
+
+### Audit Date: Wed Jul 8, 2026
+
+**Environment:** Desktop Chromium (headless), https://mikedyan.github.io/train-tracks/?v=110&fresh=1&cb=harden1audit2
+**Anchor:** 12,892 LOC / 467,828 bytes (Cycle 6 Build close, Day 109)
+**Goal:** Black-box regression audit after Cycle 6 Build Week shipped the 🗺️ Adventure Journey reshape (Days 105–109). Zero new features.
+
+### Results (all PASS)
+- **9 piece types** (straight/curve/tjunction/crossover/bridge/tunnel/station/crossing/rainbow) — all place correctly
+- **5 train colors** (red/blue/green/yellow/purple) — trains.length=5, all distinct
+- **10 scenery types** (tree/flower/house/water/cow/sheep/duck-land/horse/rock/people) — all place
+- **Play/Stop** — 1 `.animated-train` during play → 0 after stop (clean teardown)
+- **Night/Biome/Weather/High-Contrast** — all toggle + round-trip
+- **Random generator** — 53 cells placed
+- **Undo/Redo** — place→undo→redo restores
+- **Share link** — 140-char v2 hash, decode byte-identical, train preserved
+- **Save/Load** — slot 634 B; clearAll→0→load→2 cells
+- **Keyboard shortcuts** — n/b/w/a/? all fire, Esc closes
+- **Tutorial** — 4 steps, last "Go on an Adventure!"
+- **🗺️ Adventure Journey** — 12 stops (order [11,12,1,2,8,3,6,4,7,5,9,10]), 12 puzzles; star-gate + draw-in progress rail (points "20,46 50,100 80,188" at 3 done) + frontier beckon advance + completion certificate ("🏅 Journey Complete! ⭐ 36/36") all verified
+
+### Code Health
+- JS parse: CLEAN
+- HTML balance: div 197/197, button 55/55, script 1/1, style 1/1, svg 2/2
+- Duplicate functions: none (12 key fns each exactly 1)
+- File size: 12,892 LOC / 467,828 bytes (flat — Harden mandate satisfied)
+- Console errors across full audit: ZERO
+
+### Bugs Found Today: 0
+### Bugs Fixed Today: 0
+### Open Bugs: 0
+
+**Verdict:** Clean sheet. The Adventure Journey reshape integrates cleanly with the entire existing surface. qa-reports/day-110-harden6-audit.md written. NEXT: Day 111 = Harden Week Day 2 (Puzzle & Mode Testing — all 12 journey stops E2E, passenger delivery, progression, share round-trip, screenshot).
