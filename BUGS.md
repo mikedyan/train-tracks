@@ -1651,3 +1651,30 @@ The Day-4 proactive audit earned its keep: the dead-function grep surfaced `stop
 ### Open Bugs: 0
 
 **Verdict:** Clean sheet. The Adventure Journey reshape integrates cleanly with the entire existing surface. qa-reports/day-110-harden6-audit.md written. NEXT: Day 111 = Harden Week Day 2 (Puzzle & Mode Testing — all 12 journey stops E2E, passenger delivery, progression, share round-trip, screenshot).
+
+---
+
+## Day 111 — Cycle 6 Harden Week Day 2: Puzzle & Mode Testing
+
+### Audit Date: Thu Jul 9, 2026
+
+**Environment:** Desktop Chromium (headless), https://mikedyan.github.io/train-tracks/?v=111*&fresh=1
+**Anchor:** 12,892 LOC / 467,828 bytes (flat — Harden zero-growth mandate)
+
+### Results (all PASS)
+- **All 12 Adventure-Journey stops solvable E2E → 3 stars** within piece budget (order [11,12,1,2,8,3,6,4,7,5,9,10]). Grand Station (P5) via honest 9-straight+8-curve 8-corner loop; Figure Eight via crossover twin-2×2; Switchyard via 2× T-junction theta; Twin Loops via 2-component multi-train gate. Stars persisted to `trainTracks_puzzles`.
+- **Journey progression** — sequential solves opened each next stop; final state 12/12 done, 0 locked, 0 beckon, gold progress rail spans full route, certificate "🏅 Journey Complete! ⭐ 36/36", "(12/12 stops)".
+- **Passenger delivery E2E** — 2-station loop, rAF running (progress advanced), 4 delivered, onboard drained, `gameStats.passengersDelivered=4`, HUD active; stopPlay teardown → 0 anims/0 train els/0 passenger els/HUD off/delivered reset/highScore 4 persisted.
+- **Progression/unlocks** — all 10 milestones fire; gating correct (tunnel/station/bridge locked on default set, straight unlocked); LS persistence verified (tjunction locked→unlocked at Builder, full set to `trainTracks_unlocks`).
+- **Share link** — 140-char v2 hash (prefix `AggMAAAA`), decode byte-identical grid + green train preserved.
+- **Screenshot** — 2924×1948 valid PNG, content rendered, download/copy handlers present, modal closes clean.
+
+### Code Health
+- Console errors across full session: **ZERO**
+- No code edits (Harden). File size flat at 12,892 LOC / 467,828 bytes.
+
+### Bugs Found Today: 0
+### Bugs Fixed Today: 0
+### Open Bugs: 0
+
+**Verdict:** Clean sheet. The Cycle 6 Adventure Journey reshape left the puzzle engine fully intact. qa-reports/day-111-harden6-puzzle-mode.md written. NEXT: Day 112 = Harden Week Day 3 (Platform & Edge Cases).
