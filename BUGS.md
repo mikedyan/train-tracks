@@ -1678,3 +1678,32 @@ The Day-4 proactive audit earned its keep: the dead-function grep surfaced `stop
 ### Open Bugs: 0
 
 **Verdict:** Clean sheet. The Cycle 6 Adventure Journey reshape left the puzzle engine fully intact. qa-reports/day-111-harden6-puzzle-mode.md written. NEXT: Day 112 = Harden Week Day 3 (Platform & Edge Cases).
+
+---
+
+## Day 112 — Cycle 6 Harden Week Day 3: Platform & Edge Cases
+
+### Audit Date: Fri Jul 10, 2026
+
+**Environment:** Chromium (headless, CDP), https://mikedyan.github.io/train-tracks/?v=112
+**Anchor:** 12,892 LOC / 467,828 bytes (FLAT — Harden zero-growth mandate)
+
+### Results (all PASS)
+- **Mobile 375px** — no horizontal scroll, #sidebar hidden, #mobile-drawer 26 pieces / 4 sections (Tracks/Trains/Cars/Scenery), toggle collapse↔expand clean.
+- **Pinch-zoom** — setZoomAtPoint 1.3→1.3, 1.8→1.8, clamp 5.0→2.0 (MAX) / 0.05→0.5 (MIN), reset→1.0, no throw.
+- **Keyboard-only nav** — 20 shortcuts fire no-throw; arrows move gridFocus ((5,5)→ArrowUp→(4,5)); Enter places curve@(5,5) via real event; `?` help modal correctly suppresses shortcuts while open (intended, not a bug).
+- **High-contrast + reduced-motion** — HC toggles idempotently; 14 reduced-motion @media guards + matchMedia JS guards present.
+- **4 biomes × night × HC** — spring/winter/desert/autumn × {day,night} all stack cleanly, no class collisions.
+- **Cold start (localStorage.clear + reload)** — tutorial auto-opens, 96 cells, only trainTracks_stickers in LS, 20/26 palette locked fresh, tunnel/station gated.
+- **Stress** — rapid placement 24 cells no err; 10× rapid gen → 1 state.trains (BUG-019 hold); big-grid 8×12↔10×16 twice, pieces preserved, no stale-coord crash (BUG-017/018 hold); play/stop teardown all ephemerals→0; 5× rapid play/stop no leak.
+
+### Code Health
+- JS parse: CLEAN (no edits)
+- File size: FLAT at 12,892 LOC / 467,828 bytes (Harden zero-growth satisfied)
+- Console errors across full session: ZERO
+
+### Bugs Found Today: 0
+### Bugs Fixed Today: 0
+### Open Bugs: 0
+
+**Verdict:** Clean sheet. Every platform surface + edge case green after the Cycle 6 Adventure Journey reshape. qa-reports/day-112-harden6-platform-edge.md written. NEXT: Day 113 = Harden Week Day 4 (Fix Everything).
