@@ -1707,3 +1707,44 @@ The Day-4 proactive audit earned its keep: the dead-function grep surfaced `stop
 ### Open Bugs: 0
 
 **Verdict:** Clean sheet. Every platform surface + edge case green after the Cycle 6 Adventure Journey reshape. qa-reports/day-112-harden6-platform-edge.md written. NEXT: Day 113 = Harden Week Day 4 (Fix Everything).
+
+---
+
+## Day 113 — Cycle 6 Harden Week Day 4: Fix Everything
+
+**Date:** Sat Jul 11, 2026
+**Tester:** Mochi (QA Agent)
+**Mission:** Fix all open bugs (P0→P1→P2), re-test in browser, hunt duplicate/dead code, verify zero JS parse errors. ZERO new features (Harden mandate).
+
+### Open Bug Inventory: 0 (P0: 0, P1: 0, P2: 0)
+
+Days 110–112 all returned clean sheets. With an empty queue, today = proactive code-health + dead-function + teardown-wiring hunt (the Day 97 posture).
+
+### Static Analysis
+- JS parse (347,486-byte inline script): ✅ CLEAN
+- HTML balance: div 197/197, button 55/55, span 104/104, script 1/1, style 1/1, svg 2/2
+- Duplicate function names: ✅ NONE (356 named fns)
+- Dead functions (0 refs across HTML+JS): ✅ 0
+- TODO/FIXME/HACK/XXX: ✅ 0
+
+### Teardown-Wiring Audit (leak hunt)
+Every play-scoped interval torn down in stopPlay: shootingStarInterval→stopShootingStars, balloonInterval→stopBalloonSystem, puddleSpawnInterval→stopPuddleSystem, passengerSpawnTimer→resetPassengerState→stopPassengerSpawn, smokeInterval→stopSmokeLoop. chimneyInterval + weatherInterval are ambient (init + visibilitychange lifecycle), correctly NOT play-scoped. **No leak paths found.**
+
+### Live Regression (?v=113&fresh=1&cb=harden6day4)
+- Play (40-cell track): 1 animated-train + 6 critters + 1 balloon + 2 signals; stopPlay drains ALL to 0, state.trains=1 (no leak)
+- 5× rapid play/stop: all ephemerals 0, state.trains=1, no interval accumulation
+- Adventure Journey: 12 nodes, 1 beckon, "0/12 stops" fresh
+- Console errors: 0 across the whole session
+
+### Code Health
+- File size: 12,892 LOC / 467,828 bytes — FLAT at build-close anchor (Harden zero-growth satisfied)
+- No JS edits today.
+
+### Bugs Found Today: 0
+### Bugs Fixed Today: 0
+### Open Bugs: 0
+
+### Verdict: CLEAN SHEET
+Empty queue in, proactive hunt found nothing to fix. All teardown wiring correct, live drain + rapid no-leak + Adventure render green, 0 console errors. Report: qa-reports/day-113-harden6-fix-everything.md
+
+NEXT: Day 114 = Cycle 6 Harden Week Day 5 — Regression Pass (final ship-readiness, then Cycle 6 → Prune Week).
