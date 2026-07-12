@@ -1748,3 +1748,33 @@ Every play-scoped interval torn down in stopPlay: shootingStarInterval→stopSho
 Empty queue in, proactive hunt found nothing to fix. All teardown wiring correct, live drain + rapid no-leak + Adventure render green, 0 console errors. Report: qa-reports/day-113-harden6-fix-everything.md
 
 NEXT: Day 114 = Cycle 6 Harden Week Day 5 — Regression Pass (final ship-readiness, then Cycle 6 → Prune Week).
+
+---
+
+## Day 114 — Cycle 6 Harden Week Day 5: Regression Pass (Ship-Readiness)
+
+**Date:** 2026-07-12 | **Anchor:** 12,892 LOC / 467,828 bytes | **Verdict:** CLEAN SHEET — SHIP READY
+
+Final regression vs the Day-1 promise (build → play → save → share) + Adventure Journey coverage, on the deployed site.
+
+### Static
+- Served bytes 467,828 = anchor exactly (Harden zero-growth held all week)
+- JS parse (346,421-byte inline script): CLEAN
+- HTML balance: div 197/197, button 55/55, span 104/104, script 1/1, style 1/1, svg 2/2
+- Named functions: 357, 0 duplicates
+
+### Live Regression (?v=114&fresh=1&cb=harden6day5)
+- Build: generateRandomTrack populated 8×12 grid (track + scenery), state.trains=1
+- Play: 1 animated-train + 6 critters + 1 conductor + 2 balloons
+- Stop: ALL ephemerals → 0, state.trains=1 (BUG-019 holds)
+- Share: 140-char v2 hash (AggMADAA), decode 0 cell diffs (faithful round-trip)
+- Save/Load: clear to 0 → reload → grid byte-identical + trains restored
+- Adventure Journey: 12 stops, 1 beckon, base+progress rail, "0/12 stops" fresh
+- Puzzle load: First Track (id 11) loads clean; full palette + toolbar render (screenshot evidence)
+- Console errors: 0 across the whole session
+
+### Bugs Found: 0 | Bugs Fixed: 0 | Open Bugs: 0
+
+**Cycle 6 Harden Week (Days 110–114): 5 consecutive clean sheets, 0 bugs, file FLAT at 12,892 LOC / 467,828 bytes the entire week.** Report: qa-reports/day-114-harden6-regression.md
+
+NEXT: Cycle 6 closes → Day 115 = Cycle 6 Prune Week Day 1 (Fresh Eyes Audit → PRUNE_REPORT.md).
