@@ -11052,7 +11052,7 @@ const PUZZLES = [
     hint: 'Complete both rectangles — each train needs its own loop!',
   },
   {
-    // Puzzle 11 (Cycle 6 warm-up): the gentlest first stop — a tiny 3-wide loop, straights only.
+    // Puzzle 11 (Cycle 6 warm-up): the gentlest first stop — straights only.
     id: 11, name: 'First Track', difficulty: 'Easy',
     description: 'Add 2 straight tracks to finish the little loop!',
     locked: [
@@ -11066,7 +11066,7 @@ const PUZZLES = [
     hint: 'Drop a straight track in each gap between the curves!',
   },
   {
-    // Puzzle 12 (Cycle 6 warm-up): same little loop, but two corners are missing — place 2 curves. Auto-connect orients them.
+    // Puzzle 12 (Cycle 6 warm-up): place the 2 missing corners — auto-connect orients them.
     id: 12, name: 'Round the Bend', difficulty: 'Easy',
     description: 'Place 2 curve tracks to round out the loop!',
     locked: [
@@ -11111,8 +11111,7 @@ function renderStarDisplay(stars) {
   return html;
 }
 
-// Day 105 (Cycle 6 Build 1): Adventure Journey — ordered town-to-town route over the existing puzzles.
-// Each stop maps to a puzzle id; x is a percent (0-100), y is px down the winding map. region is reserved for Day 2 theming.
+// Day 105 (Cycle 6 Build 1): Adventure Journey — ordered town-to-town route over existing puzzles; each stop {puzzleId, x%, y px, region}.
 const ADVENTURE_STOPS = [
   { puzzleId: 11, x: 20, y: 46,  region: 'start' },   // Day 108: warm-up on-ramp before First Loop
   { puzzleId: 12, x: 50, y: 100, region: 'start' },
@@ -11135,7 +11134,7 @@ function isAdventureStopUnlocked(index) {
 
 function startAdventureStop(puzzleId) { closePuzzleModal(); loadPuzzle(puzzleId); }
 
-// Day 106 (Cycle 6 Build 2): region palette for the journey — meadow → hills → desert → night.
+// Day 106 (Cycle 6 Build 2): region palette for the journey.
 const ADVENTURE_REGIONS = {
   start:  { name: 'Warm-Up', color: '#9CCC65', band: 'rgba(197,225,165,0.30)', emoji: '🌱' },
   meadow: { name: 'Meadow', color: '#7CB342', band: 'rgba(139,195,74,0.16)', emoji: '🌳' },
@@ -11152,14 +11151,12 @@ function renderAdventureMap() {
   const trackH = maxY + 46;
   const doneCount = stops.filter(s => getPuzzleStars(s.puzzleId) > 0).length;
   const pts = stops.map(s => s.x + ',' + s.y).join(' ');
-  // Group consecutive stops into region segments so each stretch of the map is themed.
   const segs = [];
   stops.forEach(s => {
     const last = segs[segs.length - 1];
     if (last && last.region === s.region) last.lastY = s.y;
     else segs.push({ region: s.region, firstY: s.y, lastY: s.y });
   });
-  // Furthest-reached stop: the last stop with a star (else the very first stop).
   let reachedIdx = -1;
   stops.forEach((s, i) => { if (getPuzzleStars(s.puzzleId) > 0) reachedIdx = i; });
   const trainStop = stops[reachedIdx >= 0 ? reachedIdx : 0];
@@ -11209,7 +11206,6 @@ function renderAdventureMap() {
       '<div class="adv-node-dot">' + icon + '</div>' +
       '<div class="adv-node-name">' + nm + '</div>' + starsHtml + '</div>';
   });
-  // Journey train rides at the furthest-reached stop — a little "you are here" marker.
   html += '<div class="adv-train" style="left:' + trainStop.x + '%;top:' + (trainStop.y - 30) + 'px" title="Your train is here">🚂</div>';
   html += '</div></div>';
   host.innerHTML = html;
