@@ -11157,12 +11157,10 @@ function renderAdventureMap() {
     if (last && last.region === s.region) last.lastY = s.y;
     else segs.push({ region: s.region, firstY: s.y, lastY: s.y });
   });
-  let reachedIdx = -1;
-  stops.forEach((s, i) => { if (getPuzzleStars(s.puzzleId) > 0) reachedIdx = i; });
+  // Day 107 (Day 117 prune: single pass): reachedIdx = furthest starred stop (train marker); beckonIdx = first unlocked, unstarred stop (next-stop nudge).
+  let reachedIdx = -1, beckonIdx = -1;
+  stops.forEach((s, i) => { if (getPuzzleStars(s.puzzleId) > 0) reachedIdx = i; else if (beckonIdx === -1 && isAdventureStopUnlocked(i)) beckonIdx = i; });
   const trainStop = stops[reachedIdx >= 0 ? reachedIdx : 0];
-  // Day 107: next-stop beckon — the first unlocked stop that hasn't earned a star yet is where a kid should head next.
-  let beckonIdx = -1;
-  stops.forEach((s, i) => { if (beckonIdx === -1 && isAdventureStopUnlocked(i) && getPuzzleStars(s.puzzleId) === 0) beckonIdx = i; });
   const journeyDone = doneCount === stops.length;
   let html = '<div class="adventure-map">';
   if (journeyDone) {
@@ -11172,7 +11170,7 @@ function renderAdventureMap() {
   }
   html += '<p class="adv-intro">🚂 Ride the rails from town to town! Earn a ⭐ at each stop to open the next one. (' + doneCount + '/' + stops.length + ' stops)</p>';
   html += '<div class="adv-track" style="height:' + trackH + 'px">';
-  // Region bands (behind the rail): each spans from the midpoint above to the midpoint below its stops.
+  // Region bands render behind the rail (z-index:0).
   segs.forEach((seg, k) => {
     const top = k === 0 ? 0 : (segs[k - 1].lastY + seg.firstY) / 2;
     const bottom = k === segs.length - 1 ? trackH : (seg.lastY + segs[k + 1].firstY) / 2;
