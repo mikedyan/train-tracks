@@ -5088,6 +5088,7 @@ let puddleFadeoutTimeout = null;
 let floatingBalloons = new Set(); // Set of active balloon elements
 let balloonInterval = null;
 let balloonHeroPending = true; // Day 103: first play-session balloon spawns extra big
+let loopHeroPending = true; // Day 118: first Full Loop of a play session gets a bigger confetti burst
 
 function getSceneryEmoji(type) {
   const overrides = BIOME_EMOJI_OVERRIDES[currentBiome];
@@ -7613,14 +7614,15 @@ function triggerLoopCelebration(anim) {
 
   if (reduceMotion) return; // Skip confetti particles for reduced motion
   const colors = ['#FF5252', '#FFAB40', '#FFEB3B', '#69F0AE', '#40C4FF', '#E040FB', '#FF4081', '#7C4DFF'];
-  const numParticles = 25;
+  const hero = loopHeroPending; loopHeroPending = false; // Day 118: first loop of the session bursts bigger
+  const numParticles = hero ? 42 : 25;
 
   for (let i = 0; i < numParticles; i++) {
     const particle = document.createElement('div');
     particle.className = 'confetti-particle';
 
-    // Random size 5-9px
-    const size = 5 + Math.random() * 4;
+    // Random size 5-9px (hero first-loop burst runs a touch bigger)
+    const size = (hero ? 6 : 5) + Math.random() * (hero ? 5 : 4);
     particle.style.width = size + 'px';
     particle.style.height = size + 'px';
 
@@ -7864,6 +7866,8 @@ function startPlay() {
   // applyWeather() also wakes the system if rain is toggled mid-play.
   if (currentWeather === 'rain') startPuddleSystem();
   
+  // Day 118: first Full Loop of this session gets a bigger confetti burst
+  loopHeroPending = true;
   // Day 90: Start balloons
   startBalloonSystem();
 
